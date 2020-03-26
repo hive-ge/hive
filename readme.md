@@ -16,3 +16,11 @@ Capabilities:
 - Custom Scripting, possibly based on Lua
 - OpenGL graphics system.
 - Note System?
+
+
+## Nodes
+Any object the can interact with another object through simple message passing. 
+    Physics, AI, and other scriptable events can benefit from a node based interpretation? 
+    What do you mean scriptable? 
+    How big should a message be? How can this be generalized?
+    
