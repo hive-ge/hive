@@ -1,6 +1,9 @@
 #pragma once
 
+#include "gpu/opengl/attribute.h"
 #include "gpu/opengl/glwrap.h"
+#include "gpu/opengl/uniform.h"
+
 
 namespace hive
 {

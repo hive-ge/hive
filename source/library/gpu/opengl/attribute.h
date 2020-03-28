@@ -1,11 +1,55 @@
 #pragma once
 
+#include "gpu/opengl/buffer.h"
 #include "gpu/opengl/glwrap.h"
 
 namespace hive
 {
     namespace gl
     {
+
+
+        /**
+            Wrapper around an attribute int.
+        */
+        struct SmartGLAttribute : SmartGLint {
+
+          protected:
+            unsigned short glsl_array_size = 0;
+
+            unsigned char glsl_object_size = 0;
+
+            unsigned char glsl_object_type = 0;
+
+            virtual void deleteUnderlyingGLResource() override;
+
+          public:
+            SmartGLAttribute() : SmartGLint(SmartGLType::Attribute){};
+
+            SmartGLAttribute(GLuint program_pointer, unsigned os, unsigned as, unsigned at,
+                             bool ISREADY)
+                : SmartGLint(SmartGLType::Attribute, program_pointer, ISREADY), glsl_array_size(as),
+                  glsl_object_size(os), glsl_object_type(at){};
+
+            ~SmartGLAttribute() { decreaseReferenceCount(); }
+
+            SmartGLAttribute(const SmartGLAttribute & obj) : SmartGLint(obj)
+            {
+                glsl_array_size  = obj.glsl_array_size;
+                glsl_object_size = obj.glsl_object_size;
+                glsl_object_type = obj.glsl_object_type;
+            }
+            /**
+
+
+            */
+            virtual void use(SmartGLBuffer & buffer, GLenum type, unsigned stride, unsigned offset,
+                             unsigned divisor = 0, bool normalize = false);
+
+            virtual void release() override;
+
+            virtual bool IS_USABLE() override;
+        };
 
         void SmartGLAttribute::deleteUnderlyingGLResource() {}
 
