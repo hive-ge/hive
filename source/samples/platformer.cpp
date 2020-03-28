@@ -18,6 +18,7 @@ int main(int arg_count, char ** arguments)
 
     auto keyboard   = boss.getKeyboard();
     auto controller = boss.getController(0);
+    auto mouse      = boss.getMouse();
 
     if (!controller.isALIVE()) return -1;
 
@@ -26,11 +27,8 @@ int main(int arg_count, char ** arguments)
     glClearColor(0.0, 0.0, 0.0, 1.0);
 
     while (true) {
-        controller.poll();
-        if (controller.hasChanged()) {
-            std::cout << controller << std::endl;
-        }
 
+        std::cout << mouse << std::endl;
 
         int dur = keyboard.getKeyPressDuration(hive::interface::KeyName::A);
 
