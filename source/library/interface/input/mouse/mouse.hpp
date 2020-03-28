@@ -2,6 +2,7 @@
 
 #include <algorithm>
 #include <chrono>
+#include <iostream>
 #include <stdio.h>
 
 namespace hive
@@ -18,9 +19,12 @@ namespace hive
              * KEY_STATUS index.
              */
             enum ButtonName : char {
-                ONE,
-                TWO,
-                THREE,
+                ONE    = 0,
+                LEFT   = 0,
+                TWO    = 1,
+                RIGHT  = 1,
+                THREE  = 2,
+                MIDDLE = 2,
                 FOUR,
                 FIVE,
                 SIX,
@@ -28,39 +32,6 @@ namespace hive
                 EIGHT,
                 NINE,
                 TEN,
-                ELEVEN,
-                TWELVE,
-                THIRTEEN,
-                FOURTEEN,
-                FIFTEEN,
-                SIXTEEN,
-                SEVENTEEN,
-                EIGHTEEN,
-                NINETEEN,
-                TWENTY
-            };
-
-            enum class AxisName : char {
-                ONE,
-                TWO,
-                THREE,
-                FOUR,
-                FIVE,
-                SIX,
-                SEVEN,
-                EIGHT,
-                NINE,
-                TEN,
-                ELEVEN,
-                TWELVE,
-                THIRTEEN,
-                FOURTEEN,
-                FIFTEEN,
-                SIXTEEN,
-                SEVENTEEN,
-                EIGHTEEN,
-                NINETEEN,
-                TWENTY
             };
 
             class Mouse
@@ -72,14 +43,10 @@ namespace hive
                  * through a last hit time stamp if
                  * the value is not zero.
                  */
-                int BUTTON_STATUS[20]{0};
-                unsigned BUTTON_PREASSURE_STATUS[20]{0};
+                int BUTTON_STATUS[10]{0};
 
-                const float * axes            = nullptr;
-                const unsigned char * buttons = nullptr;
-
-                char MAX_AXES    = 0;
-                char MAX_BUTTONS = 0;
+                double x = 0.0;
+                double y = 0.0;
 
                 unsigned BUTTON_STATE_CHANGED = 0;
 
@@ -110,7 +77,7 @@ namespace hive
                     /**
                      * Returns true if the button is currently pressed.
                      */
-                    bool isButtonPressed(ButtonName button)
+                    bool isButtonPressed(ButtonName button) const
                     {
                         return mouse.BUTTON_STATUS[button] > 0;
                     }
@@ -128,7 +95,7 @@ namespace hive
                      * This will also reset the buttonpress duration to zero if the
                      * button is not being pressed.
                      */
-                    unsigned getButtonPressDuration(ButtonName button)
+                    unsigned getButtonPressDuration(ButtonName button) const
                     {
                         const int button_state_timestamp = mouse.BUTTON_STATUS[button];
 
@@ -155,28 +122,13 @@ namespace hive
                         }
                     }
 
-                    /**
-                     * Get the preassure a button was pressed with. This value is always
-                     * returned as the value set when button was last pressed, regardless
-                     * of whether the button is currently pressed.
-                     */
-                    unsigned getButtonPreassure(ButtonName button)
-                    {
-                        return mouse.BUTTON_PREASSURE_STATUS[button];
-                    }
-
-                    float getAxis(AxisName axis)
-                    {
-                        if (mouse.IS_ALIVE && (char)axis < mouse.MAX_AXES)
-                            return mouse.axes[(char)axis];
-
-                        return 0.;
-                    }
+                    double getX() const { return mouse.x; }
+                    double getY() const { return mouse.y; }
 
                     /**
                      * Has any button changed since the last call to poll;
                      */
-                    bool hasChanged() { return mouse.BUTTON_STATE_CHANGED > 0; }
+                    bool hasChanged() const { return mouse.BUTTON_STATE_CHANGED > 0; }
 
                     /**
                      * Has the button changed since the last call to poll;
@@ -186,12 +138,39 @@ namespace hive
                         return ((1 << (unsigned)button) & mouse.BUTTON_STATE_CHANGED) > 0;
                     };
 
-                    void poll() { mouse.poll(); }
+
+#ifdef HIVE_DEBUG //################### DEBUG
+                    friend std::ostream & operator<<(std::ostream & os, const MouseStateReader & r)
+                    {
+                        os << "{ \"x\": " << r.getX();
+                        os << ", \"y\": " << r.getY();
+                        os << ", \"buttons\": [";
+                        os << " ], \"buttons:[ ";
+                        for (int i = 0; i < 10; i++) {
+                            os << ":{"
+                               << " \"press\": " << r.isButtonPressed((ButtonName)i)
+                               << " \"dur\": " << r.getButtonPressDuration((ButtonName)i) << " }";
+                            if (i < 9) os << ", ";
+                        }
+                        os << " ]";
+                        return os;
+                    }
+
+
+#endif //############################## END DEBUG
+
+#ifndef HIVE_DEBUG //################## RELEASE
+
+                    friend std::ostream & operator<<(std::ostream & os,
+                                                     const ControllerStateReader & reader)
+                    {
+                        return os;
+                    }
+#endif //############################## END RELEASE
                 };
 
               private:
                 MouseStateReader reader;
-
 
                 std::chrono::time_point<std::chrono::system_clock> start =
                     std::chrono::system_clock::now();
@@ -210,7 +189,8 @@ namespace hive
               public:
                 Mouse() : reader(*this){};
 
-                bool isALIVE() { return IS_ALIVE; }
+                void setX(double X) { x = X; };
+                void setY(double Y) { y = Y; };
 
                 void setButton(ButtonName button, unsigned char preassure = 0)
                 {
@@ -220,8 +200,7 @@ namespace hive
 
                     BUTTON_STATE_CHANGED |= 1 << button;
 
-                    BUTTON_PREASSURE_STATUS[button] = preassure;
-                    BUTTON_STATUS[button]           = getTimeStamp();
+                    BUTTON_STATUS[button] = getTimeStamp();
                 }
 
                 void unsetButton(ButtonName button)
@@ -232,38 +211,6 @@ namespace hive
                         BUTTON_STATE_CHANGED |= 1 << button;
 
                         BUTTON_STATUS[button] = -(getTimeStamp() - button_timestamp);
-                    }
-                }
-
-                void setAliveStatus(bool IS_ALIVE = false) { Mouse::IS_ALIVE = IS_ALIVE; }
-
-                void setAxisArrayPointer(const float * array, size_t length)
-                {
-                    axes     = array;
-                    MAX_AXES = length;
-                }
-
-                void setButtonArrayPointer(const unsigned char * array, size_t length)
-                {
-                    buttons     = array;
-                    MAX_BUTTONS = length;
-                }
-
-                void poll()
-                {
-                    if (IS_ALIVE) {
-
-                        for (int i = 0; i < MAX_AXES; i++) {
-                        }
-
-                        BUTTON_STATE_CHANGED = 0;
-
-                        for (unsigned char i = 0; i < MAX_BUTTONS; i++) {
-                            if (buttons[i] == 0)
-                                unsetButton((ButtonName)i);
-                            else
-                                setButton((ButtonName)i);
-                        }
                     }
                 }
 

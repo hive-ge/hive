@@ -91,7 +91,7 @@ namespace hive
             virtual hive::interface::controller::Controller::ControllerStateReader &
             getController(unsigned index) = 0;
 
-            virtual hive::interface::mouse::Mouse::MouseStateReader & getMouse(unsigned index) = 0;
+            virtual hive::interface::mouse::Mouse::MouseStateReader & getMouse() = 0;
         };
 
     } // namespace interface
@@ -120,6 +120,16 @@ namespace hive
         glfwKeyboard.unsetKey(KeyName::KEY_NAME);                                                  \
         break;
 
+#define makeRenamedReleaseCaseMouse(KEY_NAME, GLFW_NAME)                                           \
+    case GLFW_MOUSE_BUTTON_##GLFW_NAME:                                                            \
+        glfwMouse.unsetButton(mouse::ButtonName::KEY_NAME);                                        \
+        break;
+
+#define makeRenamedPressCaseMouse(KEY_NAME, GLFW_NAME)                                             \
+    case GLFW_MOUSE_BUTTON_##GLFW_NAME:                                                            \
+        glfwMouse.setButton(mouse::ButtonName::KEY_NAME);                                          \
+        break;
+
 
 /* Printable keys */
 namespace hive
@@ -133,7 +143,7 @@ namespace hive
         keyboard::Keyboard glfwKeyboard;
         mouse::Mouse glfwMouse;
 
-        void GLFWKeyBoardCallback(GLFWwindow * window, int key, int scancode, int action, int mods)
+        void GLFWKeyboardCallback(GLFWwindow * window, int key, int scancode, int action, int mods)
         {
             if (action == GLFW_PRESS) {
                 switch (key) {
@@ -384,6 +394,39 @@ namespace hive
             }
         };
 
+        static void GLFWMousePositionCallback(GLFWwindow * window, double xpos, double ypos)
+        {
+            glfwMouse.setX(xpos);
+            glfwMouse.setY(ypos);
+        };
+
+        void GLFWMouseButtonCallback(GLFWwindow * window, int button, int action, int mods)
+        {
+            if (action == GLFW_PRESS) {
+                switch (button) {
+                    makeRenamedPressCaseMouse(LEFT, LEFT);
+                    makeRenamedPressCaseMouse(RIGHT, RIGHT);
+                    makeRenamedPressCaseMouse(MIDDLE, MIDDLE);
+                    makeRenamedPressCaseMouse(FOUR, 4);
+                    makeRenamedPressCaseMouse(FIVE, 5);
+                    makeRenamedPressCaseMouse(SIX, 6);
+                    makeRenamedPressCaseMouse(SEVEN, 7);
+                    makeRenamedPressCaseMouse(EIGHT, 8);
+                }
+            } else {
+                switch (button) {
+                    makeRenamedReleaseCaseMouse(LEFT, LEFT);
+                    makeRenamedReleaseCaseMouse(RIGHT, RIGHT);
+                    makeRenamedReleaseCaseMouse(MIDDLE, MIDDLE);
+                    makeRenamedReleaseCaseMouse(FOUR, 4);
+                    makeRenamedReleaseCaseMouse(FIVE, 5);
+                    makeRenamedReleaseCaseMouse(SIX, 6);
+                    makeRenamedReleaseCaseMouse(SEVEN, 7);
+                    makeRenamedReleaseCaseMouse(EIGHT, 8);
+                }
+            }
+        }
+
 
         class GLFWBoss : public hive::interface::InterfaceBoss
         {
@@ -457,11 +500,14 @@ namespace hive
                     glfwMakeContextCurrent(window);
 
                     // Setup inputs
-                    glfwSetKeyCallback(window, GLFWKeyBoardCallback);
+                    glfwSetKeyCallback(window, GLFWKeyboardCallback);
+
+                    glfwSetCursorPosCallback(window, GLFWMousePositionCallback);
+
+                    glfwSetMouseButtonCallback(window, GLFWMouseButtonCallback);
 
                     // Get all connected controllers
                     pollControllers();
-
 
                     /* Initialize glew to get GL extensions running */
                     if (glewInit() == GLEW_OK) return true;
@@ -503,7 +549,7 @@ namespace hive
                 return controllers[index % MAX_AVAILABLE_CONTROLLERS].getControllerStateReader();
             }
 
-            virtual hive::interface::mouse::Mouse::MouseStateReader & getMouse(unsigned index)
+            virtual hive::interface::mouse::Mouse::MouseStateReader & getMouse()
             {
                 return glfwMouse.getMouseStateReader();
             };
