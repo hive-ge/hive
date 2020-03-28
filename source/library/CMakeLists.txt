@@ -96,8 +96,11 @@ INCLUDE_DIRECTORIES( ${hive_library_base_path})
 ## Project Internal
 include_directories( "./audio")
 include_directories( "./filesystem")
+
 include_directories( "./gpu")
-include_directories( "./gpu")
+include_directories( "./gpu/opengl")
+
+include_directories("./resource")
 
 include_directories("./interface")
 include_directories("./interface/input/keyboard")

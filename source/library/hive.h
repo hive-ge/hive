@@ -10,11 +10,14 @@
 #include "graphic/box.hpp"
 
 
-// Interfac
+// Interface
 #include "interface/input/controller/controller.hpp"
 #include "interface/input/keyboard/keyboard.hpp"
 #include "interface/input/mouse/mouse.hpp"
 #include "interface/interface_boss.hpp"
+
+// Resource
+#include "resource/load.hpp"
 
 // Utility
 #include "primitive/log.h"

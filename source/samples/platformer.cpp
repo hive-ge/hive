@@ -22,6 +22,8 @@ int main(int arg_count, char ** arguments)
 
     if (!controller.isALIVE()) return -1;
 
+    std::cout << hive::resource::loadUTF8File("/home/anthony/work/active/apps/hive/readme.md");
+
     // making background color black as first
     // 3 arguments all are 0.0
     glClearColor(0.0, 0.0, 0.0, 1.0);
