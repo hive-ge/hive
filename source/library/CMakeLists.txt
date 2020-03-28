@@ -102,7 +102,7 @@ include_directories( "./gpu")
 include_directories("./interface")
 include_directories("./interface/input/keyboard")
 include_directories("./interface/input/mouse")
-include_directories("./interface/input/joystick")
+include_directories("./interface/input/controller")
 
 include_directories( "./network")
 include_directories( "./script")
