@@ -11,6 +11,7 @@
 #endif
 #endif
 
+
 #ifdef HIVE_USE_SDL
 #include <SDL.h>
 #include <SDL_opengl.h>
@@ -48,6 +49,23 @@ namespace hive
 {
     namespace gl
     {
+
+
+        /**
+         * returns true if major and minor versions of GL are equal to or greater than
+         * the passed in values.
+         */
+        static bool checkGLVersion(int & major, int & minor)
+        {
+            int version;
+            glGetIntegerv(GL_MAJOR_VERSION, &version);
+            if (version < major) return false;
+            major = version;
+            glGetIntegerv(GL_MINOR_VERSION, &version);
+            if (version < minor) return false;
+            minor = version;
+            return true;
+        };
 
 #ifdef HIVE_USE_SDL
         inline SDL_Window * initGL()
