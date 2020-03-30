@@ -1,13 +1,19 @@
 [
 {
   "directory": "/home/anthony/work/active/apps/hive/build",
-  "command": "/usr/local/clang_9.0.0/bin/clang++   -I../glfw/include -I../source/library -I../source/sample  -std=c++17 -pthread -O0 -g -Wall   -o CMakeFiles/platformer.dir/source/samples/platformer.cpp.o -c /home/anthony/work/active/apps/hive/source/samples/platformer.cpp",
+  "command": "/usr/bin/clang++-9   -I../glfw/include -I../source/library -I../source/sample  -std=c++17 -pthread -O0 -g -Wall   -o CMakeFiles/platformer.dir/source/samples/platformer.cpp.o -c /home/anthony/work/active/apps/hive/source/samples/platformer.cpp",
   "file": "/home/anthony/work/active/apps/hive/source/samples/platformer.cpp"
 },
 
 {
   "directory": "/home/anthony/work/active/apps/hive/build",
-  "command": "/usr/local/clang_9.0.0/bin/clang++   -I../source/library -I../source/library/./audio -I../source/library/./filesystem -I../source/library/./gpu -I../source/library/./interface -I../source/library/./interface/input/keyboard -I../source/library/./interface/input/mouse -I../source/library/./interface/input/controller -I../source/library/./network -I../source/library/./script -I../source/library/./primitive/math -I../source/library/./node  -std=c++17 -pthread -O0 -g -Wall   -o source/library/CMakeFiles/hive.dir/hive.cpp.o -c /home/anthony/work/active/apps/hive/source/library/hive.cpp",
+  "command": "/usr/bin/clang-9  -I../glfw/include -I../source/library -I../source/sample  -std=c11 -O0 -g -Wall -g   -o CMakeFiles/platformer.dir/usr/local/share/gl3w/gl3w.c.o   -c /usr/local/share/gl3w/gl3w.c",
+  "file": "/usr/local/share/gl3w/gl3w.c"
+},
+
+{
+  "directory": "/home/anthony/work/active/apps/hive/build",
+  "command": "/usr/bin/clang++-9   -I../source/library/glfw/include -I../source/library -I../source/library/./audio -I../source/library/./filesystem -I../source/library/./gpu -I../source/library/./gpu/opengl -I../source/library/./resource -I../source/library/./interface -I../source/library/./interface/input/keyboard -I../source/library/./interface/input/mouse -I../source/library/./interface/input/controller -I../source/library/./network -I../source/library/./script -I../source/library/./primitive/math -I../source/library/./node  -std=c++17 -pthread -O0 -g -Wall   -o source/library/CMakeFiles/hive.dir/hive.cpp.o -c /home/anthony/work/active/apps/hive/source/library/hive.cpp",
   "file": "/home/anthony/work/active/apps/hive/source/library/hive.cpp"
 }
 ]

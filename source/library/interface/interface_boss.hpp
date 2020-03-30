@@ -92,6 +92,8 @@ namespace hive
             getController(unsigned index) = 0;
 
             virtual hive::interface::mouse::Mouse::MouseStateReader & getMouse() = 0;
+
+            virtual bool canRun() = 0;
         };
 
     } // namespace interface
@@ -427,6 +429,11 @@ namespace hive
             }
         }
 
+        void error_callback(int error, const char * description)
+        {
+            fprintf(stderr, "Error: %s\n", description);
+        }
+
 
         class GLFWBoss : public hive::interface::InterfaceBoss
         {
@@ -476,8 +483,9 @@ namespace hive
 
             virtual bool init()
             {
+                glfwSetErrorCallback(error_callback);
 
-                if (glfwInit()) {
+                if (glfwInit() == GLFW_TRUE) {
 
                     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
                     glfwWindowHint(GLFW_FLOATING, GLFW_TRUE);
@@ -485,11 +493,12 @@ namespace hive
 //############################## DEBUG
 #ifdef HIVE_DEBUG
                     glfwWindowHint(GLFW_OPENGL_DEBUG_CONTEXT, GLFW_TRUE);
+                    window = glfwCreateWindow(width, height, "HIVE DEBUG", NULL, NULL);
 
 //############################## END DEBUG
+#else
+                    window = glfwCreateWindow(width, height, "HIVE RELEASE", NULL, NULL);
 #endif
-
-                    window = glfwCreateWindow(width, height, "Hello World", NULL, NULL);
 
                     if (window == nullptr) {
                         glfwTerminate();
@@ -509,8 +518,13 @@ namespace hive
                     // Get all connected controllers
                     pollControllers();
 
+                    auto err = glewInit();
                     /* Initialize glew to get GL extensions running */
-                    if (glewInit() == GLEW_OK) return true;
+                    if (err != GLEW_OK) {
+                        __ERROR(std::string((char *)glewGetErrorString(err)));
+                    };
+
+                    return true;
                 }
 
 
@@ -553,6 +567,13 @@ namespace hive
             {
                 return glfwMouse.getMouseStateReader();
             };
+
+            virtual bool canRun()
+            {
+                if (window) return !glfwWindowShouldClose(window);
+
+                return false;
+            }
         };
     } // namespace interface
 } // namespace hive

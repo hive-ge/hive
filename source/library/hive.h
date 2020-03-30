@@ -33,3 +33,14 @@
 #include "primitive/math/vec2.h"
 #include "primitive/math/vec3.h"
 #include "primitive/math/vec4.h"
+
+namespace hive
+{
+    namespace all
+    {
+        using namespace hive::graphic;
+        using namespace hive::interface;
+        using namespace hive::gl;
+        using namespace hive::resource;
+    } // namespace all
+} // namespace hive

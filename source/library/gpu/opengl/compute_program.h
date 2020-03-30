@@ -1,11 +1,12 @@
 #pragma once
 
-#include "gpu/opengl/attribute.h"
 #include "gpu/opengl/glwrap.h"
 #include "gpu/opengl/uniform.h"
+#include "primitive/log.h"
 #include "primitive/math/vec2.h"
 #include "primitive/math/vec3.h"
-
+#include <string>
+#include <unordered_map>
 
 namespace hive
 {
@@ -23,17 +24,17 @@ namespace hive
           public:
             SmartGLComputeProgram() : SmartGLint(SmartGLType::Program) {}
 
-            SmartGLComputeProgram(GLuint program_pointer, bool ISREADY,
-                                  std::unordered_map<std::string, SmartGLAttribute> * attr = NULL,
-                                  std::unordered_map<std::string, SmartGLUniform> * uni    = NULL)
+            SmartGLComputeProgram(GLuint program_pointer, bool ISREADY)
                 : SmartGLint(SmartGLType::Program, program_pointer, ISREADY)
             {
-                int maj, min;
-                if (!checkGLVersion(maj, min)) {
-                    __ERROR(
-                        "ERROR creating compute shader. Expected GL version 4.3 or higher. Got " +
-                        std::to_string(maj) + "." + std::to_string(min));
-                }
+                int maj = 4, min = 3;
+
+                // TODO apparently getting the actual GL version is trickier then expected on a
+                // Linux platform. Toggling this off for now. if (!checkGLVersion(maj, min)) {
+                //    __ERROR(
+                //        "ERROR creating compute shader. Expected GL version 4.3 or higher. Got " +
+                //        std::to_string(maj) + "." + std::to_string(min));
+                //}
             };
 
             ~SmartGLComputeProgram() { decreaseReferenceCount(); }
@@ -80,14 +81,13 @@ namespace hive
             }
         };
 
-        SmartGLComputeProgram createComputeShaderProgram(std::string vector_shader,
-                                                         std::string frag_shader)
+        SmartGLComputeProgram createComputeShaderProgram(std::string compute_shader)
         {
 
-            GLuint computeShader = glCreateShader(GL_COMPUTE_SHADER);
+            /*GLuint computeShader = glCreateShader(GL_COMPUTE_SHADER);
 
             // Read shaders
-            const char * computeShaderSrc = vector_shader.c_str();
+            const char * computeShaderSrc = compute_shader.c_str();
 
             GLint result = GL_FALSE;
             int logLength;
@@ -140,7 +140,7 @@ namespace hive
             // glDeleteShader(computeShader);
             // glDeleteShader(fragShader);
 
-            std::unordered_map<std::string, SmartGLAttribute> * attributes = NULL;
+            std::unordered_map<std::string, SMar> * attributes = NULL;
 
             std::unordered_map<std::string, SmartGLUniform> * uniforms = NULL;
 
@@ -150,8 +150,9 @@ namespace hive
 
                 glUseProgram(program);
             }
-
             return SmartGLComputeProgram(program, (result == GL_TRUE) ? true : false);
+            */
+            return SmartGLComputeProgram();
         }
 
         bool SmartGLComputeProgram::IS_USABLE() { return IS_READY && pointer > -1; }

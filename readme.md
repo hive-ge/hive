@@ -72,3 +72,57 @@ Use `HIVE_DEBUG` for debug statements.
 
 /* ...Release code... */
 ```
+
+
+## Errors are Key
+
+Everything that can throw an errors should, or at least report that an error has accurred. Without knowing if something did not perform as expected, hidden problems can easily crop that can steal valueble development. By reporting anything that is not correct, the dev gets invaluable information on what to fix when something breaks.
+
+## Compute shaders
+
+Must be defined with `#version 430` or higher.
+
+Thread groups are 3D blocks of threads. Defined in shader. Own definition
+
+Each thread group gets input information to allow it to spatially locate it amongst the data sets.
+
+Work groups are 3D blocks of Thread Groups. 
+
+Work Invocation / Work Item - single thread.
+
+In C/C++ space, use `glMemoryBarrier` to sync CPU/GPU execution before reading glBuffer data.
+- `in uvec3 gl_NumWorkGroups;`
+- `in uvec3 gl_GlobalInvocationID` the location of the thread across all work groups. values `x` `y` `z` and combinations thereof.
+- `in uvec3 gl_WorkGroupID ;`the location of the local work group across all work work groups. [link](https://www.khronos.org/registry/OpenGL-Refpages/gl4/html/gl_WorkGroupID.xhtml)
+- `in uvec3 gl_LocalInvocationID;` the location of the work invocation within the local work group. [link](https://www.khronos.org/registry/OpenGL-Refpages/gl4/html/gl_LocalInvocationID.xhtml)
+- `in uint  gl_LocalInvocationIndex;` 1 dimensional index of the invocation unit within the total number of invocations:
+```c
+gl_LocalInvocationIndex =
+        gl_LocalInvocationID.z * gl_WorkGroupSize.x * gl_WorkGroupSize.y +
+        gl_LocalInvocationID.y * gl_WorkGroupSize.x + 
+        gl_LocalInvocationID.x;
+```
+## Terms 
+ 
+### Local Work Group
+
+Defined by `layout(local_size_x, local_size_y, local_size_z)`.
+
+```c
+layout(local_size_x = 1, local_size_y = 1) in;
+```
+
+### Shared Memory
+
+Declared with `shared` qualifier. 
+Cannot have initializer: `shared float d = 0.1; //not gonna work`. Has to be set by one thread.
+Need to synch execution for shared memory, not just use barriers. User `barrier()` to ensure execution across invocations syncs before continuing.
+
+#### Memory Barriers
+- `memoryBarrier()`
+- `memoryBarrierShared()` - Orders read write for current workgroup.
+
+
+```c
+shared vec4 data
+```

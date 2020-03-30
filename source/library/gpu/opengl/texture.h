@@ -3,6 +3,7 @@
 #include "gpu/opengl/glwrap.h"
 #include "gpu/opengl/uniform.h"
 #include "primitive/log.h"
+#include <gl3w/GL/glcorearb.h>
 
 
 namespace hive
@@ -114,6 +115,13 @@ namespace hive
                 bind();
                 glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, filter);
             };
+            /**
+             * https://www.khronos.org/registry/OpenGL-Refpages/gl4/html/glBindImageTexture.xhtml
+             *
+             * Access:
+             *  One of GL_READ_ONLY, GL_WRITE_ONLY, or GL_READ_WRITE
+             */
+            inline void bindImageTexture(int access = GL_READ_WRITE, int format = GL_RGBA32F);
         };
         void SmartGLTexture::deleteUnderlyingGLResource() {}
 
@@ -125,6 +133,17 @@ namespace hive
                 tex_2D_references[unit] = pointer;
             glActiveTexture(GL_TEXTURE0 + unit);
             glBindTexture(target, pointer);
+        }
+
+        void SmartGLTexture::bindImageTexture(int access, int format)
+        {
+            if (tex_2D_references[unit] == pointer)
+                return;
+            else
+                tex_2D_references[unit] = pointer;
+            glActiveTexture(GL_TEXTURE0 + unit);
+            glBindImageTexture(GL_TEXTURE0 + unit, pointer, mip_level, GL_FALSE, 0, access,
+                               internal_format);
         }
 
         void SmartGLTexture::setData(void * data, GLenum format, GLenum type)

@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.15)
 
 #SET (CMAKE_CXX_STANDARD 17)
 
-SET (CMAKE_C_FLAGS_INIT                "-std=c99")
+SET (CMAKE_C_FLAGS_INIT                "-std=c11")
 SET (CMAKE_C_FLAGS_DEBUG_INIT          "-O0 -g -Wall")
 SET (CMAKE_C_FLAGS_MINSIZEREL_INIT     "-Os -DNDEBUG")
 SET (CMAKE_C_FLAGS_RELEASE_INIT        "-O3 -DNDEBUG")
@@ -36,7 +36,9 @@ list(APPEND CMAKE_CXX_SOURCE_FILE_EXTENSIONS h hpp cpp)
 
 ###########################################
 # LOCATE DEPENDENCIES
+#link_libraries(${CMAKE_DL_LIBS})
 
+#find_package(OpenGL REQUIRED)
 
 if (OPENGL_FOUND)
     include_directories(${OPENGL_INCLUDE_DIR})
@@ -49,17 +51,13 @@ endif()
 find_package(GLEW REQUIRED)
 
 if (GLEW_FOUND)
-    include_directories(${GLEW_INCLUDE_DIRS})
-    link_libraries(${GLEW_LIBRARIES})
+include_directories(${GLEW_INCLUDE_DIRS})
+link_libraries(${GLEW_LIBRARIES})
 endif()
 
-if (GLEW_FOUND)
-    include_directories(${GLEW_INCLUDE_DIRS})
-    link_libraries(${GLEW_LIBRARIES})
-endif()
+
 
 #find_package(Vulkan REQUIRED)
-
 
 ## Use all the *.cpp files we found under this folder for the project
 FILE(GLOB SRCS
@@ -116,6 +114,5 @@ include_directories( "./node")
 ##########################################
 ## Define the library
 
-add_library(${HIVE_LIBRARY_PROJECT} ${SRCS} ${INCLUDES})
-
+add_library(${HIVE_LIBRARY_PROJECT} ${SRCS} ${INCLUDES} )
 target_link_libraries( ${HIVE_LIBRARY_PROJECT})

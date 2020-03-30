@@ -1,0 +1,16 @@
+#version 430
+
+layout(std140) uniform ObjData
+{
+    vec3 pos;
+    vec3 rot;
+    vec3 scl;
+};
+
+in vec3 vertex;
+
+uniform mat44 camera;
+
+void main() { 
+    gl_Position = camera * vec4((scl * vertex) + pos, 1.0); 
+}

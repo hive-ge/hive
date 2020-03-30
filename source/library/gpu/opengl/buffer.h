@@ -4,6 +4,7 @@
 #include "primitive/log.h"
 #include <GL/gl.h>
 
+
 namespace hive
 {
 
@@ -98,6 +99,18 @@ namespace hive
 
             void useRange(const SKGLB buffer_binding, unsigned index, unsigned offset,
                           unsigned size);
+            /**
+             * Bind buffer to an indexed buffer target.
+             *
+             * binding_point is the index of the binding point used
+             *
+             * SKGLB should be one of:
+             *     ATOMIC_COUNTER_BUFFER
+             *     SHADER_STORAGE_BUFFER
+             *     TRANSFORM_FEEDBACK_BUFFER
+             *     UNIFORM_BUFFER
+             */
+            void useBase(const SKGLB buffer_binding, unsigned binding_point);
 
             virtual void release() override;
 
@@ -189,14 +202,112 @@ namespace hive
         {
             glDeleteBuffers(1, (GLuint *)(&pointer));
         }
-        inline void SmartGLBuffer::useRange(const SKGLB buffer_binding, unsigned index,
-                                            unsigned offset, unsigned size)
+
+        inline void SmartGLBuffer::useBase(const SKGLB buffer_binding, unsigned binding_point)
         {
 
 //############################## DEBUG
 #ifdef HIVE_DEBUG
             if (!IS_READY) {
-                __ERROR("GL buffer is not ready to use.", 0, "buffer.cpp", __LINE__);
+                //  __ERROR("GL buffer is not ready to use.", 0, "buffer.cpp", __LINE__);
+                return; // throw error
+            }
+
+            clearErrors();
+
+//############################## END DEBUG
+#endif
+
+            switch (buffer_binding) {
+
+            case (SKGLB::ATOMIC_COUNTER_BUFFER):
+                if (SKGL_ATOMIC_COUNTER_BUFFER_SET != pointer) {
+                    SKGL_ATOMIC_COUNTER_BUFFER_SET = pointer;
+                    glBindBufferBase(GL_ATOMIC_COUNTER_BUFFER, binding_point, pointer);
+                    BOUND_TO |= SKGLB::ATOMIC_COUNTER_BUFFER;
+                }
+                break;
+
+            case (SKGLB::SHADER_STORAGE_BUFFER):
+                if (SKGL_SHADER_STORAGE_BUFFER_SET != pointer) {
+                    SKGL_SHADER_STORAGE_BUFFER_SET = pointer;
+                    glBindBufferBase(GL_SHADER_STORAGE_BUFFER, binding_point, pointer);
+                    BOUND_TO |= SKGLB::SHADER_STORAGE_BUFFER;
+                }
+                break;
+
+            case (SKGLB::TRANSFORM_FEEDBACK_BUFFER):
+                if (SKGL_TRANSFORM_FEEDBACK_BUFFER_SET != pointer) {
+                    SKGL_TRANSFORM_FEEDBACK_BUFFER_SET = pointer;
+                    glBindBufferBase(GL_TRANSFORM_FEEDBACK_BUFFER, binding_point, pointer);
+                    BOUND_TO |= SKGLB::TRANSFORM_FEEDBACK_BUFFER;
+                }
+                break;
+
+            case (SKGLB::UNIFORM_BUFFER):
+                if (SKGL_UNIFORM_BUFFER_SET != pointer) {
+                    SKGL_UNIFORM_BUFFER_SET = pointer;
+                    glBindBufferBase(GL_UNIFORM_BUFFER, binding_point, pointer);
+                    BOUND_TO |= SKGLB::UNIFORM_BUFFER;
+                }
+                break;
+            default:
+
+                IS_READY = false;
+
+//############################## DEBUG
+#ifdef HIVE_DEBUG
+                __ERROR("Buffer target not valid for this operation.");
+
+//############################## END DEBUG
+#endif
+
+                return;
+            }
+
+
+//############################## DEBUG
+#ifdef HIVE_DEBUG
+
+            GLenum error = glGetError();
+
+            if (error != GL_NO_ERROR) IS_READY = false;
+
+            switch (error) {
+            case GL_INVALID_ENUM:
+                // GL_INVALID_ENUM is generated if target is not GL_ATOMIC_COUNTER_BUFFER,
+                // GL_TRANSFORM_FEEDBACK_BUFFER, GL_UNIFORM_BUFFER or GL_SHADER_STORAGE_BUFFER.
+                __ERROR("Buffer target not valid. Needs to be one of GL_ATOMIC_COUNTER_BUFFER,"
+                        " GL_TRANSFORM_FEEDBACK_BUFFER, GL_UNIFORM_BUFFER or "
+                        "GL_SHADER_STORAGE_BUFFER.");
+                break;
+
+
+            case GL_INVALID_VALUE:
+                // GL_INVALID_VALUE is generated if index is greater than or equal to the number of
+                // target-specific indexed binding points. GL_INVALID_VALUE is generated if buffer
+                // does not have an associated data store, or if the size of that store is zero.
+
+                if (buffer_size <= 0) {
+                    __ERROR("Buffer store is empty.");
+                } else {
+                    __ERROR("Index is out of range");
+                }
+                break;
+            }
+
+//############################## END DEBUG
+#endif
+        }
+
+        void SmartGLBuffer::useRange(const SKGLB buffer_binding, unsigned index, unsigned offset,
+                                     unsigned size)
+        {
+
+//############################## DEBUG
+#ifdef HIVE_DEBUG
+            if (!IS_READY) {
+                //__ERROR("GL buffer is not ready to use.", 0, "buffer.cpp", __LINE__);
                 return; // throw error
             }
 //############################## END DEBUG
@@ -248,12 +359,14 @@ namespace hive
 
                 return;
             }
-            GLenum error = glGetError();
-
-            if (error != GL_NO_ERROR) IS_READY = false;
 
 //############################## DEBUG
 #ifdef HIVE_DEBUG
+
+
+            GLenum error = glGetError();
+
+            if (error != GL_NO_ERROR) IS_READY = false;
 
             switch (error) {
             case GL_INVALID_ENUM:
@@ -290,6 +403,8 @@ namespace hive
                 __ERROR("GL buffer is not ready to use.", 0, "buffer.cpp", __LINE__);
                 return; // throw error
             }
+
+            clearErrors();
 //############################## END DEBUG
 #endif
 
@@ -407,12 +522,12 @@ namespace hive
                 break;
             }
 
-            GLenum error = glGetError();
-
-            if (error != GL_NO_ERROR) IS_READY = false;
 
 //############################## DEBUG
 #ifdef HIVE_DEBUG
+            GLenum error = glGetError();
+
+            if (error != GL_NO_ERROR) IS_READY = false;
 
             switch (error) {
             case GL_INVALID_ENUM:
@@ -454,9 +569,11 @@ namespace hive
 //############################## DEBUG
 #ifdef HIVE_DEBUG
             if (!IS_READY) {
-                __ERROR("GL buffer is not ready to use.", 0, "buffer.cpp", __LINE__);
+                //__ERROR("GL buffer is not ready to use.", 0, "buffer.cpp", __LINE__);
                 return; // throw error
             }
+
+            clearErrors();
 //############################## END DEBUG
 #endif
 
@@ -467,12 +584,10 @@ namespace hive
                 glNamedBufferSubData(pointer, offset, size, data);
             }
 
-            GLenum error = glGetError();
-
-            if (error != GL_NO_ERROR) IS_READY = false;
-
 //############################## DEBUG
 #ifdef HIVE_DEBUG
+            GLenum error = glGetError();
+            if (error != GL_NO_ERROR) IS_READY = false;
 
             switch (error) {
             case GL_INVALID_ENUM:

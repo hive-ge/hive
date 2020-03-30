@@ -18,7 +18,8 @@
 #endif // HIVE_USE_SDL
 
 #ifdef HIVE_USE_GLFW
-#define GLEW_STATIC
+//#define GLEW_STATIC
+//#include "/usr/local/include/gl3w/GL/gl3w.h"
 #include <GL/glew.h>
 #define GLFW_INCLUDE_NONE
 #include <GLFW/glfw3.h>
@@ -29,7 +30,9 @@
 #include <unordered_map>
 #include <vector>
 
+#include "primitive/log.h"
 #include "primitive/math/math.h"
+
 
 //#include "../elements/elements.h"
 
@@ -57,14 +60,7 @@ namespace hive
          */
         static bool checkGLVersion(int & major, int & minor)
         {
-            int version;
-            glGetIntegerv(GL_MAJOR_VERSION, &version);
-            if (version < major) return false;
-            major = version;
-            glGetIntegerv(GL_MINOR_VERSION, &version);
-            if (version < minor) return false;
-            minor = version;
-            return true;
+            return true; // gl3wIsSupported(major, minor);
         };
 
 #ifdef HIVE_USE_SDL
@@ -80,7 +76,7 @@ namespace hive
 #endif
 
         static HIVE_GL_REFERENCE_COUNT_ELEMENT_TYPE
-            reference_counts[HIVE_GL_REFERENCE_COUNT_MAX * 5];
+            reference_counts[HIVE_GL_REFERENCE_COUNT_MAX * 8];
 
         static HIVE_GL_REFERENCE_COUNT_ELEMENT_TYPE tex_1D_references[128];
 
@@ -106,8 +102,8 @@ namespace hive
         int SKGL_TRANSFORM_FEEDBACK_BUFFER_SET = -1;
         int SKGL_UNIFORM_BUFFER_SET            = -1;
 
-        // Quick size reference for GLSL types.
-        unsigned getGLSLTypeBase(GLint t)
+        // Quick primitive type reference for GLSL types.
+        unsigned getGLSLTypePrimitive(GLint t)
         {
             switch (t) {
             case GL_FLOAT:
@@ -180,37 +176,28 @@ namespace hive
                 return 13;
             }
             return 0;
-        }
+        };
 
-        unsigned getGLSLTypeSize(GLint t)
+        // Number of elements per type
+        unsigned getGLSLTypeElementCount(GLint t)
         {
             switch (t) {
             case GL_FLOAT:
-                return 4;
+                return 1;
             case GL_FLOAT_VEC2:
                 return 2;
             case GL_FLOAT_VEC3:
                 return 3;
             case GL_FLOAT_VEC4:
                 return 4;
-            case GL_FLOAT_MAT2:
+            case GL_DOUBLE:
+                return 1;
+            case GL_DOUBLE_VEC2:
+                return 2;
+            case GL_DOUBLE_VEC3:
+                return 3;
+            case GL_DOUBLE_VEC4:
                 return 4;
-            case GL_FLOAT_MAT3:
-                return 9;
-            case GL_FLOAT_MAT4:
-                return 16;
-            case GL_FLOAT_MAT2x3:
-                return 6;
-            case GL_FLOAT_MAT3x2:
-                return 6;
-            case GL_FLOAT_MAT2x4:
-                return 8;
-            case GL_FLOAT_MAT4x2:
-                return 8;
-            case GL_FLOAT_MAT3x4:
-                return 12;
-            case GL_FLOAT_MAT4x3:
-                return 12;
             case GL_INT:
                 return 1;
             case GL_INT_VEC2:
@@ -227,14 +214,32 @@ namespace hive
                 return 3;
             case GL_UNSIGNED_INT_VEC4:
                 return 4;
-            case GL_DOUBLE:
-                return 4;
-            case GL_DOUBLE_VEC2:
+            case GL_BOOL:
+                return 1;
+            case GL_BOOL_VEC2:
                 return 2;
-            case GL_DOUBLE_VEC3:
+            case GL_BOOL_VEC3:
                 return 3;
-            case GL_DOUBLE_VEC4:
+            case GL_BOOL_VEC4:
                 return 4;
+            case GL_FLOAT_MAT2:
+                return 4;
+            case GL_FLOAT_MAT3:
+                return 9;
+            case GL_FLOAT_MAT4:
+                return 16;
+            case GL_FLOAT_MAT2x3:
+                return 6;
+            case GL_FLOAT_MAT2x4:
+                return 8;
+            case GL_FLOAT_MAT3x2:
+                return 6;
+            case GL_FLOAT_MAT3x4:
+                return 12;
+            case GL_FLOAT_MAT4x2:
+                return 8;
+            case GL_FLOAT_MAT4x3:
+                return 12;
             case GL_DOUBLE_MAT2:
                 return 4;
             case GL_DOUBLE_MAT3:
@@ -243,16 +248,244 @@ namespace hive
                 return 16;
             case GL_DOUBLE_MAT2x3:
                 return 6;
-            case GL_DOUBLE_MAT3x2:
-                return 6;
             case GL_DOUBLE_MAT2x4:
                 return 8;
-            case GL_DOUBLE_MAT4x2:
-                return 8;
+            case GL_DOUBLE_MAT3x2:
+                return 6;
             case GL_DOUBLE_MAT3x4:
                 return 12;
+            case GL_DOUBLE_MAT4x2:
+                return 8;
             case GL_DOUBLE_MAT4x3:
                 return 12;
+            case GL_SAMPLER_1D:
+                return 1;
+            case GL_SAMPLER_2D:
+                return 2;
+            case GL_SAMPLER_3D:
+                return 3;
+            case GL_SAMPLER_CUBE:
+                return 3;
+            case GL_SAMPLER_1D_SHADOW:
+                return 1;
+            case GL_SAMPLER_2D_SHADOW:
+                return 2;
+            case GL_SAMPLER_1D_ARRAY:
+                return 3;
+            case GL_SAMPLER_2D_ARRAY:
+                return 2;
+            case GL_SAMPLER_1D_ARRAY_SHADOW:
+                return 1;
+            case GL_SAMPLER_2D_ARRAY_SHADOW:
+                return 2;
+            case GL_SAMPLER_2D_MULTISAMPLE:
+                return 2;
+            case GL_SAMPLER_2D_MULTISAMPLE_ARRAY:
+                return 2;
+            case GL_SAMPLER_CUBE_SHADOW:
+                return 6;
+            case GL_SAMPLER_BUFFER:
+                return 1;
+            case GL_SAMPLER_2D_RECT:
+                return 2;
+            case GL_SAMPLER_2D_RECT_SHADOW:
+                return 2;
+            case GL_INT_SAMPLER_1D:
+                return 1;
+            case GL_INT_SAMPLER_2D:
+                return 2;
+            case GL_INT_SAMPLER_3D:
+                return 3;
+            case GL_INT_SAMPLER_CUBE:
+                return 6;
+            case GL_INT_SAMPLER_1D_ARRAY:
+                return 1;
+            case GL_INT_SAMPLER_2D_ARRAY:
+                return 2;
+            case GL_INT_SAMPLER_2D_MULTISAMPLE:
+                return 2;
+            case GL_INT_SAMPLER_2D_MULTISAMPLE_ARRAY:
+                return 2;
+            case GL_INT_SAMPLER_BUFFER:
+                return 1;
+            case GL_INT_SAMPLER_2D_RECT:
+                return 2;
+            case GL_UNSIGNED_INT_SAMPLER_1D:
+                return 1;
+            case GL_UNSIGNED_INT_SAMPLER_2D:
+                return 2;
+            case GL_UNSIGNED_INT_SAMPLER_3D:
+                return 3;
+            case GL_UNSIGNED_INT_SAMPLER_CUBE:
+                return 6;
+            case GL_UNSIGNED_INT_SAMPLER_1D_ARRAY:
+                return 1;
+            case GL_UNSIGNED_INT_SAMPLER_2D_ARRAY:
+                return 2;
+            case GL_UNSIGNED_INT_SAMPLER_2D_MULTISAMPLE:
+                return 2;
+            case GL_UNSIGNED_INT_SAMPLER_2D_MULTISAMPLE_ARRAY:
+                return 2;
+            case GL_UNSIGNED_INT_SAMPLER_BUFFER:
+                return 1;
+            case GL_UNSIGNED_INT_SAMPLER_2D_RECT:
+                return 2;
+            }
+            return 0;
+        }
+
+        // Byte size of a single index of type.
+        unsigned getGLSLTypeSize(GLint t)
+        {
+            switch (t) {
+            case GL_FLOAT:
+                return 4;
+            case GL_FLOAT_VEC2:
+                return 8;
+            case GL_FLOAT_VEC3:
+                return 12;
+            case GL_FLOAT_VEC4:
+                return 16;
+            case GL_DOUBLE:
+                return 8;
+            case GL_DOUBLE_VEC2:
+                return 16;
+            case GL_DOUBLE_VEC3:
+                return 24;
+            case GL_DOUBLE_VEC4:
+                return 32;
+            case GL_INT:
+                return 4;
+            case GL_INT_VEC2:
+                return 8;
+            case GL_INT_VEC3:
+                return 12;
+            case GL_INT_VEC4:
+                return 16;
+            case GL_UNSIGNED_INT:
+                return 4;
+            case GL_UNSIGNED_INT_VEC2:
+                return 8;
+            case GL_UNSIGNED_INT_VEC3:
+                return 12;
+            case GL_UNSIGNED_INT_VEC4:
+                return 16;
+            case GL_BOOL:
+                return 4;
+            case GL_BOOL_VEC2:
+                return 8;
+            case GL_BOOL_VEC3:
+                return 12;
+            case GL_BOOL_VEC4:
+                return 16;
+            case GL_FLOAT_MAT2:
+                return 16;
+            case GL_FLOAT_MAT3:
+                return 36;
+            case GL_FLOAT_MAT4:
+                return 64;
+            case GL_FLOAT_MAT2x3:
+                return 24;
+            case GL_FLOAT_MAT2x4:
+                return 32;
+            case GL_FLOAT_MAT3x2:
+                return 24;
+            case GL_FLOAT_MAT3x4:
+                return 42;
+            case GL_FLOAT_MAT4x2:
+                return 32;
+            case GL_FLOAT_MAT4x3:
+                return 42;
+            case GL_DOUBLE_MAT2:
+                return 32;
+            case GL_DOUBLE_MAT3:
+                return 72;
+            case GL_DOUBLE_MAT4:
+                return 128;
+            case GL_DOUBLE_MAT2x3:
+                return 48;
+            case GL_DOUBLE_MAT2x4:
+                return 64;
+            case GL_DOUBLE_MAT3x2:
+                return 48;
+            case GL_DOUBLE_MAT3x4:
+                return 84;
+            case GL_DOUBLE_MAT4x2:
+                return 64;
+            case GL_DOUBLE_MAT4x3:
+                return 84;
+            case GL_SAMPLER_1D:
+                return 4;
+            case GL_SAMPLER_2D:
+                return 8;
+            case GL_SAMPLER_3D:
+                return 12;
+            case GL_SAMPLER_CUBE:
+                return 12;
+            case GL_SAMPLER_1D_SHADOW:
+                return 4;
+            case GL_SAMPLER_2D_SHADOW:
+                return 8;
+            case GL_SAMPLER_1D_ARRAY:
+                return 12;
+            case GL_SAMPLER_2D_ARRAY:
+                return 8;
+            case GL_SAMPLER_1D_ARRAY_SHADOW:
+                return 4;
+            case GL_SAMPLER_2D_ARRAY_SHADOW:
+                return 8;
+            case GL_SAMPLER_2D_MULTISAMPLE:
+                return 8;
+            case GL_SAMPLER_2D_MULTISAMPLE_ARRAY:
+                return 8;
+            case GL_SAMPLER_CUBE_SHADOW:
+                return 24;
+            case GL_SAMPLER_BUFFER:
+                return 4;
+            case GL_SAMPLER_2D_RECT:
+                return 8;
+            case GL_SAMPLER_2D_RECT_SHADOW:
+                return 8;
+            case GL_INT_SAMPLER_1D:
+                return 4;
+            case GL_INT_SAMPLER_2D:
+                return 8;
+            case GL_INT_SAMPLER_3D:
+                return 12;
+            case GL_INT_SAMPLER_CUBE:
+                return 24;
+            case GL_INT_SAMPLER_1D_ARRAY:
+                return 4;
+            case GL_INT_SAMPLER_2D_ARRAY:
+                return 8;
+            case GL_INT_SAMPLER_2D_MULTISAMPLE:
+                return 8;
+            case GL_INT_SAMPLER_2D_MULTISAMPLE_ARRAY:
+                return 8;
+            case GL_INT_SAMPLER_BUFFER:
+                return 4;
+            case GL_INT_SAMPLER_2D_RECT:
+                return 8;
+            case GL_UNSIGNED_INT_SAMPLER_1D:
+                return 4;
+            case GL_UNSIGNED_INT_SAMPLER_2D:
+                return 8;
+            case GL_UNSIGNED_INT_SAMPLER_3D:
+                return 12;
+            case GL_UNSIGNED_INT_SAMPLER_CUBE:
+                return 24;
+            case GL_UNSIGNED_INT_SAMPLER_1D_ARRAY:
+                return 4;
+            case GL_UNSIGNED_INT_SAMPLER_2D_ARRAY:
+                return 8;
+            case GL_UNSIGNED_INT_SAMPLER_2D_MULTISAMPLE:
+                return 8;
+            case GL_UNSIGNED_INT_SAMPLER_2D_MULTISAMPLE_ARRAY:
+                return 8;
+            case GL_UNSIGNED_INT_SAMPLER_BUFFER:
+                return 4;
+            case GL_UNSIGNED_INT_SAMPLER_2D_RECT:
+                return 8;
             }
             return 0;
         }
@@ -274,7 +507,23 @@ namespace hive
             UNIFORM_BUFFER            = 8192,
         };
 
-        enum SmartGLType : unsigned char { Null, Program, Attribute, Uniform, Texture, Buffer };
+        enum SmartGLType : unsigned char {
+            Null,
+            Program,
+            Input,
+            Output,
+            Uniform,
+            Texture,
+            Buffer,
+            UniformBlock,
+            Shaderlock,
+        };
+
+        void clearErrors()
+        {
+            while (glGetError())
+                ;
+        }
 
         /* Wrapper around GLint pointers for OO style GL programming. Works for
          * Gluint style pointers as well*/
@@ -284,7 +533,7 @@ namespace hive
             GLint pointer                                          = -1;
             HIVE_GL_REFERENCE_COUNT_ELEMENT_TYPE * reference_count = NULL;
             bool IS_READY                                          = false;
-            SmartGLType type                                       = SmartGLType::Null;
+            SmartGLType sm_gl_type                                 = SmartGLType::Null;
 
           protected: // Function Members
             inline void increaseReferenceCount()
@@ -315,7 +564,7 @@ namespace hive
 
                 if (pointer > -1) {
                     reference_count =
-                        &reference_counts[pointer + (HIVE_GL_REFERENCE_COUNT_MAX * type)];
+                        &reference_counts[pointer + (HIVE_GL_REFERENCE_COUNT_MAX * sm_gl_type)];
                     increaseReferenceCount();
                 } else
                     reference_count = NULL;
@@ -325,8 +574,8 @@ namespace hive
 
           public: // Function Members
             SmartGLint() {}
-            SmartGLint(SmartGLType t) : type(t) {}
-            SmartGLint(SmartGLType t, GLint program_pointer, bool ISREADY) : type(t)
+            SmartGLint(SmartGLType t) : sm_gl_type(t) {}
+            SmartGLint(SmartGLType t, GLint program_pointer, bool ISREADY) : sm_gl_type(t)
             {
                 setPointer(program_pointer);
                 IS_READY = (pointer > -1 && ISREADY);
@@ -337,22 +586,22 @@ namespace hive
 
             SmartGLint(const SmartGLint & obj)
             {
-                if (obj.type != type) type = SmartGLType::Null;
+                if (obj.sm_gl_type != sm_gl_type) sm_gl_type = SmartGLType::Null;
                 pointer         = obj.pointer;
                 reference_count = obj.reference_count;
                 IS_READY        = obj.IS_READY;
-                type            = obj.type;
+                sm_gl_type      = obj.sm_gl_type;
                 increaseReferenceCount();
             }
 
             SmartGLint & operator=(const SmartGLint & obj)
             {
-                if (obj.type != type)
-                    throw("Incompatible SmartGLint assignment. Types do not match.");
+                if (obj.sm_gl_type != sm_gl_type)
+                    __ERROR("Incompatible SmartGLint assignment. Types do not match.");
                 pointer         = obj.pointer;
                 reference_count = obj.reference_count;
                 IS_READY        = obj.IS_READY;
-                type            = obj.type;
+                sm_gl_type      = obj.sm_gl_type;
                 increaseReferenceCount();
                 return *this;
             }

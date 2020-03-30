@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.15)
 
 #SET (CMAKE_CXX_STANDARD 17)
 
-SET (CMAKE_C_FLAGS_INIT                "-std=c99")
+SET (CMAKE_C_FLAGS_INIT                "-std=c11")
 SET (CMAKE_C_FLAGS_DEBUG_INIT          "-O0 -g -Wall")
 SET (CMAKE_C_FLAGS_MINSIZEREL_INIT     "-Os -DNDEBUG")
 SET (CMAKE_C_FLAGS_RELEASE_INIT        "-O3 -DNDEBUG")
@@ -34,6 +34,9 @@ project(${PROJECT_NAME})
 ###########################################
 # LOCATE DEPENDENCIES
 
+
+
+
 find_package(OpenGL REQUIRED)
 
 if (OPENGL_FOUND)
@@ -52,9 +55,7 @@ endif()
 
 
 #find_package(Vulkan REQUIRED)
-
 INCLUDE_DIRECTORIES("source/library")
-
 INCLUDE_DIRECTORIES("source/sample")
 
 #INCLUDE_DIRECTORIES(${Vulkan_INCLUDE_DIR})
@@ -65,6 +66,6 @@ INCLUDE_DIRECTORIES("source/sample")
 
 add_executable(${PROJECT_NAME} "source/samples/platformer.cpp")
 
-target_link_libraries( ${PROJECT_NAME} ${HIVE_LIBRARY_PROJECT})
 
+target_link_libraries( ${PROJECT_NAME} ${HIVE_LIBRARY_PROJECT})
 
