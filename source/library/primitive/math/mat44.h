@@ -120,51 +120,55 @@ namespace hive
                                0.5f),
                   r = t * aspect_ratio, l = -r, b = -t;
 
-                Out_Mat44.m1  = (near_clip * 2.f) / (r - l);
-                Out_Mat44.m2  = 0;
-                Out_Mat44.m3  = 0;
-                Out_Mat44.m4  = 0;
-                Out_Mat44.m5  = 0;
-                Out_Mat44.m6  = (near_clip * 2.f) / (t - b);
-                Out_Mat44.m7  = 0;
-                Out_Mat44.m8  = 0;
-                Out_Mat44.m9  = (r + l) / (r - l);
-                Out_Mat44.m10 = (t + b) / (t - b);
-                Out_Mat44.m11 = -(far_clip + near_clip) / (far_clip - near_clip);
-                Out_Mat44.m12 = -1.f;
-                Out_Mat44.m13 = 0;
-                Out_Mat44.m14 = 0;
-                Out_Mat44.m15 = (-2.f * far_clip * near_clip) / (far_clip - near_clip);
-                Out_Mat44.m16 = 0;
+                Out_Mat44.row1.x = (near_clip * 2.f) / (r - l);
+                Out_Mat44.row1.y = 0;
+                Out_Mat44.row1.z = 0;
+                Out_Mat44.row1.w = 0;
+
+                Out_Mat44.row2.x = 0;
+                Out_Mat44.row2.y = (near_clip * 2.f) / (t - b);
+                Out_Mat44.row2.z = 0;
+                Out_Mat44.row2.w = 0;
+
+                Out_Mat44.row3.x = (r + l) / (r - l);
+                Out_Mat44.row3.y = (t + b) / (t - b);
+                Out_Mat44.row3.z = -(far_clip + near_clip) / (far_clip - near_clip);
+                Out_Mat44.row3.w = -1.f;
+
+                Out_Mat44.row4.x = 0;
+                Out_Mat44.row4.y = 0;
+                Out_Mat44.row4.z = (-2.f * far_clip * near_clip) / (far_clip - near_clip);
+                Out_Mat44.row4.w = 0;
 
                 return Out_Mat44;
             }
 
             inline T * toArray() { return (T *)this; }
 
-            friend inline tmat44<T> operator*(tmat44<T> & left, tmat44<T> & right)
+            friend inline tmat44<T> operator*(tmat44<T> & columns, tmat44<T> & rows)
             {
-                return tmat44<T>(left.row1.dot(right.col1()), left.row1.dot(right.col2()),
-                                 left.row1.dot(right.col3()), left.row1.dot(right.col4()),
-                                 left.row2.dot(right.col1()), left.row2.dot(right.col2()),
-                                 left.row2.dot(right.col3()), left.row2.dot(right.col4()),
-                                 left.row3.dot(right.col1()), left.row3.dot(right.col2()),
-                                 left.row3.dot(right.col3()), left.row3.dot(right.col4()),
-                                 left.row4.dot(right.col1()), left.row4.dot(right.col2()),
-                                 left.row4.dot(right.col3()), left.row4.dot(right.col4()));
+                return tmat44<T>(rows.row1.dot(columns.col1()), rows.row1.dot(columns.col2()),
+                                 rows.row1.dot(columns.col3()), rows.row1.dot(columns.col4()),
+                                 rows.row2.dot(columns.col1()), rows.row2.dot(columns.col2()),
+                                 rows.row2.dot(columns.col3()), rows.row2.dot(columns.col4()),
+                                 rows.row3.dot(columns.col1()), rows.row3.dot(columns.col2()),
+                                 rows.row3.dot(columns.col3()), rows.row3.dot(columns.col4()),
+                                 rows.row4.dot(columns.col1()), rows.row4.dot(columns.col2()),
+                                 rows.row4.dot(columns.col3()), rows.row4.dot(columns.col4()));
             }
 
             friend inline tvec4<T> operator*(tmat44<T> & left, tvec4<T> & right) {}
 
-            inline tvec4<T> col1() { return tvec4<T>(m1, m5, m9, m13); }
-
-            inline tvec4<T> col2() { return tvec4<T>(m2, m6, m10, m14); }
+            inline tvec4<T> col4() { return tvec4<T>(m4, m8, m12, m16); }
 
             inline tvec4<T> col3() { return tvec4<T>(m3, m7, m11, m15); }
 
-            inline tvec4<T> col4() { return tvec4<T>(m4, m8, m12, m16); }
+            inline tvec4<T> col2() { return tvec4<T>(m2, m6, m10, m14); }
 
-            inline tmat44<T> transpose() { return mat44(col1(), col2(), col3(), col4()); }
+            inline tvec4<T> col1() { return tvec4<T>(m1, m5, m9, m13); }
+
+
+            inline tmat44<T> transpose() { return tmat44<T>(col1(), col2(), col3(), col4()); }
         };
 
         typedef tmat44<float> mat44;

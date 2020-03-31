@@ -1,7 +1,9 @@
 #pragma once
 
+#include "vec2.h"
 #include <cmath>
 #include <iostream>
+
 
 namespace hive
 {
@@ -33,34 +35,34 @@ namespace hive
                 return os;
             }
 
-            friend tvec3<T> operator-(tvec3<T> & vl, tvec3<T> & vr)
+            friend tvec3<T> operator-(tvec3<T> vl, tvec3<T> vr)
             {
                 return tvec3<T>(vl.x - vr.x, vl.y - vr.y, vl.z - vr.z);
             }
 
-            friend tvec3<T> operator+(tvec3<T> & vl, tvec3<T> & vr)
+            friend tvec3<T> operator+(tvec3<T> vl, tvec3<T> vr)
             {
                 return tvec3<T>(vl.x + vr.x, vl.y + vr.y, vl.z + vr.z);
             }
 
-            friend tvec3<T> operator*(T s, tvec3<T> & vr)
+            friend tvec3<T> operator*(T s, tvec3<T> vr)
             {
                 return tvec3<T>(vr.x * s, vr.y * s, vr.z * s);
             }
 
-            friend tvec3<T> operator*(tvec3<T> & vl, T s) { return s * vl; }
+            friend tvec3<T> operator*(tvec3<T> vl, T s) { return s * vl; }
 
-            friend tvec3<T> operator*(tvec3<T> & vl, tvec3<T> & vr)
+            friend tvec3<T> operator*(tvec3<T> vl, tvec3<T> vr)
             {
                 return tvec3<T>(vr.x * vl.x, vr.y * vl.y, vr.z * vl.z);
             }
 
-            friend tvec3<T> operator/(T s, tvec3<T> & vr)
+            friend tvec3<T> operator/(T s, tvec3<T> vr)
             {
                 return tvec3<T>(vr.x / s, vr.y / s, vr.z / s);
             }
 
-            friend tvec3<T> operator/(tvec3<T> & vl, T s) { return s / vl; }
+            friend tvec3<T> operator/(tvec3<T> vl, T s) { return s / vl; }
 
             // Methods
             inline tvec3<T> negate() { return tvec3<T>(-x, -y, -z); }
@@ -70,15 +72,15 @@ namespace hive
                 return tvec3<T>(std::round(x), std::round(y), std::round(z));
             }
 
-            inline T dot(tvec3<T> & v) { return x * v.x + y * v.y + z * v.z; }
+            inline T dot(tvec3<T> v) { return x * v.x + y * v.y + z * v.z; }
 
             inline T magnitude() { return sqrt(dot(*this)); }
 
             inline tvec3<T> normalize() { return (*this) / magnitude(); }
 
-            inline tvec3<T> lerp(tvec3<T> & v, T t) { return (*this) + (v - (*this)) * t; }
+            inline tvec3<T> lerp(tvec3<T> v, T t) { return (*this) + (v - (*this)) * t; }
 
-            inline tvec3<T> cross(tvec3<T> & v)
+            inline tvec3<T> cross(tvec3<T> v)
             {
                 tvec3<T> a{y, z, x}, b{v.z, v.x, v.y}, c{z, x, y}, d{v.y, v.z, v.x};
                 return (a * b) - (c * d);
@@ -92,6 +94,19 @@ namespace hive
             }
 
             inline bool isNAN() { return x == (T)NAN || y == (T)NAN || z == (T)NAN; }
+
+            inline tvec2<T> xy() { return {x, y}; }
+            inline tvec2<T> xz() { return {x, z}; }
+            inline tvec2<T> yx() { return {y, x}; }
+            inline tvec2<T> yz() { return {y, z}; }
+            inline tvec2<T> zx() { return {z, x}; }
+            inline tvec2<T> zy() { return {z, y}; }
+
+            inline tvec3<T> xzy() { return {x, z, y}; }
+            inline tvec3<T> yxz() { return {y, x, z}; }
+            inline tvec3<T> yzx() { return {y, z, x}; }
+            inline tvec3<T> zxy() { return {z, x, y}; }
+            inline tvec3<T> zyx() { return {z, y, x}; }
         };
 
         typedef tvec3<float> vec3;

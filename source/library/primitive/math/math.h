@@ -9,3 +9,4 @@
 #include "primitive/math/vec3.h"
 #include "primitive/math/vec4.h"
 
+#include "primitive/math/general.h"
