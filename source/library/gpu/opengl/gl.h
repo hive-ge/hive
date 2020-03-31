@@ -4,9 +4,9 @@
 
 
 #include "gpu/opengl/buffer.h"
-#include "gpu/opengl/compute_program.h"
 #include "gpu/opengl/input.h"
 #include "gpu/opengl/output.h"
+#include "gpu/opengl/pipeline.h"
 #include "gpu/opengl/program.h"
 #include "gpu/opengl/shader_block.h"
 #include "gpu/opengl/texture.h"
