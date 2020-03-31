@@ -94,9 +94,9 @@ namespace hive
             virtual bool IS_USABLE() override;
 
 
-            inline friend void operator<<(SmartGLUniform & uni, hive::math::mat44 * mat)
+            inline friend void operator<<(SmartGLUniform & uni, hive::math::mat44 mat)
             {
-                uni.setMat4V((float *)mat);
+                uni.setMat4V(&mat.m1);
             }
 
 
