@@ -1,0 +1,45 @@
+#version 440
+
+layout(local_size_x = 32, local_size_y = 1) in;
+
+struct Pixel{
+    vec2 pos;              // 0
+    vec2 fpos;
+    vec2 vel;              // 2
+    vec2 fvel;
+    float Buffer;               // 3
+    float Radius;               // 4
+    float Mass;                 // 5
+    float FrictionCoefficient;  // 6
+    int linkname[4];            // 7
+};
+
+layout(std430, binding = 1) buffer Pixels {
+  Pixel pixels[];  
+} ;
+
+writeonly layout(std430, binding = 2) buffer Localities {
+  uint localities[4096][4096]; 
+};
+
+void main() {
+
+  uint id = gl_GlobalInvocationID.x;
+  //
+  // interesting stuff happens here later
+  //
+  
+  Pixel pix = pixels[id];
+
+  //pix.Position += pix.Velocity * 0.99995;
+  //pix.Velocity *= 0.999995;
+
+  //assign pixel to locality based on pixel position
+  vec2 pos = pix.pos ;
+
+  ivec2 locale = ivec2((floor(pos)/ 1.0) + vec2(2048.0,2048.0));
+
+  //set the index of the pixels future location.
+  atomicExchange(localities[locale.x][locale.y], id);
+  //localities[locale.x][locale.y] = id;
+}

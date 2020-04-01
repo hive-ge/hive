@@ -1,0 +1,27 @@
+#version 430
+
+layout(local_size_x = 32, local_size_y = 32) in;
+
+struct Pixel{
+    vec2 pos;              // 0
+    vec2 fpos;
+    vec2 vel;              // 2
+    vec2 fvel;
+    float Buffer;               // 3
+    float Radius;               // 4
+    float Mass;                 // 5
+    float FrictionCoefficient;  // 6
+    int linkname[4];            // 7
+};
+
+layout(std430, binding = 1) buffer Pixels {
+    Pixel pixels[];  
+};
+
+layout(std430, binding = 2) buffer Localities {
+  uint localities[4096][4096]; 
+};
+
+void main() {
+    localities[gl_GlobalInvocationID.x][gl_GlobalInvocationID.y] = 0;
+}

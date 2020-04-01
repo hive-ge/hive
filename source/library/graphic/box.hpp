@@ -92,17 +92,17 @@ namespace hive
             SmartGLUniformBlock obj_data;
             SmartGLUniform camera;
 
-            unsigned int indices[6] = {3, 1, 0, 3, 2, 1};
+            unsigned int indices[6] = {0, 1, 3, 3, 2, 1}; // 24
 
             vec3 surface_points[4] = {{-1.0, 1.0, 0.0},
                                       {1.0, 1.0, 0.0},
                                       {1.0, -1.0, 0.0},
-                                      {-1.0, -1.0, 0.0}};
+                                      {-1.0, -1.0, 0.0}}; // 48
 
           public:
-            vec3 pos = {0.0, 0.0, 0.0};
-            vec3 rot = {0.0, 0.0, 0.0};
-            vec3 scl = {1.0, 1.0, 1.0};
+            vec4 pos = {1.0, 1.0, 1.0, 1.0};
+            vec4 rot = {1.0, 1.0, 1.0, 1.0};
+            vec4 scl = {0.5, 0.5, 0.5, 0.5};
 
           private:
           public:
@@ -110,12 +110,16 @@ namespace hive
             {
                 if (!program.IS_USABLE()) {
 
-                    program = createShaderProgram(
-                        hive::resource::loadUTF8File(
-                            "/home/anthony/work/active/apps/hive/source/shader/box.vert"),
+                    auto vert = hive::resource::loadUTF8File(
+                        "/home/anthony/work/active/apps/hive/source/shader/box.vert");
 
-                        hive::resource::loadUTF8File(
-                            "/home/anthony/work/active/apps/hive/source/shader/box.frag"));
+                    auto frag = hive::resource::loadUTF8File(
+                        "/home/anthony/work/active/apps/hive/source/shader/box.frag");
+
+                    ProgramDefinition def;
+                    def.vert = &vert;
+                    def.frag = &frag;
+                    program  = createShaderProgram(def);
 
                     program.use();
 
@@ -123,24 +127,29 @@ namespace hive
 
                     obj_data = program.getUniformBlock("ObjData");
 
-
                     bufferA.setData(&indices, 24 + 48);
+
+                    bufferB.setData(&pos, 48);
 
                     vecAttribute.use(bufferA, GL_FLOAT, 0, 24);
 
                     bufferA.use(SKGLB::ELEMENT_ARRAY_BUFFER);
-                    camera = program.getUniform("camera");
 
-                    // obj_data.bind(0);
+                    camera = program.getUniform("camera");
 
                     camera.use();
 
-                    // buffer.setData(&indices, 36 + 48 + 24);
+                    obj_data.bind(bufferB, 0, 0, 48);
 
-                    // buffer.useRange(hive::gl::SKGLB::UNIFORM_BUFFER, 0, 24 + 48, 36);
                     program.release();
-                    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
                 }
+            }
+
+            void update()
+            {
+                program.use();
+                bufferB.setData(&pos, 48);
+                program.release();
             }
 
             void draw(mat44 projection_view)
@@ -150,12 +159,13 @@ namespace hive
 
                 program.use();
 
-                camera << &projection_view;
+                obj_data.bind(bufferB, 0, 0, 48);
+
+                camera << projection_view;
 
                 // buffer.use(SKGLB::ARRAY_BUFFER);
                 // return;
                 glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, (void *)0);
-
 
                 GLenum err = glGetError();
 

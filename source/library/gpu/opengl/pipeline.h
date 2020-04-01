@@ -105,11 +105,10 @@ namespace hive
         {
             if (pointer > -1) {
                 // glDeleteVertexArrays(1, &vertex_array_object);
-                unsigned pipe = pointer;
+                const unsigned pipe = pointer;
                 glDeleteProgramPipelines(1, &pipe);
             }
-            IS_READY        = false;
-            reference_count = NULL;
+            IS_READY = false;
         }
     } // namespace gl
 } // namespace hive

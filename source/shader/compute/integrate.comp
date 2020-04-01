@@ -1,0 +1,145 @@
+#version 430
+
+layout(local_size_x = 32, local_size_y = 1) in;
+
+struct Pixel{
+  vec2 pos;              // 0
+  vec2 fpos;
+  vec2 vel;              // 2
+  vec2 fvel;
+  float Buffer;               // 3
+  float Radius;               // 4
+  float Mass;                 // 5
+  float FrictionCoefficient;  // 6
+  int linkname[4];            // 7
+};
+
+
+volatile layout(std430, binding = 1) buffer Pixels {
+  Pixel pixels[];  
+};
+
+readonly layout(std430, binding = 2) buffer Localities {
+  uint localities[4096][4096]; 
+};
+
+mat2 createRotationMatrix(float angle){
+    float s = sin(angle), c = cos(angle);
+    return mat2(c,s,-s,c);
+}
+
+
+vec2 lineIntersect2D(vec2 a_start,vec2 a_end,vec2 b_start,vec2 b_end, out bool valid){
+
+    float 
+        x1 = a_start.x,
+        y1 = a_start.y,
+        x2 = a_end.x,
+        y2 = a_end.y,
+        x3 = b_start.x,
+        y3 = b_start.y,
+        x4 = b_end.x,
+        y4 = b_end.y;
+
+    float den = ((x1 - x2) * (y3 - y4) - (x3 - x4) * (y1 - y2));
+
+    float t = ((x1 - x3) * (y3 - y4) - (x3 - x4) * (y1 - y3)) / den;
+
+    float u = -(((x1 - x2) * (y1 - y3) - (x1 - x3) * (y1 - y2)) / den);
+
+    valid = all(
+        bvec4(
+            greaterThanEqual(vec2(u,t), vec2(0.0, 0.0)),
+            lessThanEqual(vec2(u,t), vec2(1.0001, 1.0001))
+        )
+    ) && bool(den != 0.0);
+    
+  return vec2(t, u);
+}
+
+void main() {
+
+    uint id = gl_GlobalInvocationID.x;
+    //
+    // interesting stuff happens here later
+    //
+    
+    Pixel pix = pixels[id];
+
+    //assign pixel to locality based on pixel position
+    //ivec2 locale = ivec2( (round(pos)/ 10.0) + vec2(50.0,50.0));
+
+    //Cycle through locality kernel and compare positions with the 
+    //each object.
+    //Handle colision with a colision multiply switch. Update 
+    //Position with resolved value.
+
+    vec2 fpos = pix.pos + pix.vel;
+    vec2 fvel = pix.vel;
+
+    ivec2 locale = ivec2((floor(pix.pos)/ 1.0) + vec2(2048.0,2048.0));
+    
+    float nearest_distance = 4.0;
+
+    vec2 outpos = fpos;
+    vec2 outvel = fvel;
+
+    //*
+    for(int i = 0; i < 3; i++){
+
+        for(int j = 0; j < 3; j++){
+
+          uint iind = localities[locale.x+j-1][locale.y+i-1];
+
+            //for(int px = 0; px < 4; px++){
+
+               // if(local.index[px] > 0){
+
+                    Pixel cpix = pixels[iind];
+                    
+                    bool is_not_self = (iind != id);
+                    
+                    vec2 cp1 = cpix.pos + cpix.vel;
+                    vec2 contact = fpos - cp1;
+                    float mag = length(contact);
+
+                  //  if( inrange ){
+                        vec2 col_norm = normalize(cp1 - fpos);
+                        
+                        vec2 tan = vec2(-col_norm.y, col_norm.x);
+                        
+                        float response = dot(fvel,tan);
+                        
+                        vec2 velChanged = fvel * response;
+                        
+                        float velMag = length(fvel);
+                        
+                        vec2 fposn = fpos-(col_norm * (1.0 - mag) * 0.51); 
+
+                        vec2 fveln = fvel - ((2*1 / (1+1)) * (  dot(fvel - cpix.vel,  contact)  / (mag * mag)  ) * (contact)); 
+
+                        bool floatbool = ((mag < 1.0) && (is_not_self) && iind > 0 && mag < nearest_distance);
+                        //float fls = 1.0 - floatbool;
+                        //float tru = floatbool;
+
+                        if(floatbool){
+                          outpos = fposn;
+                          outvel = fveln;
+                          nearest_distance =  mag;
+                        }else{
+                          outpos = outpos;
+                          outvel = outvel;
+                          nearest_distance = nearest_distance;
+                        }
+                 //   }
+                //}
+            //}
+        }
+    }
+    //*/
+
+    pix.fpos = outpos;
+    pix.fvel = outvel * 0.99995+ vec2(0.0, -0.00001);
+//
+    pixels[id] = pix;
+}

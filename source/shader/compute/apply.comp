@@ -1,0 +1,53 @@
+#version 430
+
+layout(local_size_x = 32, local_size_y = 1) in;
+
+struct Pixel{
+    vec2 pos;              // 0
+    vec2 fpos;
+    vec2 vel;              // 2
+    vec2 fvel;
+    float Buffer;               // 3
+    float Radius;               // 4
+    float Mass;                 // 5
+    float FrictionCoefficient;  // 6
+    int linkname[4];            // 7
+};
+
+layout(std430, binding = 1) buffer Pixels {
+    Pixel pixels[];  
+};
+
+layout(std430, binding = 2) buffer Localities {
+  uint localities[4096][4096]; 
+};
+
+
+void main() {
+
+    uint id = gl_GlobalInvocationID.x;
+    
+    Pixel pix = pixels[id];
+    vec2 oldpos = pix.pos;
+    pix.pos = pix.fpos;
+
+    pix.vel = pix.fvel;// * 0.95;
+    //pix.vel.y = max(min(pix.vel.y, 2.0),-2.0);
+    //pix.vel.x = max(min(pix.vel.x, 2.0),-2.0);
+
+
+    
+    if(pix.pos.y < -30.0){
+        pix.pos.y = -30.0;
+        pix.vel.y  = 0.0;
+        pix.vel.x = 0.0;
+    }
+
+    pix.pos.x = max(-1024.0,min(pix.pos.x, 1024.0));
+
+    //if(length(oldpos-pix.pos) < 0.015){
+    //    pix.vel *= 0.5;
+    //}
+
+    pixels[id] = pix;
+}

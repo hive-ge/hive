@@ -91,8 +91,8 @@ namespace hive
 
 
             */
-            virtual void use(SmartGLBuffer & buffer, GLenum type, unsigned stride, unsigned offset,
-                             unsigned divisor = 0, bool normalize = false);
+            virtual void use(SmartGLBuffer & buffer, GLenum type, unsigned stride = 0,
+                             unsigned offset = 0, unsigned divisor = 0, bool normalize = false);
             virtual void release() override;
             virtual bool IS_USABLE() override;
         };
@@ -140,7 +140,7 @@ namespace hive
                 glVertexAttribIPointer(pointer, size, type, stride, (void *)off);
                 break;
             case 2: // float
-                glVertexAttribPointer(pointer, size, type, normalize, stride, (void *)off);
+                glVertexAttribPointer(pointer, size, type, GL_FALSE, stride, (void *)off);
                 break;
             case 3: // double
                 glVertexAttribLPointer(pointer, size, type, stride, (void *)off);

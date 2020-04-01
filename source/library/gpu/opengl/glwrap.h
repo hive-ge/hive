@@ -37,11 +37,11 @@
 //#include "../elements/elements.h"
 
 #ifndef HIVE_GL_REFERENCE_COUNT_MAX
-#define HIVE_GL_REFERENCE_COUNT_MAX 1024
+#define HIVE_GL_REFERENCE_COUNT_MAX 2048
 #endif // !HIVE_GL_REFERENCE_COUNT_MAX
 
 #ifndef HIVE_GL_REFERENCE_COUNT_ELEMENT_TYPE
-#define HIVE_GL_REFERENCE_COUNT_ELEMENT_TYPE unsigned short
+#define HIVE_GL_REFERENCE_COUNT_ELEMENT_TYPE unsigned char
 #endif // !HIVE_GL_REFERENCE_COUNT_MAX
 
 #ifndef HIVE_GL_REFERENCE_COUNT_MAX_VALUE
@@ -75,8 +75,27 @@ namespace hive
         }
 #endif
 
-        static HIVE_GL_REFERENCE_COUNT_ELEMENT_TYPE
-            reference_counts[HIVE_GL_REFERENCE_COUNT_MAX * 8];
+        static HIVE_GL_REFERENCE_COUNT_ELEMENT_TYPE reference_counts[HIVE_GL_REFERENCE_COUNT_MAX] =
+            {0};
+
+        HIVE_GL_REFERENCE_COUNT_ELEMENT_TYPE *
+        getReferenceCounter(int search_size = HIVE_GL_REFERENCE_COUNT_MAX, int start_index = 0)
+        {
+
+            if (search_size == 1) {
+                if (reference_counts[start_index] == 0)
+                    return reference_counts + start_index;
+                else
+                    return nullptr;
+            }
+
+            const auto size = search_size >> 1;
+
+            HIVE_GL_REFERENCE_COUNT_ELEMENT_TYPE * rc = getReferenceCounter(size, start_index);
+            if (!rc) return getReferenceCounter(size, start_index + size);
+            return rc;
+        }
+
 
         static HIVE_GL_REFERENCE_COUNT_ELEMENT_TYPE tex_1D_references[128];
 
@@ -516,24 +535,30 @@ namespace hive
             Texture,
             Buffer,
             UniformBlock,
-            Shaderlock,
+            ShaderBufferBlock,
         };
 
-        void clearErrors()
+        bool clearErrors()
         {
-            while (glGetError())
-                ;
+            int gl_err = glGetError();
+            bool err   = false;
+            do {
+                if (gl_err) err = true;
+                gl_err = glGetError();
+            } while (gl_err);
+            return err;
         }
 
         /* Wrapper around GLint pointers for OO style GL programming. Works for
          * Gluint style pointers as well*/
         struct SmartGLint {
           private:
-          protected: // Properties
-            GLint pointer                                          = -1;
             HIVE_GL_REFERENCE_COUNT_ELEMENT_TYPE * reference_count = NULL;
-            bool IS_READY                                          = false;
             SmartGLType sm_gl_type                                 = SmartGLType::Null;
+
+          protected: // Properties
+            GLint pointer = -1;
+            bool IS_READY = false;
 
           protected: // Function Members
             inline void increaseReferenceCount()
@@ -549,12 +574,13 @@ namespace hive
             inline void decreaseReferenceCount()
             {
                 if (reference_count != NULL)
-                    if (reference_count[0] == 1)
+                    if (reference_count[0] == 1) {
                         deleteUnderlyingGLResource();
-                    else
+                        reference_count[0] = 0;
+                        reference_count    = nullptr;
+                    } else
                         reference_count[0]--;
             };
-
 
             inline void setPointer(GLint p)
             {
@@ -563,8 +589,17 @@ namespace hive
                 pointer = p;
 
                 if (pointer > -1) {
-                    reference_count =
-                        &reference_counts[pointer + (HIVE_GL_REFERENCE_COUNT_MAX * sm_gl_type)];
+                    reference_count = getReferenceCounter();
+
+                    if (!reference_count) {
+
+                        __LOG("Unable to obtain a reference counter for SmartGLint type " +
+                              std::to_string(sm_gl_type) +
+                              " rcs:" + std::to_string(HIVE_GL_REFERENCE_COUNT_MAX));
+
+                        throw(-1);
+                    }
+
                     increaseReferenceCount();
                 } else
                     reference_count = NULL;

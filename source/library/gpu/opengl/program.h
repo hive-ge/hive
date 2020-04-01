@@ -3,12 +3,14 @@
 #include "gpu/opengl/glwrap.h"
 #include "gpu/opengl/input.h"
 #include "gpu/opengl/output.h"
+#include "gpu/opengl/shader_block.h"
 #include "gpu/opengl/uniform.h"
 #include "gpu/opengl/uniform_block.h"
 #include "primitive/log.h"
 #include <GL/gl.h>
 #include <string>
 #include <unordered_map>
+
 
 #ifdef HIVE_DEBUG
 #define DEBUG_META(data) data;
@@ -70,10 +72,11 @@ namespace hive
         struct SmartGLProgram final : SmartGLint {
 
           private:
-            std::unordered_map<std::string, SmartGLInput> * inputs               = NULL;
-            std::unordered_map<std::string, SmartGLOutput> * outputs             = NULL;
-            std::unordered_map<std::string, SmartGLUniform> * uniforms           = NULL;
-            std::unordered_map<std::string, SmartGLUniformBlock> * uniformblocks = NULL;
+            std::unordered_map<std::string, SmartGLInput> * inputs                    = NULL;
+            std::unordered_map<std::string, SmartGLOutput> * outputs                  = NULL;
+            std::unordered_map<std::string, SmartGLUniform> * uniforms                = NULL;
+            std::unordered_map<std::string, SmartGLUniformBlock> * uniformblocks      = NULL;
+            std::unordered_map<std::string, SmartGLShaderBufferBlock> * shaderbuffers = NULL;
 
             GLuint vertex_array_object = 0;
 
@@ -89,13 +92,14 @@ namespace hive
 
             SmartGLProgram(
                 GLuint program_pointer, bool ISREADY, bool SEPERABLE, int shader_bits,
-                std::unordered_map<std::string, SmartGLInput> * inputs               = NULL,
-                std::unordered_map<std::string, SmartGLOutput> * outputs             = NULL,
-                std::unordered_map<std::string, SmartGLUniform> * uni                = NULL,
-                std::unordered_map<std::string, SmartGLUniformBlock> * uniformblocks = NULL)
+                std::unordered_map<std::string, SmartGLInput> * inputs                    = NULL,
+                std::unordered_map<std::string, SmartGLOutput> * outputs                  = NULL,
+                std::unordered_map<std::string, SmartGLUniform> * uni                     = NULL,
+                std::unordered_map<std::string, SmartGLUniformBlock> * uniformblocks      = NULL,
+                std::unordered_map<std::string, SmartGLShaderBufferBlock> * shaderbuffers = NULL)
                 : SmartGLint(SmartGLType::Program, program_pointer, ISREADY), inputs(inputs),
                   outputs(outputs), uniforms(uni), uniformblocks(uniformblocks),
-                  SEPERABLE(SEPERABLE), shader_bits(shader_bits)
+                  shaderbuffers(shaderbuffers), SEPERABLE(SEPERABLE), shader_bits(shader_bits)
             {
                 glGenVertexArrays(1, &vertex_array_object);
             };
@@ -111,9 +115,7 @@ namespace hive
             }
 
             virtual void use();
-
             virtual void release() override;
-
             virtual bool IS_USABLE() override;
 
             inline bool HAVE_VERT() { return (shader_bits & VERT_BIT) > 0; }
@@ -153,9 +155,15 @@ namespace hive
                 if (uniformblocks != NULL) return (*uniformblocks)[str];
                 return SmartGLUniformBlock(); // Null unused object;
             }
+
+            inline SmartGLShaderBufferBlock getShaderBufferBlock(std::string str)
+            {
+                if (shaderbuffers != NULL) return (*shaderbuffers)[str];
+                return SmartGLShaderBufferBlock(); // Null unused object;
+            }
         };
 
-        GLuint createShader(std::string & str, GLenum shader_type, const char * info_label)
+        GLuint createShader(std::string & str, GLenum shader_type, const std::string info_label)
         {
             GLuint shader = glCreateShader(shader_type);
 
@@ -178,20 +186,35 @@ namespace hive
 
                 glGetShaderInfoLog(shader, info_length, NULL, &shader_log[0]);
 
-                DEBUG_META(__LOG(&shader_log[0]););
-
                 if (result == GL_TRUE) {
-                    DEBUG_META(__LOG("Compiled " + std::to_string(*info_label)));
+                    DEBUG_META(__LOG("Compiled " + info_label));
                 } else {
-                    DEBUG_META(__LOG("" + std::to_string(*info_label) + "failed to load \n ");
+                    DEBUG_META(__LOG("" + info_label + " failed to load \n ");
                                __LOG(&shader_log[0]);)
                 }
             } else {
-                DEBUG_META(__LOG("Failed to generate " + std::to_string(*info_label)));
+                DEBUG_META(__LOG("Failed to generate " + info_label));
             }
 
             return shader;
         };
+
+        void reportShaderProgramErrors()
+        {
+            int err = glGetError();
+
+            do {
+                // TODO - Make this more informative.
+                __LOG("GL_INVALID_VALUE is generated if either program or shader is not a value "
+                      "generated by OpenGL.\n"
+                      "GL_INVALID_OPERATION is generated if program is not a program object.\n"
+                      "GL_INVALID_OPERATION is generated if shader is not a shader object.\n"
+                      "GL_INVALID_OPERATION is generated if shader is already attached to "
+                      "program.\n");
+
+                err = glGetError();
+            } while (err);
+        }
 
 
         SmartGLProgram createShaderProgram(ProgramDefinition program_definition,
@@ -201,9 +224,6 @@ namespace hive
             SmartGLProgram smprogram;
 
             int vert = 0, frag = 0, tess = 0, comp = 0, eval = 0, geom = 0;
-
-            // Compile vertex shader
-            __LOG("Compiling vertex shader."); // <================================================
 
             const int shader_bits = ((program_definition.vert ? 1 : 0) << 1) |
                                     ((program_definition.frag ? 1 : 0) << 2) |
@@ -308,6 +328,10 @@ namespace hive
                 auto uniform_blocks = new std::unordered_map<std::string, SmartGLUniformBlock>;
                 loadResource<SmartGLUniformBlock>(GL_UNIFORM_BLOCK, program, *uniform_blocks);
 
+                auto shader_buffers = new std::unordered_map<std::string, SmartGLShaderBufferBlock>;
+                loadResource<SmartGLShaderBufferBlock>(GL_SHADER_STORAGE_BLOCK, program,
+                                                       *shader_buffers);
+
                 // Shaders do not need to be attached to the program anymore
                 if (vert) glDetachShader(program, vert);
                 if (frag) glDetachShader(program, frag);
@@ -317,7 +341,8 @@ namespace hive
                 if (comp) glDetachShader(program, comp);
 
                 smprogram = SmartGLProgram(program, (result == GL_TRUE) ? true : false, SEPERABLE,
-                                           shader_bits, inputs, outputs, uniforms, uniform_blocks);
+                                           shader_bits, inputs, outputs, uniforms, uniform_blocks,
+                                           shader_buffers);
             } else {
                 // pullup any error
                 DEBUG_META(reportShaderProgramErrors());
@@ -367,25 +392,7 @@ namespace hive
                 glDeleteVertexArrays(1, &vertex_array_object);
                 glDeleteProgram(pointer);
             }
-            IS_READY        = false;
-            reference_count = NULL;
-        }
-
-        void reportShaderProgramErrors()
-        {
-            int err = glGetError();
-
-            do {
-                // TODO - Make this more informative.
-                __LOG("GL_INVALID_VALUE is generated if either program or shader is not a value "
-                      "generated by OpenGL.\n"
-                      "GL_INVALID_OPERATION is generated if program is not a program object.\n"
-                      "GL_INVALID_OPERATION is generated if shader is not a shader object.\n"
-                      "GL_INVALID_OPERATION is generated if shader is already attached to "
-                      "program.\n");
-
-                err = glGetError();
-            } while (err);
+            IS_READY = false;
         }
     } // namespace gl
 } // namespace hive

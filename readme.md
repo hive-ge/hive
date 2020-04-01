@@ -126,3 +126,5 @@ Need to synch execution for shared memory, not just use barriers. User `barrier(
 ```c
 shared vec4 data
 ```
+
+atomicAdd doesn't appear to handle multiple reads writes. Try a dense grid write first approach
