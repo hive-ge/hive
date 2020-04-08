@@ -1,5 +1,7 @@
 #pragma once
 
+#ifdef HIVE_USE_OPENGL
+
 #include "buffer.h"
 #include "gpu/opengl/glwrap.h"
 #include <gl3w/GL/glcorearb.h>
@@ -73,8 +75,8 @@ namespace hive
                 active_variables     = obj.active_variables;
                 index                = obj.index;
             }
-            virtual void bind(SmartGLBuffer & buffer, unsigned binding_point = 0,
-                              unsigned offset = 0, unsigned size = 0);
+            virtual void bind(VRAMBuffer & buffer, unsigned binding_point = 0, unsigned offset = 0,
+                              unsigned size = 0);
 
             virtual void release() override;
 
@@ -83,8 +85,8 @@ namespace hive
 
         void SmartGLUniformBlock::deleteUnderlyingGLResource() {}
 
-        void SmartGLUniformBlock::bind(SmartGLBuffer & buffer, unsigned binding_point,
-                                       unsigned offset, unsigned size)
+        void SmartGLUniformBlock::bind(VRAMBuffer & buffer, unsigned binding_point, unsigned offset,
+                                       unsigned size)
         {
             // buffer.use(UNIFORM_BUFFER);
 
@@ -100,3 +102,5 @@ namespace hive
         bool SmartGLUniformBlock::IS_USABLE() { return false; }
     } // namespace gl
 } // namespace hive
+
+#endif

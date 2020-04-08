@@ -1,5 +1,6 @@
 #pragma once
 
+
 #include "gpu/opengl/buffer.h"
 #include "gpu/opengl/glwrap.h"
 #include <GL/gl.h>
@@ -13,7 +14,7 @@ namespace hive
         /**
             Wrapper around an attribute int.
         */
-        struct SmartGLInput : SmartGLint {
+        struct SmartGLInput : hive::gl::SmartGLint {
 
           protected:
             // Primitive type
@@ -91,7 +92,7 @@ namespace hive
 
 
             */
-            virtual void use(SmartGLBuffer & buffer, GLenum type, unsigned stride = 0,
+            virtual void use(VRAMBuffer & buffer, GLenum type, unsigned stride = 0,
                              unsigned offset = 0, unsigned divisor = 0, bool normalize = false);
             virtual void release() override;
             virtual bool IS_USABLE() override;
@@ -114,7 +115,7 @@ namespace hive
          *    GL_DOUBLE
          *
          */
-        void SmartGLInput::use(SmartGLBuffer & buffer, GLenum type, unsigned stride, unsigned off,
+        void SmartGLInput::use(VRAMBuffer & buffer, GLenum type, unsigned stride, unsigned off,
                                unsigned divisor, bool normalize)
         {
 

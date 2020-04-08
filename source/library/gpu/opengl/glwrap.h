@@ -1,5 +1,7 @@
 #pragma once
 
+#ifdef HIVE_USE_OPENGL
+
 //#define GL_GLEXT_PROTOTYPES
 //#define HIVE_USE_GLFW
 
@@ -31,7 +33,7 @@
 #include <vector>
 
 #include "primitive/log.h"
-#include "primitive/math/math.h"
+#include "primitive/math/hive_math.h"
 
 
 //#include "../elements/elements.h"
@@ -526,7 +528,7 @@ namespace hive
             UNIFORM_BUFFER            = 8192,
         };
 
-        enum SmartGLType : unsigned char {
+        enum class SmartGLType : unsigned char {
             Null,
             Program,
             Input,
@@ -563,23 +565,29 @@ namespace hive
           protected: // Function Members
             inline void increaseReferenceCount()
             {
-                if (reference_count != NULL)
+                if (reference_count != NULL) {
+
                     if (reference_count[0] == HIVE_GL_REFERENCE_COUNT_MAX_VALUE) {
                         throw("Max number of resource references reached");
-                    } else
+                    } else {
                         reference_count[0]++;
+                    }
+                }
             };
 
 
             inline void decreaseReferenceCount()
             {
-                if (reference_count != NULL)
+                if (reference_count != NULL) {
+
                     if (reference_count[0] == 1) {
                         deleteUnderlyingGLResource();
                         reference_count[0] = 0;
                         reference_count    = nullptr;
-                    } else
+                    } else {
                         reference_count[0]--;
+                    }
+                }
             };
 
             inline void setPointer(GLint p)
@@ -594,7 +602,7 @@ namespace hive
                     if (!reference_count) {
 
                         __LOG("Unable to obtain a reference counter for SmartGLint type " +
-                              std::to_string(sm_gl_type) +
+                              std::to_string((int)sm_gl_type) +
                               " rcs:" + std::to_string(HIVE_GL_REFERENCE_COUNT_MAX));
 
                         throw(-1);
@@ -653,3 +661,5 @@ namespace hive
 
     } // namespace gl
 } // namespace hive
+
+#endif

@@ -3,14 +3,14 @@ cmake_minimum_required(VERSION 3.15)
 #SET (CMAKE_CXX_STANDARD 17)
 
 SET (CMAKE_C_FLAGS_INIT                "-std=c11")
-SET (CMAKE_C_FLAGS_DEBUG_INIT          "-O0 -g -Wall")
+SET (CMAKE_C_FLAGS_DEBUG_INIT          "-O0 -g -w")
 SET (CMAKE_C_FLAGS_MINSIZEREL_INIT     "-Os -DNDEBUG")
 SET (CMAKE_C_FLAGS_RELEASE_INIT        "-O3 -DNDEBUG")
 SET (CMAKE_C_FLAGS_RELWITHDEBINFO_INIT "-O2 -g")
 
 
 SET (CMAKE_CXX_FLAGS_INIT                "-std=c++17 -pthread")
-SET (CMAKE_CXX_FLAGS_DEBUG          	 "-O0 -g -Wall")
+SET (CMAKE_CXX_FLAGS_DEBUG          	 "-O0 -g")
 SET (CMAKE_CXX_FLAGS_MINSIZEREL_INIT     "-O2 -DNDEBUG")
 SET (CMAKE_CXX_FLAGS_RELEASE_INIT        "-O3 -DNDEBUG")
 SET (CMAKE_CXX_FLAGS_RELWITHDEBINFO_INIT "-O2 -g")
@@ -53,6 +53,13 @@ if (GLEW_FOUND)
     link_libraries(${GLEW_LIBRARIES})
 endif()
 
+find_package(ZLIB REQUIRED)
+
+if (ZLIB_FOUND)
+    include_directories(${ZLIB_INCLUDE_DIRS})
+    link_libraries(${ZLIB_LIBRARIES})
+endif()
+
 
 #find_package(Vulkan REQUIRED)
 INCLUDE_DIRECTORIES("source/library")
@@ -67,5 +74,5 @@ INCLUDE_DIRECTORIES("source/sample")
 add_executable(${PROJECT_NAME} "source/samples/platformer.cpp")
 
 
-target_link_libraries( ${PROJECT_NAME} ${HIVE_LIBRARY_PROJECT})
+target_link_libraries( ${PROJECT_NAME} hive)
 

@@ -1,5 +1,6 @@
 #pragma once
 
+#include "primitive/typedef.h"
 #include <cstring>
 #include <fstream>
 #include <iostream>
@@ -7,34 +8,54 @@
 #include <string>
 #include <system_error>
 #include <unordered_map>
+#include <vector>
 
 
 namespace hive
 {
-    namespace resource
+
+    /**
+     * Methods for loading resources
+     */
+    std::string loadUTF8File(const std::string file_path)
     {
-        /**
-         * Methods for loading resources
-         */
-        std::string loadUTF8File(std::string file_path)
-        {
-            std::ifstream file;
+        std::ifstream file;
 
-            std::stringstream str;
+        std::stringstream str;
 
-            file.open(file_path);
+        file.open(file_path);
 
-            if (file.good()) {
-                char c = file.get();
-                while (file.good()) {
-                    str << c;
-                    c = file.get();
-                }
+        if (file.good()) {
+            char c = file.get();
+            while (file.good()) {
+                str << c;
+                c = file.get();
             }
-
-            file.close();
-
-            return str.str();
         }
-    } // namespace resource
+
+        file.close();
+
+        return str.str();
+    }
+
+    /**
+     * Methods for loading resources
+     */
+    std::vector<ubyte> loadCharFile(const std::string file_path)
+    {
+        std::vector<ubyte> buffer;
+
+        std::ifstream file;
+
+        file.open(file_path);
+
+        while (file.good()) {
+
+            buffer.push_back(file.get());
+        }
+
+        file.close();
+
+        return buffer;
+    }
 } // namespace hive

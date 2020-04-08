@@ -1,5 +1,7 @@
 #pragma once
 
+#ifdef HIVE_USE_OPENGL
+
 #include "gpu/opengl/glwrap.h"
 #include "gpu/opengl/input.h"
 #include "gpu/opengl/output.h"
@@ -20,7 +22,7 @@ namespace hive
 
         struct SmartGLPipeline final : SmartGLint {
 
-            std::vector<SmartGLProgram> programs;
+            std::vector<Program> programs;
 
           protected:
             virtual void deleteUnderlyingGLResource() override;
@@ -28,8 +30,7 @@ namespace hive
           public:
             SmartGLPipeline() : SmartGLint(SmartGLType::Program) {}
 
-            SmartGLPipeline(GLuint program_pointer, bool ISREADY,
-                            std::vector<SmartGLProgram> programs)
+            SmartGLPipeline(GLuint program_pointer, bool ISREADY, std::vector<Program> programs)
                 : SmartGLint(SmartGLType::Program, program_pointer, ISREADY){};
 
             ~SmartGLPipeline() { decreaseReferenceCount(); }
@@ -43,7 +44,7 @@ namespace hive
             virtual bool IS_USABLE() override;
         };
 
-        SmartGLPipeline createPipeline(std::vector<SmartGLProgram> programs)
+        SmartGLPipeline createPipeline(std::vector<Program> programs)
         {
             unsigned pipeline;
 
@@ -112,3 +113,5 @@ namespace hive
         }
     } // namespace gl
 } // namespace hive
+
+#endif

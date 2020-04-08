@@ -71,10 +71,10 @@ namespace hive
                 active_variables     = obj.active_variables;
                 index                = obj.index;
             }
-            virtual void bind(SmartGLBuffer & buffer, unsigned binding_point, unsigned offset = 0,
+            virtual void bind(VRAMBuffer & buffer, unsigned binding_point, unsigned offset = 0,
                               unsigned size = 0);
 
-            virtual void bind(SmartGLBuffer & buffer, unsigned offset = 0, unsigned size = 0);
+            virtual void bind(VRAMBuffer & buffer, unsigned offset = 0, unsigned size = 0);
 
             virtual void release() override;
 
@@ -83,7 +83,7 @@ namespace hive
 
         void SmartGLShaderBufferBlock::deleteUnderlyingGLResource() {}
 
-        void SmartGLShaderBufferBlock::bind(SmartGLBuffer & buffer, unsigned binding_point,
+        void SmartGLShaderBufferBlock::bind(VRAMBuffer & buffer, unsigned binding_point,
                                             unsigned offset, unsigned size)
         {
             if (buffer_binding < 0) return;
@@ -93,7 +93,7 @@ namespace hive
             buffer.useRange(SHADER_STORAGE_BUFFER, binding_point, offset, size);
         }
 
-        void SmartGLShaderBufferBlock::bind(SmartGLBuffer & buffer, unsigned offset, unsigned size)
+        void SmartGLShaderBufferBlock::bind(VRAMBuffer & buffer, unsigned offset, unsigned size)
         {
             if (buffer_binding < 0) return;
 

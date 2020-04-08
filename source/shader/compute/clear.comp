@@ -14,14 +14,13 @@ struct Pixel{
     int linkname[4];            // 7
 };
 
-layout(std430, binding = 1) buffer Pixels {
-    Pixel pixels[];  
-};
-
 layout(std430, binding = 2) buffer Localities {
-  uint localities[4096][4096]; 
+  uint localities[2048 * 2048 * 4]; 
 };
 
 void main() {
-    localities[gl_GlobalInvocationID.x][gl_GlobalInvocationID.y] = 0;
+    localities[gl_GlobalInvocationID.x * 2 + gl_GlobalInvocationID.y * 2048 + 0] = 0;
+    localities[gl_GlobalInvocationID.x * 2 + gl_GlobalInvocationID.y * 2048 + 1] = 0;
+    localities[gl_GlobalInvocationID.x * 2 + gl_GlobalInvocationID.y * 2048 + 2] = 0;
+    localities[gl_GlobalInvocationID.x * 2 + gl_GlobalInvocationID.y * 2048 + 3] = 0;
 }

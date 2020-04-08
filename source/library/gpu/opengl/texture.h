@@ -1,172 +1,181 @@
 #pragma once
 
+#ifdef HIVE_USE_OPENGL
+
 #include "gpu/opengl/glwrap.h"
 #include "gpu/opengl/uniform.h"
 #include "primitive/log.h"
 #include <gl3w/GL/glcorearb.h>
 
-
 namespace hive
 {
 
-    namespace gl
-    {
-        struct SmartGLTexture : SmartGLint {
-          protected:
-            unsigned internal_format = GL_RGBA;
+    using namespace gl;
 
-            unsigned buffer_size = 0;
+    struct Texture : SmartGLint {
 
-            unsigned short width = 0;
+      protected:
+        unsigned internal_format = GL_RGBA;
 
-            unsigned short height = 0;
+        unsigned buffer_size = 0;
 
-            unsigned short depth = 0;
+        unsigned short width = 0;
 
-            unsigned short mip_level = 0;
+        unsigned short height = 0;
 
-            unsigned short BOUND_TO = 0;
+        unsigned short depth = 0;
 
-            unsigned char unit = 0;
+        unsigned short mip_level = 0;
 
-            GLenum target = GL_TEXTURE_2D;
+        unsigned short BOUND_TO = 0;
 
-          protected:
-            virtual void deleteUnderlyingGLResource() override;
+        unsigned char unit = 0;
 
-            void setData(void *, GLenum format, GLenum type);
-            //	void setDataArray(void *, unsigned int = 0, unsigned int = 0);
-          public:
-            SmartGLTexture(GLenum target = GL_TEXTURE_2D, unsigned internal_format = GL_RGBA,
-                           unsigned unit = 0, unsigned width = 1, unsigned height = 1,
-                           unsigned depth = 1)
-                : SmartGLint(SmartGLType::Texture), target(target),
-                  internal_format(internal_format), unit(unit), width(width), height(height),
-                  depth(depth)
-            {
-                glGenTextures(1, (GLuint *)(&pointer));
-                IS_READY = (pointer != 0);
-            };
-            ~SmartGLTexture() { decreaseReferenceCount(); }
-            SmartGLTexture(const SmartGLTexture & obj) : SmartGLint(obj)
-            {
-                target          = obj.target;
-                width           = obj.width;
-                height          = obj.height;
-                depth           = obj.depth;
-                unit            = obj.unit;
-                internal_format = obj.internal_format;
-            }
+        GLenum target = GL_TEXTURE_2D;
 
-            inline void bind();
+      protected:
+        virtual void deleteUnderlyingGLResource() override;
 
-            void use(SmartGLUniform &);
-
-            virtual void release() override;
-
-            inline void setData(unsigned char * p, GLenum format)
-            {
-                setData(p, format, GL_UNSIGNED_BYTE);
-            };
-
-            inline void setData(char * p, GLenum format) { setData(p, format, GL_BYTE); };
-
-            inline void setData(unsigned short * p, GLenum format)
-            {
-                setData(p, format, GL_UNSIGNED_SHORT);
-            };
-
-            inline void setData(short * p, GLenum format) { setData(p, format, GL_SHORT); };
-
-            inline void setData(unsigned int * p, GLenum format)
-            {
-                setData(p, format, GL_UNSIGNED_INT);
-            };
-
-            inline void setData(int * p, GLenum format) { setData(p, format, GL_INT); };
-
-            inline void setData(float * p, GLenum format) { setData(p, format, GL_FLOAT); };
-
-            inline void setDataManual(void * p, GLenum format, GLenum type)
-            {
-                setData(p, format, type);
-            };
-
-            inline void setMagFilter(GLint filter)
-            {
-                bind();
-                glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, filter);
-            }
-
-            inline void setMinFilter(GLint filter)
-            {
-                bind();
-                glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, filter);
-            }
-
-            inline void setTexWrapS(GLint filter)
-            {
-                bind();
-                glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, filter);
-            }
-
-            inline void setTexWrapT(GLint filter)
-            {
-                bind();
-                glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, filter);
-            };
-            /**
-             * https://www.khronos.org/registry/OpenGL-Refpages/gl4/html/glBindImageTexture.xhtml
-             *
-             * Access:
-             *  One of GL_READ_ONLY, GL_WRITE_ONLY, or GL_READ_WRITE
-             */
-            inline void bindImageTexture(int access = GL_READ_WRITE, int format = GL_RGBA32F);
+        void setData(void *, GLenum format, GLenum type);
+        //	void setDataArray(void *, unsigned int = 0, unsigned int = 0);
+      public:
+        Texture(GLenum target = GL_TEXTURE_2D, unsigned internal_format = GL_RGBA,
+                unsigned unit = 0, unsigned width = 1, unsigned height = 1, unsigned depth = 1)
+            : SmartGLint(SmartGLType::Texture), target(target), internal_format(internal_format),
+              unit(unit), width(width), height(height), depth(depth)
+        {
+            glGenTextures(1, (GLuint *)(&pointer));
+            IS_READY = (pointer != 0);
         };
-        void SmartGLTexture::deleteUnderlyingGLResource() {}
 
-        void SmartGLTexture::bind()
+
+        ~Texture() { decreaseReferenceCount(); }
+
+        Texture(const Texture & obj) : SmartGLint(obj)
         {
-            if (tex_2D_references[unit] == pointer)
-                return;
-            else
-                tex_2D_references[unit] = pointer;
-            glActiveTexture(GL_TEXTURE0 + unit);
-            glBindTexture(target, pointer);
+            target          = obj.target;
+            width           = obj.width;
+            height          = obj.height;
+            depth           = obj.depth;
+            unit            = obj.unit;
+            internal_format = obj.internal_format;
         }
 
-        void SmartGLTexture::bindImageTexture(int access, int format)
-        {
-            if (tex_2D_references[unit] == pointer)
-                return;
-            else
-                tex_2D_references[unit] = pointer;
-            glActiveTexture(GL_TEXTURE0 + unit);
-            glBindImageTexture(GL_TEXTURE0 + unit, pointer, mip_level, GL_FALSE, 0, access,
-                               internal_format);
-        }
+        inline void bind();
 
-        void SmartGLTexture::setData(void * data, GLenum format, GLenum type)
-        {
-            if (!IS_READY || width * height * depth == 0) {
-                __ERROR("GL texture is not ready to use.", 0, "buffer.cpp", __LINE__);
-                return; // throw error
-            }
+        void use(SmartGLUniform &);
 
+        virtual void release() override;
+
+        inline void setData(unsigned char * p, GLenum format)
+        {
+            setData(p, format, GL_UNSIGNED_BYTE);
+        };
+
+        inline void setData(char * p, GLenum format) { setData(p, format, GL_BYTE); };
+
+        inline void setData(unsigned short * p, GLenum format)
+        {
+            setData(p, format, GL_UNSIGNED_SHORT);
+        };
+
+        inline void setData(short * p, GLenum format) { setData(p, format, GL_SHORT); };
+
+        inline void setData(unsigned int * p, GLenum format)
+        {
+            setData(p, format, GL_UNSIGNED_INT);
+        };
+
+        inline void setData(int * p, GLenum format) { setData(p, format, GL_INT); };
+
+        inline void setData(float * p, GLenum format) { setData(p, format, GL_FLOAT); };
+
+        inline void setDataManual(void * p, GLenum format, GLenum type)
+        {
+            setData(p, format, type);
+        };
+
+        inline void setMagFilter(GLint filter)
+        {
             bind();
-
-            if (buffer_size == 0) {
-                glTexImage2D(target, 0, internal_format, width, height, 0, format, type, data);
-                buffer_size = width * height * depth * sizeof(unsigned char);
-            }
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, filter);
         }
 
-        void SmartGLTexture::use(SmartGLUniform & uni)
+        inline void setMinFilter(GLint filter)
         {
             bind();
-            glUniform1i(uni.gli(), unit);
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, filter);
         }
 
-        void SmartGLTexture::release() {}
-    } // namespace gl
+        inline void setTexWrapS(GLint filter)
+        {
+            bind();
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, filter);
+        }
+
+        inline void setTexWrapT(GLint filter)
+        {
+            bind();
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, filter);
+        };
+        /**
+         * https://www.khronos.org/registry/OpenGL-Refpages/gl4/html/glBindImageTexture.xhtml
+         *
+         * Access:
+         *  One of GL_READ_ONLY, GL_WRITE_ONLY, or GL_READ_WRITE
+         */
+        inline void bindImageTexture(int access = GL_READ_WRITE, int format = GL_RGBA32F);
+    };
+    void Texture::deleteUnderlyingGLResource() {}
+
+    void Texture::bind()
+    {
+        if (tex_2D_references[unit] == pointer)
+            return;
+        else
+            tex_2D_references[unit] = pointer;
+
+        glActiveTexture(GL_TEXTURE0 + unit);
+
+        glBindTexture(target, pointer);
+    }
+
+    void Texture::bindImageTexture(int access, int format)
+    {
+        if (tex_2D_references[unit] == pointer)
+            return;
+        else
+            tex_2D_references[unit] = pointer;
+
+        glActiveTexture(GL_TEXTURE0 + unit);
+
+        glBindImageTexture(GL_TEXTURE0 + unit, pointer, mip_level, GL_FALSE, 0, access,
+                           internal_format);
+    }
+
+    void Texture::setData(void * data, GLenum format, GLenum type)
+    {
+        if (!IS_READY || width * height * depth == 0) {
+            __ERROR("GL texture is not ready to use.", 0, "buffer.cpp", __LINE__);
+            return; // throw error
+        }
+
+        bind();
+
+        if (buffer_size == 0) {
+            glTexImage2D(target, 0, internal_format, width, height, 0, format, type, data);
+            buffer_size = width * height * depth * sizeof(unsigned char);
+        }
+    }
+
+    void Texture::use(SmartGLUniform & uni)
+    {
+        bind();
+        glUniform1i(uni.gli(), unit);
+    }
+
+    void Texture::release() {}
+
 } // namespace hive
+
+#endif

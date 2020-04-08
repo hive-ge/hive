@@ -1,3 +1,4 @@
+
 #pragma once
 
 #include <algorithm>
@@ -123,6 +124,7 @@ namespace hive
                     }
 
                     double getX() const { return mouse.x; }
+
                     double getY() const { return mouse.y; }
 
                     /**
@@ -158,15 +160,6 @@ namespace hive
 
 
 #endif //############################## END DEBUG
-
-#ifndef HIVE_DEBUG //################## RELEASE
-
-                    friend std::ostream & operator<<(std::ostream & os,
-                                                     const ControllerStateReader & reader)
-                    {
-                        return os;
-                    }
-#endif //############################## END RELEASE
                 };
 
               private:

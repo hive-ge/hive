@@ -1,5 +1,7 @@
 #pragma once
 
+#ifdef HIVE_USE_OPENGL
+
 #include "gpu/opengl/buffer.h"
 #include "gpu/opengl/glwrap.h"
 
@@ -89,7 +91,7 @@ namespace hive
 
 
             */
-            virtual void use(SmartGLBuffer & buffer, GLenum type, unsigned stride, unsigned offset,
+            virtual void use(VRAMBuffer & buffer, GLenum type, unsigned stride, unsigned offset,
                              unsigned divisor = 0, bool normalize = false);
             virtual void release() override;
             virtual bool IS_USABLE() override;
@@ -112,8 +114,8 @@ namespace hive
          *    GL_DOUBLE
          *
          */
-        void SmartGLOutput::use(SmartGLBuffer & buffer, GLenum type, unsigned stride,
-                                unsigned offset, unsigned divisor, bool normalize)
+        void SmartGLOutput::use(VRAMBuffer & buffer, GLenum type, unsigned stride, unsigned offset,
+                                unsigned divisor, bool normalize)
         {
             if (!IS_READY) {
                 throw("Attribute pointer is not ready to be used.");
@@ -145,3 +147,5 @@ namespace hive
         bool SmartGLOutput::IS_USABLE() { return true; }
     } // namespace gl
 } // namespace hive
+
+#endif

@@ -29,8 +29,8 @@ namespace hive
     namespace graphic
     {
 
-        using namespace hive::math;
-        using namespace hive::gl;
+        using namespace math;
+        using namespace gl;
 
 
         /**
@@ -62,9 +62,9 @@ namespace hive
             unsigned BITFIELD = 0;
 
           protected:
-            hive::math::vec3 scale;
-            hive::math::vec3 position;
-            hive::math::vec3 rotation;
+            math::vec3 scale;
+            math::vec3 position;
+            math::vec3 rotation;
 
             HIVEcreateBITFIELDMethods(DRAW_BITFIELD_FLAGS, VISIBLE);
             HIVEcreateBITFIELDMethods(DRAW_BITFIELD_FLAGS, TRANSLUESCENT);
@@ -86,9 +86,9 @@ namespace hive
 
         class Quadrilateral : public DrawObject
         {
-            SmartGLProgram program;
-            SmartGLBuffer bufferA;
-            SmartGLBuffer bufferB;
+            Program program;
+            VRAMBuffer bufferA;
+            VRAMBuffer bufferB;
             SmartGLUniformBlock obj_data;
             SmartGLUniform camera;
 
@@ -110,10 +110,10 @@ namespace hive
             {
                 if (!program.IS_USABLE()) {
 
-                    auto vert = hive::resource::loadUTF8File(
+                    auto vert = hive::loadUTF8File(
                         "/home/anthony/work/active/apps/hive/source/shader/box.vert");
 
-                    auto frag = hive::resource::loadUTF8File(
+                    auto frag = hive::loadUTF8File(
                         "/home/anthony/work/active/apps/hive/source/shader/box.frag");
 
                     ProgramDefinition def;

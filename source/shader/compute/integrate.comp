@@ -9,7 +9,7 @@ struct Pixel{
   vec2 fvel;
   float Buffer;               // 3
   float Radius;               // 4
-  float Mass;                 // 5
+  float mass;                 // 5
   float FrictionCoefficient;  // 6
   int linkname[4];            // 7
 };
@@ -20,7 +20,7 @@ volatile layout(std430, binding = 1) buffer Pixels {
 };
 
 readonly layout(std430, binding = 2) buffer Localities {
-  uint localities[4096][4096]; 
+  uint localities[2048 * 2048 * 4]; 
 };
 
 mat2 createRotationMatrix(float angle){
@@ -66,6 +66,8 @@ void main() {
     
     Pixel pix = pixels[id];
 
+    float m1 = pix.mass;
+
     //assign pixel to locality based on pixel position
     //ivec2 locale = ivec2( (round(pos)/ 10.0) + vec2(50.0,50.0));
 
@@ -77,69 +79,138 @@ void main() {
     vec2 fpos = pix.pos + pix.vel;
     vec2 fvel = pix.vel;
 
-    ivec2 locale = ivec2((floor(pix.pos)/ 1.0) + vec2(2048.0,2048.0));
+    pixels[id].fpos = fpos;
+
+    ivec2 locale = ivec2((floor(pix.pos)/ 1.0) + vec2(1024.0,1024.0));
     
     float nearest_distance = 4.0;
 
     vec2 outpos = fpos;
     vec2 outvel = fvel;
+    vec2 avg_pos = fpos;
+    vec2 avg_vel = fvel;
+
+    float division = 1.0;
+    float fmin = 1.0;
 
     //*
     for(int i = 0; i < 3; i++){
 
-        for(int j = 0; j < 3; j++){
+            for(int j = 0; j < 3; j++){
 
-          uint iind = localities[locale.x+j-1][locale.y+i-1];
+             // if(j == 1 && i == 1) continue;
 
-            //for(int px = 0; px < 4; px++){
+              uint iind = localities[(locale.x+j-1) * 4 + (locale.y+i-1) * 2048];
 
-               // if(local.index[px] > 0){
+                //for(int px = 0; px < 4; px++){
 
-                    Pixel cpix = pixels[iind];
-                    
-                    bool is_not_self = (iind != id);
-                    
-                    vec2 cp1 = cpix.pos + cpix.vel;
-                    vec2 contact = fpos - cp1;
-                    float mag = length(contact);
+                //   if(iind != 0){
 
-                  //  if( inrange ){
-                        vec2 col_norm = normalize(cp1 - fpos);
+                        Pixel cpix = pixels[iind];
                         
-                        vec2 tan = vec2(-col_norm.y, col_norm.x);
+                        bool is_not_self = (iind != id);
+                        float m2 = cpix.mass;
                         
-                        float response = dot(fvel,tan);
+                        vec2 cp1 = cpix.pos + cpix.vel;
                         
-                        vec2 velChanged = fvel * response;
+                        vec2 contact = fpos - cp1;
                         
-                        float velMag = length(fvel);
+                        float mag = length(contact);
                         
-                        vec2 fposn = fpos-(col_norm * (1.0 - mag) * 0.51); 
+                        vec2 fveln = fvel-((2*m2 / (m1+m2)) * (  dot(fvel - cpix.vel,  contact)  / (mag * mag)  ) * (contact)); 
+                        
+                        bool floatbool = ((mag < 1.0) && (is_not_self) && iind > 0 /*&& mag < nearest_distance*/);
 
-                        vec2 fveln = fvel - ((2*1 / (1+1)) * (  dot(fvel - cpix.vel,  contact)  / (mag * mag)  ) * (contact)); 
-
-                        bool floatbool = ((mag < 1.0) && (is_not_self) && iind > 0 && mag < nearest_distance);
-                        //float fls = 1.0 - floatbool;
-                        //float tru = floatbool;
-
-                        if(floatbool){
-                          outpos = fposn;
-                          outvel = fveln;
-                          nearest_distance =  mag;
-                        }else{
-                          outpos = outpos;
-                          outvel = outvel;
-                          nearest_distance = nearest_distance;
+                        if(floatbool && mag < nearest_distance){
+                            avg_vel = fveln;
+                            nearest_distance =  mag;
                         }
-                 //   }
+                      //   }
+                //   }
                 //}
-            //}
+            }
         }
-    }
+
+        for(int u = 0; u < 4; u++){
+          barrier();
+      //Pos constraints
+        for(int i = 0; i < 3; i++){
+
+            for(int j = 0; j < 3; j++){
+
+             // if(j == 1 && i == 1) continue;
+
+              uint iind = localities[(locale.x+j-1) * 4 + (locale.y+i-1) * 2048 + u];
+
+                //for(int px = 0; px < 4; px++){
+
+                   // if(iind != 0){
+
+                        Pixel cpix = pixels[iind];
+                        
+                        bool is_not_self = (iind != id);
+                        float m2 = cpix.mass;
+                        
+                        vec2 cp1 = cpix.fpos + cpix.fvel;
+                        vec2 contact = fpos - cp1;
+                        float mag = length(contact);
+
+                      //  if( inrange ){
+                            vec2 col_norm = normalize(cp1 - fpos);
+                            vec2 fposn = -(col_norm * (1.0 - mag) * 0.50); 
+                            bool floatbool = ((mag < 1.0) && (is_not_self)  /*&& mag < nearest_distance*/);
+                            //float fls = 1.0 - floatbool;
+                            //float tru = floatbool;
+
+                            if(floatbool){
+                              pixels[iind].fpos -= fposn;
+                              (pixels[id].fpos += fposn);
+                              barrier();
+                              pix.fpos = pixels[id].fpos;
+                              fpos = pix.fpos;
+                            }
+
+                            
+                      //   }
+                   // }
+                //}
+            }
+        }
+        }
+
+      //Velocity Consideration
+
+  
+/*
+vec2 adjust = vec2(0.0,0.0);
+    for (int o = 0; o < 4; o++){
+        uint iind = localities[(locale.x) * 4 + (locale.y) * 2048 + o];
+
+        if(iind != 0 && iind != id){
+          float dir = iind < id ? -1.0 : 1.0; 
+
+          Pixel cpix = pixels[iind];
+
+          vec2 cp1 = cpix.pos + cpix.vel;
+          vec2 contact = fpos - cp1;
+          float mag = length(contact);
+
+          if(mag < 0.5){      
+             vec2 col_norm = normalize(cp1 - fpos);            
+            adjust += -(col_norm * (1.0 - mag) * 0.8); 
+          }
+        }
+    }//*/
     //*/
 
-    pix.fpos = outpos;
-    pix.fvel = outvel * 0.99995+ vec2(0.0, -0.00001);
+    if(division > 1.0){
+      division -= 1.0;
+    //  avg_vel  -= fvel;
+      avg_pos  -= fpos;
+    }
+
+   // pix.fpos = (avg_pos) ;
+    pix.fvel = ((avg_vel))   * 0.99995+ vec2(0.0, -0.0001);
 //
     pixels[id] = pix;
 }

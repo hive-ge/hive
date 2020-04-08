@@ -9,7 +9,7 @@ struct Pixel{
     vec2 fvel;
     float Buffer;               // 3
     float Radius;               // 4
-    float Mass;                 // 5
+    float mass;                 // 5
     float FrictionCoefficient;  // 6
     int linkname[4];            // 7
 };
@@ -17,11 +17,6 @@ struct Pixel{
 layout(std430, binding = 1) buffer Pixels {
     Pixel pixels[];  
 };
-
-layout(std430, binding = 2) buffer Localities {
-  uint localities[4096][4096]; 
-};
-
 
 void main() {
 
@@ -31,19 +26,20 @@ void main() {
     vec2 oldpos = pix.pos;
     pix.pos = pix.fpos;
 
-    pix.vel = pix.fvel;// * 0.95;
-    //pix.vel.y = max(min(pix.vel.y, 2.0),-2.0);
-    //pix.vel.x = max(min(pix.vel.x, 2.0),-2.0);
-
-
+    pix.vel = pix.fvel * 0.995;
+    pix.vel.y = max(min(pix.vel.y, 1.0),-1.0);
+    pix.vel.x = max(min(pix.vel.x, 1.0),-1.0);
     
-    if(pix.pos.y < -30.0){
-        pix.pos.y = -30.0;
-        pix.vel.y  = 0.0;
-        pix.vel.x = 0.0;
+    if(pix.pos.y < -100.0){
+        pix.pos.y = -100.0;
+        pix.vel.y  *= -0.95;
+        pix.vel.x  *= 0.15;
+        pix.mass = 1000.0;
+
     }
 
-    pix.pos.x = max(-1024.0,min(pix.pos.x, 1024.0));
+    if(pix.pos.x > 1024.0 || pix.pos.x < -1024.0)
+        pix.vel.x *= -0.9995;
 
     //if(length(oldpos-pix.pos) < 0.015){
     //    pix.vel *= 0.5;
