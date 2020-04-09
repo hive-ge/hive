@@ -14,7 +14,7 @@ int main(int arg_count, char ** arguments)
     BigBadBoss boss;
 
     // Setup Bosses
-    GLFWBoss interface_boss(1920, 1080);
+    GLFWBoss interface_boss(720, 480);
     DrawBoss draw_boss;
     TextureBoss texture_boss;
     SpriteBoss sprite_boss;
@@ -24,31 +24,28 @@ int main(int arg_count, char ** arguments)
     Drone & drone = boss.createDrone();
 
     drone.connect(sprite_boss.loadSprite("../test_sheet.png"));
-    drone.connect(draw_boss.compileBasicProgram("//@spriteable"
-                                                "//@billboard"
-                                                "#version 430"
-                                                "in vec3 vert;"
-                                                "in vec2 UV;"
-                                                "out vec2 texcoords;"
+
+    drone.connect(draw_boss.compileBasicProgram("#version 430\n"
+                                                "layout (location = 0) in vec3 vert;"
+                                                "layout (location = 1) in vec2 UVs;"
+                                                "out vec2 texcoord;"
                                                 "void main(){"
-                                                "texcoords = UV;"
-                                                "gl_Position = vec4(vert, 1.0);"
-                                                "}",
-                                                "#version 430"
-                                                "//@spriteable"
-                                                "//@billboard"
-                                                "in vec2 texcoords;"
-                                                "layout(location = 0) out vec4 color;"
+                                                "   texcoord = UVs;"
+                                                "   gl_Position = vec4(vert*5.0, 1.0);"
+                                                "}\n",
+                                                "#version 430\n\n"
+                                                "in vec2 texcoord;"
                                                 "uniform sampler2D texture1;"
+                                                "out vec4 FragColor;"
                                                 "void main(){"
-                                                "color = texture(texture1, texcoords);"
-                                                "}"));
+                                                "   FragColor = texture(texture1, texcoord);"
+                                                "}\n"));
 
     draw_boss.allowDraw(drone);
     // draw_boss.barDraw();
 
     // sprite_boss.registerDraw(drone);
 
-    while (boss.update())
-        ;
+    while (boss.update()) {
+    }
 }

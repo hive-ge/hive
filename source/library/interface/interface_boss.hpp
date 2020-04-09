@@ -51,7 +51,7 @@ namespace hive
              * will attempt to create a different drawing surface
              * with the required mode.
              */
-            hive::interface::SCREEN_MODE mode = hive::interface::WINDOWED;
+            SCREEN_MODE mode = hive::interface::WINDOWED;
 
           public:
             InterfaceBoss(unsigned w, unsigned h) : Boss(IDENTIFIER)

@@ -115,15 +115,16 @@ namespace hive
     SpriteProp * SpriteBoss::loadSprite(const std::string texture_image)
     {
 
-        TextureProp texture;
+        TextureProp * texture;
 
         texture = tex_boss->createTexture(texture_image);
 
         SpriteProp & sprite_prop = (*new SpriteProp);
 
-        Sprite sprite;
+        // Next object in this chain is texture
+        sprite_prop.next = texture;
 
-        sprite.texture = texture;
+        Sprite sprite;
 
         sprite_prop.sprite_id = sprites.size();
 

@@ -36,7 +36,6 @@ namespace hive
       protected:
         virtual void deleteUnderlyingGLResource() override;
 
-        void setData(void *, GLenum format, GLenum type);
         //	void setDataArray(void *, unsigned int = 0, unsigned int = 0);
       public:
         Texture(GLenum target = GL_TEXTURE_2D, unsigned internal_format = GL_RGBA,
@@ -48,6 +47,7 @@ namespace hive
             IS_READY = (pointer != 0);
         };
 
+        void setData(void *, GLenum format, GLenum type);
 
         ~Texture() { decreaseReferenceCount(); }
 
@@ -61,7 +61,7 @@ namespace hive
             internal_format = obj.internal_format;
         }
 
-        inline void bind();
+        inline void bind(unsigned unit = 0);
 
         void use(SmartGLUniform &);
 
@@ -128,7 +128,7 @@ namespace hive
     };
     void Texture::deleteUnderlyingGLResource() {}
 
-    void Texture::bind()
+    void Texture::bind(unsigned unit)
     {
         if (tex_2D_references[unit] == pointer)
             return;
@@ -137,7 +137,7 @@ namespace hive
 
         glActiveTexture(GL_TEXTURE0 + unit);
 
-        glBindTexture(target, pointer);
+        glBindTexture(GL_TEXTURE_2D, pointer);
     }
 
     void Texture::bindImageTexture(int access, int format)

@@ -70,7 +70,8 @@
 			"thread": "cpp",
 			"cinttypes": "cpp",
 			"cstdbool": "cpp",
-			"typeinfo": "cpp"
+			"typeinfo": "cpp",
+			"__functional_base": "cpp"
 		}
 	}
 }

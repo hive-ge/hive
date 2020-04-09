@@ -199,9 +199,19 @@ namespace hive
         return shader;
     };
 
-    void reportShaderProgramErrors()
+    void reportShaderProgramErrors(int program)
     {
         int err = glGetError();
+
+        int result, info_length;
+
+        glGetProgramiv(program, GL_INFO_LOG_LENGTH, &info_length);
+
+        std::vector<char> shader_log(info_length > 1 ? info_length : 1);
+
+        glGetProgramInfoLog(program, info_length, NULL, &shader_log[0]);
+
+        DEBUG_META(__LOG("Program failed to load \n "); __LOG(&shader_log[0]);)
 
         do {
             // TODO - Make this more informative.
@@ -341,7 +351,7 @@ namespace hive
                                 inputs, outputs, uniforms, uniform_blocks, shader_buffers);
         } else {
             // pullup any error
-            DEBUG_META(reportShaderProgramErrors());
+            DEBUG_META(reportShaderProgramErrors(program));
             clearErrors();
             glDeleteProgram(program);
         }

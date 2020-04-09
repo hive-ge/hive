@@ -53,7 +53,7 @@ namespace hive
         TextureBoss * boss = nullptr;
 
       public:
-        void useTexture();
+        void useTexture(unsigned unit = 0);
     };
 
     struct TextureData {
@@ -123,7 +123,8 @@ namespace hive
          *
          * TODO run on seperate thread and return early.
          */
-        TextureProp createTexture(const std::string img_path);
+        TextureProp * createTexture(const std::string img_path);
+
 
       protected:
         virtual void update(float delta_t);
@@ -134,7 +135,7 @@ namespace hive
          * Signals that the texture is intended to be used and to
          * tranfer data to video memeory.
          */
-        void useTexture(TextureID id);
+        void useTexture(TextureID id, unsigned unit = 0);
     };
 
 
@@ -148,24 +149,26 @@ namespace hive
 
     void TextureBoss::teardown(){};
 
-    void TextureBoss::useTexture(TextureID id)
+    void TextureBoss::useTexture(TextureID id, unsigned unit)
     {
         TextureData & data = textures[id.id];
 
         if (!data.IN_VIDEO_RAM) {
             auto & ubyte_vec = data.ram_data;
 
-            data.vram_data.setData(ubyte_vec.data(), ubyte_vec.size());
+            data.texture.setData(ubyte_vec.data(), GL_RGBA, GL_UNSIGNED_BYTE);
+
             data.IN_VIDEO_RAM = true;
 
             data.ram_data.clear();
             data.IN_MAIN_RAM = false;
         }
 
+        data.texture.bind(unit);
         // data.texture.use(data.vram_data);
     }
 
-    void TextureProp::useTexture() { boss->useTexture(id); }
+    void TextureProp::useTexture(unsigned unit) { boss->useTexture(id, unit); }
 
     TextureProp * TextureBoss::createTexture(char * buffer, TextureDepth, unsigned width,
                                              unsigned height, unsigned depth)
@@ -178,7 +181,7 @@ namespace hive
     };
 
 
-    TextureProp TextureBoss::createTexture(const std::string img_path)
+    TextureProp * TextureBoss::createTexture(const std::string img_path)
     {
         // Create new buffer.
         std::vector<ubyte> data = loadCharFile(img_path);
@@ -186,7 +189,7 @@ namespace hive
         int tex_id = -1;
 
         TextureData tex_data;
-        TextureProp prop;
+        TextureProp * prop = new TextureProp();
 
         // Test for PNG data
         {
@@ -218,23 +221,30 @@ namespace hive
 
                 unsigned bitdepth = 8;
 
-                std::vector<ubyte> texture_data(png_width * png_height * bitdepth);
+                std::vector<ubyte> texture_data(png_width * png_height * 4);
 
                 auto char_buffer = (texture_data.data());
 
                 /* Get an 8-bit RGBA image regardless of PNG format */
-                spng_decode_image(ctx, char_buffer, out_size, SPNG_FMT_RGBA8, 0);
+                error = spng_decode_image(ctx, char_buffer, out_size, SPNG_FMT_RGBA8, 0);
 
                 if (error) {
 
                 } else {
+                    tex_data.texture =
+                        Texture(GL_TEXTURE_2D, GL_RGBA, 0, png_width, png_height, bitdepth);
+
+
+                    tex_data.texture.setMagFilter(GL_LINEAR);
+                    tex_data.texture.setMinFilter(GL_LINEAR);
+                    tex_data.texture.setTexWrapS(GL_REPEAT);
+                    tex_data.texture.setTexWrapT(GL_REPEAT);
                     tex_data.height    = png_height;
                     tex_data.width     = png_width;
                     tex_data.bit_depth = bitdepth;
                     tex_data.ram_data  = texture_data;
 
                     tex_id = textures.size();
-
 
                     textures.push_back(tex_data);
                 }
@@ -245,10 +255,10 @@ namespace hive
         }
 
         if (tex_id >= 0) {
-            prop.width  = tex_data.width;
-            prop.height = tex_data.height;
-            prop.id.id  = tex_id;
-            prop.boss   = this;
+            prop->width  = tex_data.width;
+            prop->height = tex_data.height;
+            prop->id.id  = tex_id;
+            prop->boss   = this;
         }
 
         // Optionally check to see if there is already a buffer holding this data.

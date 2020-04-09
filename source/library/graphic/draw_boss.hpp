@@ -7,6 +7,8 @@
 #include "primitive/boss.hpp"
 #include "primitive/drone/drone.h"
 #include "primitive/math/vec2.h"
+#include "primitive/math/vec3.h"
+
 
 #include "graphic/sprite_boss.hpp"
 #include "graphic/texture_boss.hpp"
@@ -15,13 +17,36 @@ namespace hive
 {
     using namespace math;
 
+    // Quadrilateral Surface points
+    static unsigned int quad_indices[6] = {0, 1, 3, 3, 2, 1}; // 24
+
+    // Quadrilateral UV coords
+    static vec2 quad_uvs[4] = {{0.0, 0.0}, {1.0, 0.0}, {1.0, 1.0}, {0.0, 1.0}}; // 24
+
+    // Quadrilateral Surface points
+    static vec3 quad_vecs[4] = {{-1.0, 1.0, 0.0},
+                                {1.0, 1.0, 0.0},
+                                {1.0, -1.0, 0.0},
+                                {-1.0, -1.0, 0.0}}; // 48
+
     struct ProgramProp : Prop {
 
       public:
         static const ushort TYPE = PROGRAM_PROP_TYPE;
 
+        Program program;
+
       public:
         ProgramProp() : Prop(TYPE, sizeof(ProgramProp)) {}
+    };
+
+    struct DrawSequence {
+        std::vector<TextureProp *> textures;
+        std::vector<SpriteProp *> sprites;
+        Program program;
+        VRAMBuffer a;
+        VRAMBuffer b;
+        VRAMBuffer c;
     };
 
     /**
@@ -36,17 +61,12 @@ namespace hive
         DrawBoss() : Boss(IDENTIFIER) {}
 
       private:
+        std::vector<DrawSequence> sequences;
+
       public:
         virtual ProgramProp * compileBasicProgram(std::string vert_shader, std::string frag_shader);
         // Called by BigBadBoss instance.
-        virtual void update(float step){
-
-            // For each actve GPU program do:
-            //      initialize program
-            //      load program data
-            //      send program to GPU for rendering.
-
-        };
+        virtual void update(float step);
 
         // Setup of boss systems after everything is loaded
         virtual void setup(){};
@@ -71,14 +91,36 @@ namespace hive
 
         ProgramProp * prop = new ProgramProp;
 
+        prop->program = p;
+
         return prop;
     };
+
+    void DrawBoss::update(float step)
+    {
+        // For each actve GPU program do:
+        //      initialize program
+        //      load program data
+        //      send program to GPU for rendering.
+        for (auto & seq : sequences) {
+
+            seq.program.use();
+
+
+            seq.c.use(SKGLB::ELEMENT_ARRAY_BUFFER);
+
+            for (auto tex : seq.textures) tex->useTexture();
+
+            glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, (void *)0);
+        }
+    }
 
     void DrawBoss::allowDraw(const Drone & drone)
     {
         // Look for drawing systems on drone
         std::vector<TextureProp *> textures;
         std::vector<SpriteProp *> sprites;
+        std::vector<ProgramProp *> programs;
         // vector<MeshProp> meshes;
 
         auto prop = drone.props;
@@ -94,10 +136,61 @@ namespace hive
                 textures.push_back(static_cast<TextureProp *>(prop));
                 break;
             case PROGRAM_PROP_TYPE:
-
+                programs.push_back(static_cast<ProgramProp *>(prop));
                 break;
             }
 
             prop = prop->next;
         };
-    } // namespace hive
+
+        // Treat as a sprite sheet.
+        if (sprites.size() > 0) {
+
+            // Element instance are used when attribs are the same but uniforms are different
+
+            SpriteProp & sprite   = *sprites[0];
+            TextureProp & texture = *textures[0];
+            ProgramProp & program = *programs[0];
+
+
+            DrawSequence seq;
+
+            seq.sprites  = sprites;
+            seq.textures = textures;
+            seq.program  = program.program;
+
+            program.program.use();
+
+            texture.useTexture();
+
+            auto vert = program.program.getInput("vert");
+            auto UV   = program.program.getInput("UVs");
+
+            VRAMBuffer a;
+            VRAMBuffer b;
+            VRAMBuffer c;
+
+            a.setData(&quad_vecs, 48);
+            b.setData(&quad_uvs, 32);
+            c.setData(&quad_indices, 24);
+
+            vert.use(a, GL_FLOAT, 0, 0, 0, false);
+            UV.use(b, GL_FLOAT, 0, 0, 0, false);
+
+            seq.a = a;
+            seq.b = b;
+            seq.c = c;
+
+            // c.use(SKGLB::ELEMENT_ARRAY_BUFFER);
+
+            sequences.push_back(seq);
+
+            // program.program.release();
+
+            // Straight element draw
+
+
+            // texture.bind(i);
+        }
+    }
+} // namespace hive
