@@ -10,16 +10,15 @@ using namespace hive::all;
 
 int main(int arg_count, char ** arguments)
 {
-
-    BigBadBoss boss;
-
     // Setup Bosses
     GLFWBoss interface_boss(720, 480);
-    DrawBoss draw_boss;
-    TextureBoss texture_boss;
-    SpriteBoss sprite_boss;
+    // DrawBoss draw_boss;
+    // TextureBoss texture_boss;
+    // SpriteBoss sprite_boss;
 
     boss.setup();
+    // Setup vulkan
+    /*
 
     Drone & drone = boss.createDrone();
 
@@ -40,8 +39,8 @@ int main(int arg_count, char ** arguments)
                                                 "void main(){"
                                                 "   FragColor = texture(texture1, texcoord);"
                                                 "}\n"));
-
-    draw_boss.allowDraw(drone);
+*/
+    // draw_boss.allowDraw(drone);
     // draw_boss.barDraw();
 
     // sprite_boss.registerDraw(drone);

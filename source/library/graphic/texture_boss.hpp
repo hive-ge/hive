@@ -235,10 +235,10 @@ namespace hive
                         Texture(GL_TEXTURE_2D, GL_RGBA, 0, png_width, png_height, bitdepth);
 
 
-                    tex_data.texture.setMagFilter(GL_LINEAR);
-                    tex_data.texture.setMinFilter(GL_LINEAR);
-                    tex_data.texture.setTexWrapS(GL_REPEAT);
-                    tex_data.texture.setTexWrapT(GL_REPEAT);
+                    tex_data.texture.setMagFilter(GL_NEAREST);
+                    tex_data.texture.setMinFilter(GL_NEAREST);
+                    // tex_data.texture.setTexWrapS(GL_REPEAT);
+                    // tex_data.texture.setTexWrapT(GL_REPEAT);
                     tex_data.height    = png_height;
                     tex_data.width     = png_width;
                     tex_data.bit_depth = bitdepth;

@@ -38,23 +38,21 @@ list(APPEND CMAKE_CXX_SOURCE_FILE_EXTENSIONS hpp cpp)
 # LOCATE DEPENDENCIES
 #link_libraries(${CMAKE_DL_LIBS})
 
-#find_package(OpenGL REQUIRED)
 
-if (OPENGL_FOUND)
-    include_directories(${OPENGL_INCLUDE_DIR})
-	link_libraries(${OPENGL_LIBRARIES})
-	
-    link_libraries(glfw)
-    INCLUDE_DIRECTORIES("glfw/include")
-endif()
 
-find_package(GLEW REQUIRED)
+find_package(OpenGL REQUIRED)
 
-if (GLEW_FOUND)
-include_directories(${GLEW_INCLUDE_DIRS})
-link_libraries(${GLEW_LIBRARIES})
-endif()
+	if (OPENGL_FOUND)
+		include_directories(${OPENGL_INCLUDE_DIR})
+		link_libraries(${OPENGL_LIBRARIES})
+	endif()
 
+	find_package(GLEW REQUIRED)
+
+	if (GLEW_FOUND)
+		include_directories(${GLEW_INCLUDE_DIRS})
+		link_libraries(${GLEW_LIBRARIES})
+	endif()
 
 find_package(ZLIB REQUIRED)
 
@@ -62,6 +60,16 @@ if (ZLIB_FOUND)
     include_directories(${ZLIB_INCLUDE_DIRS})
     link_libraries(${ZLIB_LIBRARIES})
 endif()
+
+
+find_package(Vulkan REQUIRED)
+if(Vulkan_FOUND)
+	include_directories(${Vulkan_INCLUDE_DIRS})
+    link_libraries(${Vulkan_LIBRARIES})
+endif()
+
+link_libraries(glfw)
+INCLUDE_DIRECTORIES("glfw/include")
 
 #find_package(Vulkan REQUIRED)
 
@@ -106,6 +114,7 @@ include_directories( "./filesystem")
 
 include_directories( "./gpu")
 include_directories( "./gpu/opengl")
+include_directories( "./gpu/vulkan")
 
 include_directories("./resource")
 

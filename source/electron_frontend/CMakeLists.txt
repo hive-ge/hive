@@ -21,35 +21,30 @@ set (ruminate_VERSION_MAJOR 0)
 set (ruminate_VERSION_MINOR 1)
 set (ruminate_VERSION_PATCH 0)
 
-project("HIVE_SYSTEM")
-
-add_subdirectory("./source/library")
-add_subdirectory("./source/electron_frontend")
 
 ###########################################
 # SIMPLE PLATFORMER EXE
 ###########################################
 
-#set( PROJECT_NAME "platformer")
+set( PROJECT_NAME "hive_dev")
 
-#project(${PROJECT_NAME})
-
-###########################################
-# LOCATE DEPENDENCIES
-
-
-#find_package(Vulkan REQUIRED)
-#INCLUDE_DIRECTORIES("source/library")
-#INCLUDE_DIRECTORIES("source/sample")
-#INCLUDE_DIRECTORIES("source/electron_frontend")
-
-#INCLUDE_DIRECTORIES(${Vulkan_INCLUDE_DIR})
-
+project(${PROJECT_NAME})
 
 ##########################################
-## Define the executable
+## Define the library
+include_directories("../library")
 
-#add_executable(${PROJECT_NAME} "source/samples/platformer.cpp")
+include_directories(${CMAKE_JS_INC})
 
-#target_link_libraries( ${PROJECT_NAME} hive)
+add_library(${PROJECT_NAME} SHARED "hive_frontend.cpp" ${CMAKE_JS_SRC})
+
+set_target_properties(${PROJECT_NAME} PROPERTIES PREFIX "" SUFFIX ".node")
+
+target_link_libraries(${PROJECT_NAME} ${CMAKE_JS_LIB})
+
+target_link_libraries(${PROJECT_NAME} hive)
+
+
+
+
 

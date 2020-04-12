@@ -24,7 +24,6 @@
 //#include "/usr/local/include/gl3w/GL/gl3w.h"
 #include <GL/glew.h>
 #define GLFW_INCLUDE_NONE
-#include <GLFW/glfw3.h>
 #endif // HIVE_USE_GLFW
 
 

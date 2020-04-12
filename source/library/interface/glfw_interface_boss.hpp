@@ -2,6 +2,7 @@
 
 #include "interface/interface_boss.hpp"
 
+#include <GLFW/glfw3.h>
 #include <iostream>
 #include <vector>
 
@@ -388,7 +389,13 @@ namespace hive
             {
                 if (window != nullptr) {
                     glfwDestroyWindow(window);
+
+#ifdef HIVE_USE_GL
                     glfwTerminate();
+#endif
+#ifdef HIVE_USE_VULKAN
+                    vulkanDestroy();
+#endif
                     window = nullptr;
                 }
             }
@@ -400,9 +407,13 @@ namespace hive
 
                 if (glfwInit() == GLFW_TRUE) {
 
-                    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
-                    glfwWindowHint(GLFW_FLOATING, GLFW_TRUE);
+#ifdef HIVE_USE_VULKAN
+                    glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
+#endif
 
+
+#ifdef HIVE_USE_GL
+                    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
 //############################## DEBUG
 #ifdef HIVE_DEBUG
                     glfwWindowHint(GLFW_OPENGL_DEBUG_CONTEXT, GLFW_TRUE);
@@ -410,16 +421,44 @@ namespace hive
 
 //############################## END DEBUG
 #else
-                    window = glfwCreateWindow(width, height, "HIVE RELEASE", NULL, NULL);
 #endif
+                    /*make this the current context */
+                    glfwMakeContextCurrent(window);
+#endif
+                    glfwWindowHint(GLFW_FLOATING, GLFW_TRUE);
+
+                    window = glfwCreateWindow(width, height, "HIVE RELEASE", NULL, NULL);
 
                     if (window == nullptr) {
                         glfwTerminate();
                         fatalError();
+                        return;
                     }
 
-                    /*make this the current context */
-                    glfwMakeContextCurrent(window);
+#ifdef HIVE_USE_VULKAN
+
+                    auto extensionFunction = [&](unsigned * extension_count,
+                                                 const char *** glfw_extensions) {
+                        (*glfw_extensions) = glfwGetRequiredInstanceExtensions(extension_count);
+                    };
+
+                    auto surfaceFunction = [&](VkInstance instance,
+                                               VkSurfaceKHR * vksurface) -> bool {
+                        if (glfwCreateWindowSurface(instance, window, nullptr, vksurface) !=
+                            VK_SUCCESS) {
+                            __ERROR("Failed to create VK Surface");
+                            return false;
+                        }
+
+                        return true;
+                    };
+
+                    initVulkanInstance(extensionFunction);
+
+                    initVulkanSurface(surfaceFunction);
+
+                    initVulkanDevice();
+#endif
 
                     // Setup inputs
                     glfwSetKeyCallback(window, GLFWKeyboardCallback);
@@ -431,16 +470,12 @@ namespace hive
                     // Get all connected controllers
                     pollControllers();
 
-                    auto err = glewInit();
-                    /* Initialize glew to get GL extensions running */
-                    if (err != GLEW_OK) {
-                        __ERROR(std::string((char *)glewGetErrorString(err)));
-                    } else {
-                        return;
-                    }
+                    return;
                 }
 
                 fatalError();
+
+                return;
             };
 
 
@@ -482,8 +517,8 @@ namespace hive
             {
                 return glfwMouse.getMouseStateReader();
             };
-        };
-    } // namespace interface
+        }; // namespace interface
+    }      // namespace interface
 } // namespace hive
 
 #endif

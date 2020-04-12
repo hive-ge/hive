@@ -1,0 +1,27 @@
+{
+    "type": "module",
+    "name": "hive",
+    "version": "0.0.1",
+    "description": "Prototyping System",
+    "main": "./source/electron_frontend/hive_frontend_entry.js",
+    "repository": "ssh://github.com/acweathersby/hive",
+    "author": "Anthony C Weathersby",
+    "license": "MIT",
+    "private": true,
+    "scripts": {
+        "start": "electron --enable-transparent-visuals --disable-gpu ."
+    },
+    "bin": {
+        "hivedev": "./source/electron_frontend/hive_frontend_entry.js"
+    },
+    "dependencies": {
+        "@candlefw/hydrocarbon": "^0.3.4-dev-1",
+        "@candlefw/wick": "^0.8.13",
+        "cmake-js": "^6.1.0",
+        "electron": "^8.2.1",
+        "emscripten": "^0.0.2-beta"
+    },
+    "devDependencies": {
+        "@candlefw/test": "^0.0.1"
+    }
+}
