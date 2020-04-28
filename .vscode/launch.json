@@ -5,6 +5,17 @@
     "version": "0.2.0",
     "configurations": [
         {
+            "name": "Launch",
+            "type": "lldb",
+            "request": "launch",
+            "program": "/home/anthony/.nvm/versions/node/v13.11.0/bin/node",
+            "cwd": "${workspaceFolder}",
+            "args": [
+                "${workspaceFolder}/dev.js"
+            ],
+        }
+        /*
+        {
             "name": "clang++ - Build and debug active file",
             "type": "cppdbg",
             "request": "launch",
@@ -33,5 +44,6 @@
             ],
             "miDebuggerPath": "lldb-mi"
         }
+        */
     ]
 }

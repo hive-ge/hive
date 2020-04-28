@@ -1,0 +1,273 @@
+
+@SYMBOL //::HIVE ... :: -> && // /*
+
+@IGNORE θws θnl
+
+<> cpp > start
+
+<> start > statements
+
+<> statements > statement(+)
+
+<> statement > //::HIVE t:DRONE_PROP g:nl class_declaration ;       f:return{ {t:"HivePropStruct", v:$sym4} } 
+    |  g:any(+)                                                     f:return{ null }  
+
+<> name > g:id
+
+<> declaration > specifiers_and_qualifier(+) declarators_and_initializers ; f:return { { specifiers:$sym1, decl:$sym2  } }
+
+<> initializer > 
+    \= expression 
+    | \( expression_list \) 
+    | { initializer_list }
+
+<> initializer_list > expression(+,)
+
+<> expression_list > expression(+,)
+
+<> expression > 
+    value 
+    | qualified_id \( expression_list? \)   f:return{ {t:"call", name:$sym1, args:$sym3} }
+
+<> value  > 
+    qualified_id 
+    | g:num                 f:return{ {t:"num_literal", val:$sym1} }
+### Attributes - Attribute Specifier Sequence >= C++11
+
+    <> attr > 
+        \[\[ attribute_list \]\] 
+        | \[\[ t:using attribute_namespace : attribute_list \]\]
+
+    <> attribute_list > attribute(+,) \...?
+
+    <> attribute > 
+        identifier 
+        | attribute_namespace :: identifier
+        | identifier \( argument_list \)
+        | attribute_namespace :: identifier \( argument_list \)
+
+    <> argument_list > expression_list
+
+    <> attribute_namespace > qualified_id
+
+
+## Function Declaration
+
+<> function_declaration > noptr_declarator \( (parameter_list (,? ...)? | ...? )  \) cv? ref? except? attr? ( -> trailing )?
+
+<> cv > [t:constant? t:volatile?]
+
+<> trailing > declarator
+
+<> ref > t:ref
+
+<> noptr_declarator > declarator 
+
+<> except > noexcept_specifier | dynamic_exception
+
+<> dynamic_exception > t:throw\( ( typeid(+,) )? \)
+
+<> typeid > qualified_id
+
+<> noexcept_specifier > t:noexcept  ( \( expression \) )?
+
+<> parameter_list > parameter_declaration(+,)
+
+<> parameter_declaration > attr? decl_specifier_seq declarator? initializer? f:cstr{ 
+ 
+    const data = env.fn.mergeChain($$sym2);
+    this.attr=$sym1;
+    this.specifiers = data ? data.filter(v=>v.type == "specifier").map(a=>a.v) : [];
+    this.qualifiers = data ? data.filter(v=>v.type == "qualifier").map(a=>a.v) : [];
+    this.type = data ? data.filter(v=>v.type != "specifier" && v.type != "qualifier").map(a=>a.v) : [];
+    this.name=$$sym3;
+    this.init=$$sym4;
+}
+
+## Function Definition
+
+<> compound_statement > \{ compound_statements? \} ;?
+
+<> compound_statements > compound_statements compound_statement
+    | compound_statements g:any
+    | g:any
+    | compound_statement 
+
+<> function_definition > attr? decl_specifier_seq? function_declaration virt_specifier_seq? function_body
+
+<> virt_specifier_seq > t:final 
+
+<> function_body > compound_statement 
+    | = t:delete ;
+    | = t:default ;
+    | function_try_block
+    | ;
+
+<> function_try_block > t:try compound_statement
+
+<> constructor_function_try_block  > t:try compound_statement
+
+<> noptr_declarator > 
+    qualified_id attr?
+    | ... identifier attr?
+    | nested_name_specifier * attr declarator?
+    | noptr_declarator \[ constexpr? \] attr?
+    #| noptr_declarator \( parameter_list \) cv? ref? except? attr?
+    #| \( ptr_declarator \)
+
+<> constexpr > expression
+
+<> declarator > 
+    qualified_id attr?
+    | ... identifier attr?
+    | nested_name_specifier * attr? declarator?
+    | noptr_declarator \[ constexpr? \] attr?
+    | noptr_declarator \( parameter_list? \) cv? ref? except? attr?
+    | ptr_declarator
+
+<> ptr_declarator > 
+      \* attr? declarator?  f:return{ { type:"ptr", name:$sym3 } }
+    | \& attr? declarator?  f:return{ { type:"ptr", name:$sym3 } }
+    | \&& attr? declarator? f:return{ { type:"ptr", name:$sym3 } }
+
+
+## Class Declaration
+
+    <> class_declaration > class_key attr? class_head_name? f:{ env.class_name = sym[sym.length-1] } base_clause? { member_specification(+) } f:return{ {name:$sym3, props:$$sym6} }
+
+    <> class_key > 
+        t:struct 
+        | t:class_key
+
+    <> class_head_name > qualified_id t:final?  f:return{ $sym1.final == !!$$sym2, $sym1 }
+
+### Base Clause
+
+        <> base_clause > \: base_specifiers(+,)
+
+        <> base_specifiers > attr? access_specifier? t:virtual? class_or_decltype
+            | attr? t:virtual? access_specifier? class_or_decltype      
+
+        <> class_or_decltype > qualified_id
+
+### Class Members
+
+        <> member_specification >  property_attribs? declarator initializer? ;
+
+            f:cstr{ 
+                this.t = "member property";
+                this.specifiers = $$sym1 ? $$sym1.specifiers : [];
+                this.qualifiers = $$sym1 ? $$sym1.qualifiers : [];
+                this.type = $$sym1 ? $$sym1.type : [];
+                this.name = $$sym2;
+                this.init = $$sym3
+            }
+
+            |   property_attribs? declarator \( parameter_list? \) member_function_initializer? function_body? 
+
+            f:cstr{ 
+                this.t = (env.class_name.v == $sym2.v) ? "constructor function" : "member function";
+                this.specifiers = $$sym1 ? $$sym1.specifiers : [];
+                this.qualifiers = $$sym1 ? $$sym1.qualifiers : [];
+                this.type = $$sym1 ? $$sym1.type : [];
+                this.name = $$sym2;
+                this.params=$$sym4;
+            }
+
+            | \~ declarator \(  parameter_list? \) function_body? 
+
+            f:return{ 
+                {t:"destructor function", name:$sym2, params:$$sym4} 
+            }               
+
+            | access_specifier \: 
+
+            f:return{ {t:"access", val:$sym1} }
+
+        <> member_function_initializer > \: ( qualified_id \( expression_list? \) )(+,)
+
+        <> prop_declarator > 
+            declarator 
+            | noptr_declarator
+
+        <> property_attribs >  attr? decl_specifier_seq?  f:cstr{ 
+            
+            const data = env.fn.mergeChain($$sym2);
+
+            this.specifiers = data ? data.filter(v=>v.type == "specifier").map(a=>a.v) : [];
+            this.qualifiers = data ? data.filter(v=>v.type == "qualifier").map(a=>a.v) : [];
+            this.type = data ? data.filter(v=>v.type != "specifier" && v.type !== "qualifier").map(a=>a.v) : [];
+        }
+
+        <> decl_specifier_seq > specifiers_and_qualifier f:return{ { n:null, v:$sym1, f:null } }
+            | decl_specifier_seq specifiers_and_qualifier f:return{ $sym1.f = $sym1.f || $sym1, $sym1.n = { n:null, v:$sym2, f:$sym1.f }, $sym1.n  }
+
+        <> member_declaration_list > declarator initializer?
+
+        <> pure_specifier >  t:vir
+
+        <> init_declarator_list > ( declarator initializer )(+,)
+
+
+<> nested_name_specifier > qualified_id
+
+<> access_specifier > 
+    τpublic                         f:return{ { v:$sym1, type : "specifier" }  }
+    | τprivate                      f:return{ { v:$sym1, type : "specifier" }  }
+    | τprotected                    f:return{ { v:$sym1, type : "specifier" }  }
+
+## Specifiers
+
+<> specifiers_and_qualifier > 
+    specifier 
+    | type_qualifier                f:return{ { v:$sym1, type : "qualifier" }  }
+    | storage_class_specifier       f:return{ { v:$sym1, type : "specifier" }  }
+
+<> specifier > 
+    qualified_id
+    | t:void                        f:return{ { v:$sym1, type : "specifier" }  }
+    | arithmatic_type               f:return{ { v:$sym1, namespace : ["g_arithmatic_primitive"] } }
+
+<> declarators_and_initializers > declarator initializer?
+
+<> struct_declaration_list > g:num
+
+<> type_qualifier >
+    t:const
+    | t:volatile
+    | t:restrict
+    
+<> storage_class_specifier >
+    t:auto
+    | t:static
+    | t:register
+    | t:extern
+
+<> arithmatic_type > 
+    t:char
+    | t:int
+    | t:short
+    | t:long
+    | t:signed
+    | t:unsigned
+    | t:float
+    | t:double 
+    | \_ (ERR g:ws) t:Bool
+    | \_ (ERR g:ws) t:Complex
+    | \_ (ERR g:ws) t:Imaginary
+
+### Identifiers
+
+<> qualified_id > qualified_id_part                             
+
+<> qualified_id_part > namespace_names unqualified_id           f:return{ $sym2.namespace = $sym1, $sym2 }
+    | unqualified_id 
+    | \:: unqualified_id   
+
+<> namespace_names > ( unqualified_id )(+::) \::                f:return {$sym1.map(s=>s.v)}
+
+<> unqualified_id > (RED g:ws) identifier                       f:return{ { v:$sym1 } }
+
+<> identifier > g:id 
+    | \_  
+    | identifier g:id                                           f:return{ $sym1 + $sym2 }

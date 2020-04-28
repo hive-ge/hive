@@ -1,24 +1,26 @@
 #include <hive.h>
-#include <nodejs/src/node_api.h>
 #include <thread>
 #include <vector>
+
+
+#include <nodejs/src/node_api.h>
+
+#include "./interfaces.hpp"
 
 using namespace hive::all;
 
 BigBadBoss boss;
 
-GLFWBoss interface_boss(1920, 1080);
+GLFWBoss interface_boss(512, 512);
 
 // Sentinal agains multiple setup calls if there
 // are more than one NodeJS instances running.
 bool INITIALIZED = false, CLOSING = false;
 
-
 // Deferred object to inform NodeJS/Electron that the app should close.
 napi_threadsafe_function close_function;
 
 std::vector<napi_env> closing_environments;
-
 
 void shouldClose()
 {
@@ -127,11 +129,12 @@ napi_value HiveShouldClose(napi_env env, napi_callback_info info)
 
 NAPI_MODULE_INIT()
 {
+    std::cout << "HELO WORLD" << std::endl;
+
     napi_status status;
 
-
     napi_value init_fn, close_event_fn;
-
+    //*
     status = napi_create_function(env, "init", 0, HiveInitializeFunction, NULL, &init_fn);
     if (status != napi_ok) return NULL;
 
@@ -145,6 +148,8 @@ NAPI_MODULE_INIT()
     status = napi_set_named_property(env, exports, "addShouldCloseCB", close_event_fn);
     if (status != napi_ok) return NULL;
 
+    //*/
+    hive::js::RegisterInterfaces(env, exports);
 
     return exports;
 }

@@ -24,7 +24,7 @@ set (ruminate_VERSION_PATCH 0)
 project("HIVE_SYSTEM")
 
 add_subdirectory("./source/library")
-add_subdirectory("./source/electron_frontend")
+add_subdirectory("./source/frontend")
 
 ###########################################
 # SIMPLE PLATFORMER EXE

@@ -21,9 +21,11 @@ set (ruminate_VERSION_MAJOR 0)
 set (ruminate_VERSION_MINOR 1)
 set (ruminate_VERSION_PATCH 0)
 
+# define NPI_VERSION
+add_definitions(-DNAPI_VERSION=5)
 
 ###########################################
-# SIMPLE PLATFORMER EXE
+# HIVE FRONT END JS LINKAGE
 ###########################################
 
 set( PROJECT_NAME "hive_dev")
@@ -36,7 +38,7 @@ include_directories("../library")
 
 include_directories(${CMAKE_JS_INC})
 
-add_library(${PROJECT_NAME} SHARED "hive_frontend.cpp" ${CMAKE_JS_SRC})
+add_library(${PROJECT_NAME} SHARED "hive_frontend.cpp" "./interfaces.hpp" ${CMAKE_JS_SRC})
 
 set_target_properties(${PROJECT_NAME} PROPERTIES PREFIX "" SUFFIX ".node")
 

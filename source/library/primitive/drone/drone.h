@@ -13,15 +13,18 @@ namespace hive
 {
     struct Drone;
 
+    //::HIVE DRONE_PROP
     struct Prop {
 
       public:
         static const ushort TYPE = NULL_PROP_TYPE;
 
+        static Prop * construct() { return new Prop(); }
+
       public:
+        Drone * drone    = nullptr;
         Prop * prev      = nullptr;
         Prop * next      = nullptr;
-        Drone * drone    = nullptr;
         ushort type      = 0;
         ushort byte_size = 0;
 
@@ -40,7 +43,7 @@ namespace hive
          * If the prop is already connected to the
          * the drone then this method will have no effect.
          */
-        void connect(Drone *);
+        void connect(hive::Drone *);
 
         /**
          * Disconnects the property from it's drone
@@ -48,6 +51,9 @@ namespace hive
          * method will have no effect.
          */
         void disconnect();
+
+
+        void gravy(Prop * prop) { std::cout << "Test set " << prop->byte_size << std::endl; };
     };
 
     struct ID {
