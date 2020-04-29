@@ -1,13 +1,12 @@
 #pragma once
 
-#include "primitive/typedef.h"
+#include "../typedef.hpp"
 
 // Property Types
 #define NULL_PROP_TYPE 0
 #define SPRITE_PROP_TYPE 1
 #define TEXTURE_PROP_TYPE 2
 #define PROGRAM_PROP_TYPE 3
-
 
 namespace hive
 {
@@ -51,9 +50,6 @@ namespace hive
          * method will have no effect.
          */
         void disconnect();
-
-
-        void gravy(Prop * prop) { std::cout << "Test set " << prop->byte_size << std::endl; };
     };
 
     struct ID {
@@ -65,23 +61,38 @@ namespace hive
     };
 
     // Forward declare the big one.
-    class BigBadBoss;
+    // class BigBadBoss;
 
+    //::HIVE DRONE_PROP
     struct Drone {
-        friend BigBadBoss;
 
+        //  friend hive::BigBadBoss;
+
+      private:
+        static void * boss;
+
+      public:
         ID id;
 
+        static inline void setBoss(void * ptr)
+        {
+            if (boss == nullptr) boss = ptr;
+        };
+
+        static inline void * getBoss() { return boss; };
+
+      public:
         unsigned long long flags = 0;
 
         Prop * props = nullptr;
 
-      private:
-        BigBadBoss * boss = nullptr;
-        Drone(BigBadBoss * b) : boss(b){};
+        static Drone * construct();
 
       public:
+        Drone(){};
         ~Drone() {}
+
+        Drone * operator->();
 
         // Defined in boss.hpp;
         void signalUpdate();
@@ -116,17 +127,4 @@ namespace hive
             prop->drone = nullptr;
         };
     };
-
-    void Prop::connect(Drone * drone)
-    {
-        if (this->drone)
-            if (this->drone == drone) return;
-
-        drone->connect(this);
-    }
-
-    void Prop::disconnect()
-    {
-        if (this->drone) this->drone->disconnect(this);
-    }
 } // namespace hive

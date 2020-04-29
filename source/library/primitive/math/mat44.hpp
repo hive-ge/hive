@@ -1,6 +1,6 @@
 #pragma once
 
-#include "./vec4.h"
+#include "./vec4.hpp"
 #include <cmath>
 #include <iostream>
 

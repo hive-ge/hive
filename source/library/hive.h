@@ -1,9 +1,10 @@
 #pragma once
 
+#ifndef HIVE_HEADER_H
+#define HIVE_HEADER_H
 
 #define HIVE_USE_GLFW
 #define HIVE_DEBUG
-#define HIVE_USE_OPENGL
 //#define HIVE_USE_VULKAN
 
 #define HIVE_MAJOR_VERSION 0
@@ -22,26 +23,28 @@
 #define HIVE_APP_PATCH_VERSION 0
 #endif
 
+#include "primitive/typedef.hpp"
 
-#include "primitive/typedef.h"
 
 // GPU Systems
-#include "gpu/opengl/gl.h"
-#include "gpu/vulkan/vulkan_wrap.hpp"
+#ifdef HIVE_USE_OPENGL
+#include "gpu/opengl/gl.hpp"
+#endif
 
-// Primitives
-#include "gpu/gpu_primitive.hpp"
-#include "primitive/drone/drone.h"
+#ifdef HIVE_USE_VULKAN
+#include "gpu/vulkan/vulkan_wrap.hpp"
+#endif
+
 
 // MATHS Stuff
-#include "primitive/math/line.h"
-#include "primitive/math/mat33.h"
-#include "primitive/math/mat44.h"
-#include "primitive/math/qbezier.h"
-#include "primitive/math/quat.h"
-#include "primitive/math/vec2.h"
-#include "primitive/math/vec3.h"
-#include "primitive/math/vec4.h"
+#include "primitive/math/line.hpp"
+#include "primitive/math/mat33.hpp"
+#include "primitive/math/mat44.hpp"
+#include "primitive/math/qbezier.hpp"
+#include "primitive/math/quat.hpp"
+#include "primitive/math/vec2.hpp"
+#include "primitive/math/vec3.hpp"
+#include "primitive/math/vec4.hpp"
 
 
 // Interface - Accessed through an interface boss.
@@ -50,18 +53,22 @@
 #include "interface/input/mouse/mouse.hpp"
 
 // Bosses
+#include "primitive/boss.hpp"
 //#include "graphic/draw_boss.hpp"
 //#include "graphic/sprite_boss.hpp"
 //#include "graphic/texture_boss.hpp"
 #include "interface/glfw_interface_boss.hpp"
 #include "interface/interface_boss.hpp"
-#include "primitive/boss.hpp"
+
+// Primitives
+#include "gpu/gpu_primitive.hpp"
+#include "primitive/drone/drone.hpp"
 
 // Resource
 #include "resource/load.hpp"
 
 // Utility
-#include "primitive/log.h"
+#include "primitive/log.hpp"
 
 
 namespace hive
@@ -71,6 +78,9 @@ namespace hive
         using namespace hive;
         // using namespace hive::graphic;
         using namespace hive::interface;
+        using namespace hive::math;
         // using namespace gl;
     } // namespace all
 } // namespace hive
+
+#endif

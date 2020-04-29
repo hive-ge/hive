@@ -1,6 +1,6 @@
 #pragma once
 
-#include "gpu/opengl/glwrap.h"
+#include "gpu/opengl/glwrap.hpp"
 
 namespace hive
 {

@@ -9,7 +9,7 @@ SET (CMAKE_C_FLAGS_RELEASE_INIT        "-O3 -DNDEBUG")
 SET (CMAKE_C_FLAGS_RELWITHDEBINFO_INIT "-O2 -g")
 
 
-SET (CMAKE_CXX_FLAGS_INIT                "-std=c++17 -pthread")
+SET (CMAKE_CXX_FLAGS_INIT                "-std=c++17 -pthread -fPIC")
 SET (CMAKE_CXX_FLAGS_DEBUG          	 "-O0 -g")
 SET (CMAKE_CXX_FLAGS_MINSIZEREL_INIT     "-O2 -DNDEBUG")
 SET (CMAKE_CXX_FLAGS_RELEASE_INIT        "-O3 -DNDEBUG")
@@ -21,6 +21,12 @@ set (HIVE_VERSION_MAJOR 0)
 set (HIVE_VERSION_MINOR 1)
 set (HIVE_VERSION_PATCH 0)
 
+SET (HIVE_USE_OPENGL true)
+
+set(CMAKE_POSITION_INDEPENDENT_CODE ON)
+
+
+add_definitions(-DHIVE_USE_OPENGL -DHIVE_USE_GLFW)
 
 ###########################################
 # HIVE LIBRARY
@@ -37,8 +43,6 @@ list(APPEND CMAKE_CXX_SOURCE_FILE_EXTENSIONS hpp cpp)
 ###########################################
 # LOCATE DEPENDENCIES
 #link_libraries(${CMAKE_DL_LIBS})
-
-
 
 find_package(OpenGL REQUIRED)
 
@@ -69,34 +73,37 @@ if(Vulkan_FOUND)
 endif()
 
 link_libraries(glfw)
+
 INCLUDE_DIRECTORIES("glfw/include")
 
 #find_package(Vulkan REQUIRED)
 
 ## Use all the *.cpp files we found under this folder for the project
-FILE(GLOB SRCS
+FILE(GLOB_RECURSE SRCS
 	"./3rdparty/libspng/spng.c" 
-	"./*.cpp"
- 	"./audio/**/*.cpp"
-	"./filesystem/**/*.cpp"
-	"./gpu/**/*.cpp"
-	"./interface/**/*.cpp"
-	"./network/**/*.cpp"
-	"./primitive/**/*.cpp"
-	"./script/**/*.cpp"
+	"./hive.cpp"
+ 	"./audio/**.cpp"
+	"./filesystem/**.cpp"
+	"./gpu/**.cpp"
+	"./interface/**.cpp"
+	"./network/**.cpp"
+	"./primitive/**.cpp"
+	"./primitive/**.cpp"
+	"./script/**.cpp"
 ) 
 
-FILE(GLOB INCLUDES
-	"./3rdparty/libspng/spng.h" 
-	"./*.h*"
- 	"./audio/**/*.h*"
-	"./filesystem/**/*.h*"
-	"./gpu/**/*.h*"
-	"./interface/**/*.h*"
-	"./network/**/*.h*"
-	"./primitive/**/*.h*"
-	"./script/**/*.h*"
+FILE(GLOB_RECURSE INCLUDES
+	"3rdparty/libspng/spng.h" 
+	"./*.hpp"
+ 	"audio/**.hpp"
+	"filesystem/**.hpp"
+	"gpu/**.hpp"
+	"interface/**.hpp"
+	"network/**.hpp"
+	"primitive/**.hpp"
+	"script/**.hpp"
 ) 
+
 
 ##########################################
 ## Add Include Objects
@@ -125,11 +132,13 @@ include_directories("./interface/input/controller")
 
 include_directories( "./network")
 include_directories( "./script")
+include_directories( "./primitive")
 include_directories( "./primitive/math")
+include_directories( "./primitive/drone")
 include_directories( "./script")
 include_directories( "./node")
 
 ##########################################
 ## Define the library
 
-add_library(${HIVE_LIBRARY_PROJECT} ${SRCS} ${INCLUDES})
+add_library(${HIVE_LIBRARY_PROJECT} STATIC ${SRCS} ${INCLUDES})

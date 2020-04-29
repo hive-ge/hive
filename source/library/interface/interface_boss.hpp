@@ -4,7 +4,7 @@
 #include "interface/input/keyboard/keyboard.hpp"
 #include "interface/input/mouse/mouse.hpp"
 #include "primitive/boss.hpp"
-#include "primitive/log.h"
+#include "primitive/log.hpp"
 
 #include <iostream>
 #include <vector>

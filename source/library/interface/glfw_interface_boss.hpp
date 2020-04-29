@@ -6,7 +6,7 @@
 #include <iostream>
 #include <vector>
 
-#ifdef HIVE_USE_GLFW
+//#ifdef HIVE_USE_GLFW
 
 #define makePressCase(KEY_NAME)                                                                    \
     case GLFW_KEY_##KEY_NAME:                                                                      \
@@ -48,10 +48,11 @@ namespace hive
         using namespace controller;
         using namespace mouse;
 
-        keyboard::Keyboard glfwKeyboard;
-        mouse::Mouse glfwMouse;
+        static keyboard::Keyboard glfwKeyboard;
+        static mouse::Mouse glfwMouse;
 
-        void GLFWKeyboardCallback(GLFWwindow * window, int key, int scancode, int action, int mods)
+        inline void GLFWKeyboardCallback(GLFWwindow * window, int key, int scancode, int action,
+                                         int mods)
         {
             if (action == GLFW_PRESS) {
                 switch (key) {
@@ -302,13 +303,13 @@ namespace hive
             }
         };
 
-        static void GLFWMousePositionCallback(GLFWwindow * window, double xpos, double ypos)
+        inline void GLFWMousePositionCallback(GLFWwindow * window, double xpos, double ypos)
         {
             glfwMouse.setX(xpos);
             glfwMouse.setY(ypos);
         };
 
-        void GLFWMouseButtonCallback(GLFWwindow * window, int button, int action, int mods)
+        inline void GLFWMouseButtonCallback(GLFWwindow * window, int button, int action, int mods)
         {
             if (action == GLFW_PRESS) {
                 switch (button) {
@@ -335,7 +336,7 @@ namespace hive
             }
         }
 
-        void error_callback(int error, const char * description)
+        inline void error_callback(int error, const char * description)
         {
             fprintf(stderr, "Error: %s\n", description);
         }
@@ -403,6 +404,7 @@ namespace hive
           protected:
             virtual void setup()
             {
+
                 glfwSetErrorCallback(error_callback);
 
                 if (glfwInit() == GLFW_TRUE) {
@@ -521,4 +523,4 @@ namespace hive
     }      // namespace interface
 } // namespace hive
 
-#endif
+//#endif

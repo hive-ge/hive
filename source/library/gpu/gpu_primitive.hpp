@@ -5,7 +5,7 @@
 #endif
 
 #ifdef HIVE_USE_OPENGL
-#include "gpu/opengl/gl.h"
-#include "gpu/opengl/program.h"
-#include "gpu/opengl/texture.h"
+#include "gpu/opengl/gl.hpp"
+#include "gpu/opengl/program.hpp"
+#include "gpu/opengl/texture.hpp"
 #endif

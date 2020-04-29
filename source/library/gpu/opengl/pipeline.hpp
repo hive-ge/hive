@@ -1,18 +1,16 @@
 #pragma once
 
-#ifdef HIVE_USE_OPENGL
 
-#include "gpu/opengl/glwrap.h"
-#include "gpu/opengl/input.h"
-#include "gpu/opengl/output.h"
-#include "gpu/opengl/uniform.h"
-#include "gpu/opengl/uniform_block.h"
-#include "primitive/log.h"
-#include "program.h"
+#include "gpu/opengl/glwrap.hpp"
+#include "gpu/opengl/input.hpp"
+#include "gpu/opengl/output.hpp"
+#include "gpu/opengl/uniform.hpp"
+#include "gpu/opengl/uniform_block.hpp"
+#include "primitive/log.hpp"
+#include "program.hpp"
 #include <string>
 #include <unordered_map>
 #include <vector>
-
 
 namespace hive
 {
@@ -113,5 +111,3 @@ namespace hive
         }
     } // namespace gl
 } // namespace hive
-
-#endif

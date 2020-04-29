@@ -9,7 +9,7 @@
     "license": "MIT",
     "private": true,
     "scripts": {
-        "start": "node ./source/frontend/hive_frontend_entry.js",
+        "start": "node ./source/frontend/hive_frontend_entry.cjs",
         "start.electron": "electron ./source/frontend/hive_frontend_entry.js",
         "build:dev": "cmake-js build --runtime node --debug",
         "build": "cmake-js --runtime node build",

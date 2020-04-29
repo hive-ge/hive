@@ -1,14 +1,12 @@
 #pragma once
 
-#ifdef HIVE_USE_OPENGL
-
-#include "gpu/opengl/glwrap.h"
-#include "gpu/opengl/input.h"
-#include "gpu/opengl/output.h"
-#include "gpu/opengl/shader_block.h"
-#include "gpu/opengl/uniform.h"
-#include "gpu/opengl/uniform_block.h"
-#include "primitive/log.h"
+#include "gpu/opengl/glwrap.hpp"
+#include "gpu/opengl/input.hpp"
+#include "gpu/opengl/output.hpp"
+#include "gpu/opengl/shader_block.hpp"
+#include "gpu/opengl/uniform.hpp"
+#include "gpu/opengl/uniform_block.hpp"
+#include "primitive/log.hpp"
 
 #include <GL/gl.h>
 #include <gl3w/GL/glcorearb.h>
@@ -401,5 +399,3 @@ namespace hive
         IS_READY = false;
     }
 } // namespace hive
-
-#endif

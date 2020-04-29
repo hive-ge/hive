@@ -1,10 +1,8 @@
 #pragma once
 
-#ifdef HIVE_USE_OPENGL
-
-#include "gpu/opengl/glwrap.h"
-#include "gpu/opengl/uniform.h"
-#include "primitive/log.h"
+#include "gpu/opengl/glwrap.hpp"
+#include "gpu/opengl/uniform.hpp"
+#include "primitive/log.hpp"
 #include <gl3w/GL/glcorearb.h>
 
 namespace hive
@@ -177,5 +175,3 @@ namespace hive
     void Texture::release() {}
 
 } // namespace hive
-
-#endif

@@ -1,7 +1,7 @@
 #pragma once
 
-#include "buffer.h"
-#include "gpu/opengl/glwrap.h"
+#include "buffer.hpp"
+#include "gpu/opengl/glwrap.hpp"
 #include <gl3w/GL/glcorearb.h>
 
 

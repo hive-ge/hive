@@ -1,25 +1,19 @@
-#pragma once
+#include "./log.hpp"
 
-#include <iostream>
-
-#define HIVE_FATAL_ERROR 1u
 
 namespace hive
 {
     /* Basic Log will only output the error message to stdout*/
-    extern void __LOG(std::string message, unsigned level = 0)
-    {
-        std::cout << message << std::endl;
-    };
+    void __LOG(std::string message, unsigned level) { std::cout << message << std::endl; };
 
     /* Basic Errors will only output the error message to stdout or*/
-    extern int __ERROR(std::string message)
+    int __ERROR(std::string message)
     {
         std::cout << message << std::endl;
         return 0;
     };
 
-    extern int __ERROR(std::string message, unsigned error_number)
+    int __ERROR(std::string message, unsigned error_number)
     {
 
         std::cout << "0x" << error_number << " : " << message << std::endl;
@@ -29,8 +23,8 @@ namespace hive
         return 0;
     };
 
-    extern int __ERROR(std::string message, unsigned error_number, std::string filename,
-                       unsigned line_number)
+    int __ERROR(std::string message, unsigned error_number, std::string filename,
+                unsigned line_number)
     {
 
         std::cout << "0x" << error_number << " : " << message << " " << filename << ":"

@@ -2,10 +2,10 @@
 
 #include <string>
 
-#include "primitive/typedef.h"
+#include "primitive/typedef.hpp"
 
 namespace hive
-{ 
+{
     namespace gpu
     {
         /**

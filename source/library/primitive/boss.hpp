@@ -1,10 +1,11 @@
 #pragma once
 
-#include "primitive/drone/drone.h"
-#include "primitive/typedef.h"
+#include "./drone/drone.hpp"
+
+#include "./typedef.hpp"
+
 #include <string>
 #include <vector>
-
 
 #define BOSS_IDENTIFIER_NULL 0
 #define BOSS_IDENTIFIER_BBB 1
@@ -16,11 +17,11 @@
 namespace hive
 {
     // Forward declare the big one.
-    class BigBadBoss;
+    class BigBadBossA;
 
     class Boss
     {
-        friend BigBadBoss;
+        friend BigBadBossA;
 
       public:
         static const unsigned IDENTIFIER = BOSS_IDENTIFIER_NULL;
@@ -84,7 +85,7 @@ namespace hive
         void prepareExit() { SHOULD_EXIT = true; }
 
       protected:
-        // Called by BigBadBoss instance.
+        // Called by BigBadBossA instance.
         virtual void update(float step) = 0;
 
         // Setup of data
@@ -97,15 +98,11 @@ namespace hive
         virtual int priority() = 0;
     };
 
-    bool Boss::SHOULD_EXIT = false;
-
-    std::vector<Boss *> Boss::bosses;
-
     /**
      * Handles the start up and shutdown of all other bosses
      * plus the main runtime.
      */
-    class BigBadBoss : Boss
+    class BigBadBossA : public Boss
     {
       public:
         static const unsigned IDENTIFIER = BOSS_IDENTIFIER_BBB;
@@ -113,9 +110,9 @@ namespace hive
         std::vector<Drone *> drones;
 
       public:
-        BigBadBoss() : Boss(IDENTIFIER) {}
+        BigBadBossA() : Boss(IDENTIFIER) { Drone::setBoss(this); }
 
-        virtual ~BigBadBoss() {}
+        virtual ~BigBadBossA() {}
 
       public:
         inline bool canRun() { return !SHOULD_EXIT; }
@@ -123,89 +120,24 @@ namespace hive
         virtual void setup();
         void prepareDroneUpdate(hive::Drone * drone) {}
 
-        inline Drone & createDrone()
+        inline Drone * createDrone()
         {
-            hive::Drone & drone = *new Drone(this);
+            BigBadBossA & boss = *static_cast<BigBadBossA *>(Drone::getBoss());
+
+            hive::Drone & drone = *new Drone();
 
             drone.id.id = drones.size();
 
             drones.push_back(&drone);
 
-            return drone;
+            return (Drone *)drone.id.id;
         }
+
+        inline Drone & getDrone(unsigned id) { return *drones[id]; }
 
       protected:
         virtual void teardown();
         virtual int priority();
         virtual void update(float step);
     };
-
-    void BigBadBoss::setup()
-    {
-        for (auto boss : bosses) {
-
-            if (boss == this) continue;
-
-            boss->setup();
-        }
-    };
-
-    void BigBadBoss::teardown(){
-
-    };
-
-    int BigBadBoss::priority() { return 0; };
-
-
-    void BigBadBoss::update(float delta_t)
-    {
-        if (SHOULD_EXIT) {
-
-            for (auto boss : bosses) {
-
-                if (boss == this) continue;
-
-                boss->teardown();
-            }
-
-            teardown();
-
-        } else {
-            for (auto boss : bosses) {
-
-                if (boss == this) continue;
-
-                boss->update(delta_t);
-            }
-        }
-    }
-
-    bool BigBadBoss::update()
-    {
-
-        update(0.0);
-
-        if (SHOULD_EXIT) {
-
-            for (auto boss : bosses) {
-
-                if (boss == this) continue;
-
-                boss->teardown();
-            }
-
-            teardown();
-
-            return false;
-        }
-
-        return true;
-    }
-
-
-    void hive::Drone::signalUpdate()
-    {
-        if (flags) boss->prepareDroneUpdate(this);
-    }
-
 } // namespace hive

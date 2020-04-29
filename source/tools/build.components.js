@@ -4,8 +4,7 @@ import fs from "fs";
 
 const templates = {
     get_callback_data(arg_size = 0) {
-        return `
-        void * data;
+        return `  void * data;
 
         napi_value this_arg;
 
@@ -32,7 +31,7 @@ utils.onPropParseEnd(() => {
     const out_data =
 
         `/*!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-    DO NOT MODIFY - Rendered file
+    DO NOT MODIFY - This file is automatically created by the build:props script.
 
     COPYRIGHT 2020 Anthony C Weathersby
  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!*/
@@ -61,13 +60,17 @@ namespace hive{
         }
 
         napi_value JSError(napi_env env, const char * message){
-            napi_throw_error(env, nullptr, "Expected instance of ${hive_struct_name} for argument ${arg_name}.");
+            napi_throw_error(env, nullptr, message);
             return nullptr;
         }
 
-        ${prop_interfaces.flatMap(p => `napi_ref ${p.name}_reference;`).join("\n")};
+        ${prop_interfaces.flatMap(p => `napi_ref ${p.name}_reference;`).join("\n")} 
 
-        ${prop_interfaces.flatMap(p => p.functions).join("\n")};
+        //Forward Declarations
+
+        ${prop_interfaces.flatMap(p => p.forward_declarations).join("\n")}
+
+        ${prop_interfaces.flatMap(p => p.functions).join("\n")}
         
         void RegisterInterfaces(napi_env env, napi_value registry){
             ${prop_interfaces.map(p => `${p.name}_Register(env, registry);\n`).join("")}
@@ -110,11 +113,11 @@ function createJSInterface(struct) {
 
     for (const prop of struct.properties) {
 
+        console.log({ prop });
         if (prop.access_type !== "public") continue;
 
         if (prop.specifiers.includes("static")) continue;
 
-        console.log({ prop });
         const
             type = getJSToCValue(prop);
 
@@ -169,6 +172,8 @@ function createJSInterface(struct) {
 
     for (const method of struct.functions) {
 
+        //Ignore overloading for now.
+        if (method.operator) continue;
 
         const
             member_name = getPropName(method.name);
@@ -344,8 +349,10 @@ function createJSInterface(struct) {
     prop_interfaces.push(
         {
             name,
+            forward_declarations: [
+                forward_declare_instance_wrap
+            ],
             functions: [
-                forward_declare_instance_wrap,
                 ...methods,
                 props_definition,
                 destructor_function,
@@ -378,8 +385,7 @@ const conversion_objects = {
         },
 
         setter(hive_struct_name = "", napi_value_name = "value", hive_prop_instance_name = "prop", hive_prop_instance_member = "undefined") {
-            return `;
-            /** 
+            return `/** 
              * Need to test if the incoming value is an object, is a wrapped object, and is a property with a type that
              * matches the struct member type.
              */
@@ -429,8 +435,7 @@ const conversion_objects = {
             `;
         },
         method_return(hive_struct_name = "", napi_return_value = "", method_call = "") {
-            return `
-                ${hive_struct_name} * v = ${method_call};
+            return `${hive_struct_name} * v = ${method_call};
 
                 if (v == nullptr) { status = napi_get_null(env, & ${napi_return_value}); } else {
                     //Wrap the pointer within an accessor object. 
@@ -764,6 +769,40 @@ const conversion_objects = {
         }
     },
 
+    unsigned_long_integer: {
+        getter(hive_struct_name = "prop", napi_value_name = "value", hive_prop_instance_name = "prop", hive_prop_instance_member = "undefined") {
+            return `status = napi_create_int64(env, static_cast<long long>(${hive_prop_instance_name} -> ${hive_prop_instance_member}), &${napi_value_name});
+                if(status != napi_ok) return JSError(env, "Could not read value as a long integer");`;
+        },
+        setter(hive_struct_name = "prop", napi_value_name = "value", hive_prop_instance_name = "prop", hive_prop_instance_member = "undefined") {
+            return `int64_t temp;
+            status = napi_get_value_int64(env, ${napi_value_name}, &temp);
+            if(status != napi_ok) return JSError(env, "Could not read value as a long integer");
+            ${hive_prop_instance_name} -> ${hive_prop_instance_member} = static_cast<unsigned long long>(temp);`;
+        },
+        method_arg(hive_struct_name = "", arg_name = "", napi_value_name) {
+            return `napi_valuetype number_val;
+            
+            status = napi_typeof(env, ${ napi_value_name}, &number_val);
+            
+            if(status != napi_ok) return JSError(env, "Could not read argument ${arg_name}.");
+            if(number_val != napi_number) return JSError(env, "Argument ${arg_name} is not a number type.");
+            
+            long long temp_${arg_name};
+            
+            unsigned long long ${arg_name};
+
+            status = napi_get_value_int64(env, ${napi_value_name}, &temp_${arg_name});
+            if(status != napi_ok) return JSError(env, "Could not read argument ${arg_name}.");
+            ${arg_name} = static_cast<unsigned long long>(temp);`;
+        },
+        method_return(hive_struct_name = "", napi_return_value = "", method_call = "") {
+            return `unsigned long long temp_ull = ${method_call}
+            status = napi_create_int64(env, static_cast<long long>(temp_ull), &${napi_return_value});
+            if(status != napi_ok) return JSError(env, "Could not write value as a long integer");`;
+        }
+    },
+
     long_integer: {
         getter(hive_struct_name = "prop", napi_value_name = "value", hive_prop_instance_name = "prop", hive_prop_instance_member = "undefined") {
             return `status = napi_create_int64(env, ${hive_prop_instance_name} -> ${hive_prop_instance_member}, &${napi_value_name});
@@ -851,8 +890,11 @@ function getJSToCValue(param) {
             case "int":
                 return { type, name, render: conversion_objects.integer };
             case "long long":
-            case "long integer":
+            case "long long int":
                 return { type, name, render: conversion_objects.long_integer };
+            case "unsigned long long":
+            case "unsigned long long int":
+                return { type, name, render: conversion_objects.unsigned_long_integer };
             case "unsigned int":
             case "unsigned":
                 return { type, name, render: conversion_objects.unsigned };

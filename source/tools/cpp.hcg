@@ -1,5 +1,5 @@
 
-@SYMBOL //::HIVE ... :: -> && // /*
+@SYMBOL //::HIVE ... :: -> && // /* += -= *= /= %= ^= &= |= << >> >>= <<= == != <= >= <=> && || ++ -- ->* ->
 
 @IGNORE θws θnl
 
@@ -110,7 +110,7 @@
 <> noptr_declarator > 
     qualified_id attr?
     | ... identifier attr?
-    | nested_name_specifier * attr declarator?
+    | nested_name_specifier * attr? declarator?
     | noptr_declarator \[ constexpr? \] attr?
     #| noptr_declarator \( parameter_list \) cv? ref? except? attr?
     #| \( ptr_declarator \)
@@ -163,7 +163,7 @@
                 this.init = $$sym3
             }
 
-            |   property_attribs? declarator \( parameter_list? \) member_function_initializer? function_body? 
+            |   property_attribs? declarator operator_specifier? \( parameter_list? \) member_function_initializer? function_body? 
 
             f:cstr{ 
                 this.t = (env.class_name.v == $sym2.v) ? "constructor function" : "member function";
@@ -171,7 +171,8 @@
                 this.qualifiers = $$sym1 ? $$sym1.qualifiers : [];
                 this.type = $$sym1 ? $$sym1.type : [];
                 this.name = $$sym2;
-                this.params=$$sym4;
+                this.operator = $$sym3;
+                this.params=$$sym5;
             }
 
             | \~ declarator \(  parameter_list? \) function_body? 
@@ -183,6 +184,10 @@
             | access_specifier \: 
 
             f:return{ {t:"access", val:$sym1} }
+
+            | t:friend qualified_id ;
+
+            f:return{ {t:"friend", val:$sym2} }
 
         <> member_function_initializer > \: ( qualified_id \( expression_list? \) )(+,)
 
@@ -223,10 +228,51 @@
     | type_qualifier                f:return{ { v:$sym1, type : "qualifier" }  }
     | storage_class_specifier       f:return{ { v:$sym1, type : "specifier" }  }
 
-<> specifier > 
-    qualified_id
+<> specifier >  qualified_id
     | t:void                        f:return{ { v:$sym1, type : "specifier" }  }
     | arithmatic_type               f:return{ { v:$sym1, namespace : ["g_arithmatic_primitive"] } }
+
+<> operator_specifier > t:operator op f:return{ { v:$sym2, type : "overload" }  }
+
+<> op > +
+| -
+| *
+| /
+| %
+| ^
+| &
+| \|
+| ~
+| !
+| =
+| <
+| >
+| +=
+| -=
+| *=
+| /=
+| %=
+| ^=
+| &=
+| \|=
+| <<
+| >>
+| >>=
+| <<=
+| ==
+| !=
+| <=
+| >=
+| <=>
+| &&
+| \||
+| ++
+| --
+| ,
+| ->*
+| ->
+| \( \) 
+| \[ \]
 
 <> declarators_and_initializers > declarator initializer?
 

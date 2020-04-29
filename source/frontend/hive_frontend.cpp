@@ -1,15 +1,18 @@
-#include <hive.h>
 #include <thread>
 #include <vector>
 
+#include <hive.h>
 
 #include <nodejs/src/node_api.h>
+
 
 #include "./interfaces.hpp"
 
 using namespace hive::all;
 
-BigBadBoss boss;
+vec3 vec;
+
+BigBadBossA boss;
 
 GLFWBoss interface_boss(512, 512);
 
@@ -41,6 +44,7 @@ void shouldClose()
 // Run from a detached thread.
 void mainHiveThread()
 {
+    std::cout << vec << std::endl;
     while (boss.update())
         ;
 

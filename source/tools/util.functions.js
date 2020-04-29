@@ -191,7 +191,9 @@ async function parseHPPHeader(obj_path) {
                 hpp = await fsp.readFile(obj_path, { encoding: "utf8" }),
                 d = hc.lrParse(hpp, parser_data, env);
 
+            console.log({ obj_path, d });
             if (d.value && d.value.length > 1) {
+
 
                 for (const a of d.value) {
 
@@ -202,8 +204,9 @@ async function parseHPPHeader(obj_path) {
                     if (!WATCHED_FILE_GUARD)
                         fs.watch(obj_path, start);
                 }
+            }
 
-            } else if (d.error)
+            if (d.error)
                 console.error(obj_path, "\n", d.error);
 
         } catch (e) {
@@ -233,9 +236,6 @@ const type = {
 };
 
 function compileStruct(d) {
-
-
-    console.log(d);
 
     console.log("--start--");
     // filter through props and isolate functions and properties

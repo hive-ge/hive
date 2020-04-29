@@ -1,9 +1,7 @@
 #pragma once
 
-#ifdef HIVE_USE_OPENGL
-
-#include "buffer.h"
-#include "gpu/opengl/glwrap.h"
+#include "buffer.hpp"
+#include "gpu/opengl/glwrap.hpp"
 #include <gl3w/GL/glcorearb.h>
 
 
@@ -102,5 +100,3 @@ namespace hive
         bool SmartGLUniformBlock::IS_USABLE() { return false; }
     } // namespace gl
 } // namespace hive
-
-#endif

@@ -24,7 +24,11 @@ set (ruminate_VERSION_PATCH 0)
 project("HIVE_SYSTEM")
 
 add_subdirectory("./source/library")
-add_subdirectory("./source/frontend")
+
+if (CMAKE_JS_VERSION)
+    add_subdirectory("./source/frontend")
+endif()
+
 
 ###########################################
 # SIMPLE PLATFORMER EXE

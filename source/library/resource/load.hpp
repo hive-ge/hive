@@ -1,6 +1,6 @@
 #pragma once
 
-#include "primitive/typedef.h"
+#include "primitive/typedef.hpp"
 #include <cstring>
 #include <fstream>
 #include <iostream>
@@ -17,7 +17,7 @@ namespace hive
     /**
      * Methods for loading resources
      */
-    std::string loadUTF8File(const std::string file_path)
+    inline std::string loadUTF8File(const std::string file_path)
     {
         std::ifstream file;
 
@@ -41,7 +41,7 @@ namespace hive
     /**
      * Methods for loading resources
      */
-    std::vector<ubyte> loadCharFile(const std::string file_path)
+    inline std::vector<ubyte> loadCharFile(const std::string file_path)
     {
         std::vector<ubyte> buffer;
 

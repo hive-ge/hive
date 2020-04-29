@@ -1,8 +1,7 @@
 #pragma once
 
-
-#include "gpu/opengl/buffer.h"
-#include "gpu/opengl/glwrap.h"
+#include "gpu/opengl/buffer.hpp"
+#include "gpu/opengl/glwrap.hpp"
 #include <GL/gl.h>
 
 namespace hive

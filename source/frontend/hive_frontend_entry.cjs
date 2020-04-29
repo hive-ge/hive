@@ -33,7 +33,9 @@ fsp = fs.promises;
 
     //global.win = win;
 
-    console.log(hive.Prop);
+    console.log(hive);
+
+    const drone = new hive.Drone();
 
     const prop = new hive.Prop(223);
     const l = new hive.Prop;
