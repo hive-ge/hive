@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 import * as utils from "./util.functions.js";
 import fs from "fs";
+const fsp = fs.promises;
 
 const templates = {
     get_callback_data(arg_size = 0) {
@@ -19,12 +20,11 @@ const templates = {
     }
 };
 
-
 const prop_interfaces = [], prop_names = new Map;
 
 utils.onPropParseStart(() => { prop_interfaces.length = 0; });
 
-utils.onPropParseEnd(() => {
+utils.onPropParseEnd(async () => {
 
     prop_names.forEach(createJSInterface);
 
@@ -80,7 +80,14 @@ namespace hive{
 
     prop_names.clear();
 
-    fs.writeFile("./source/frontend/interfaces.hpp", out_data, { encoding: "utf8" }, () => { });
+    try {
+        await fsp.writeFile("./source/frontend/interfaces.hpp", out_data, { encoding: "utf8" });
+    } catch (e) {
+        console.error(e);
+        process.exit(1);
+    }
+
+    process.exit(0);
 });
 
 utils.onHandleProp(struct => {
@@ -113,7 +120,6 @@ function createJSInterface(struct) {
 
     for (const prop of struct.properties) {
 
-        console.log({ prop });
         if (prop.access_type !== "public") continue;
 
         if (prop.specifiers.includes("static")) continue;
@@ -221,7 +227,7 @@ function createJSInterface(struct) {
             (napi_property_attributes)(napi_enumerable),
             NULL
         }`;
-        console.log({ arg_actions });
+
         methods.push(js_method_function);
         property_descriptors.push(prop_assignment);
     }
@@ -852,8 +858,6 @@ const conversion_objects = {
 function getJSToCValue(param) {
 
     const name = param.name;
-
-    console.log(param);
 
     const type = param.type.join(" ");
 

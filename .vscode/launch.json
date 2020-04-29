@@ -11,7 +11,7 @@
             "program": "/home/anthony/.nvm/versions/node/v13.11.0/bin/node",
             "cwd": "${workspaceFolder}",
             "args": [
-                "${workspaceFolder}/dev.js"
+                "${workspaceFolder}/source/frontend/hive_frontend_entry.cjs"
             ],
         }
         /*

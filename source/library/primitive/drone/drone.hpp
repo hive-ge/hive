@@ -96,7 +96,14 @@ namespace hive
 
         // Defined in boss.hpp;
         void signalUpdate();
-
+BigBadBossA
+BigBadBossA
+BigBadBossA
+BigBadBossA
+BigBadBossA
+BigBadBossA
+BigBadBossA
+BigBadBossA
         void connect(Prop * prop)
         {
             if (prop->drone) {

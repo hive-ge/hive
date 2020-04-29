@@ -10,7 +10,7 @@
 
 //import Q from "@nodegui/nodegui";
 
-const hive = require("../../build/Release/hive_dev.node");
+const hive = require("../../build/Debug/hive_dev.node");
 const fs = require("fs");
 //import hive from ;
 //import fs from "fs";

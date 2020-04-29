@@ -17,11 +17,11 @@
 namespace hive
 {
     // Forward declare the big one.
-    class BigBadBossA;
+    class BigBadBoss;
 
     class Boss
     {
-        friend BigBadBossA;
+        friend BigBadBoss;
 
       public:
         static const unsigned IDENTIFIER = BOSS_IDENTIFIER_NULL;
@@ -85,7 +85,7 @@ namespace hive
         void prepareExit() { SHOULD_EXIT = true; }
 
       protected:
-        // Called by BigBadBossA instance.
+        // Called by BigBadBoss instance.
         virtual void update(float step) = 0;
 
         // Setup of data
@@ -102,7 +102,7 @@ namespace hive
      * Handles the start up and shutdown of all other bosses
      * plus the main runtime.
      */
-    class BigBadBossA : public Boss
+    class BigBadBoss : public Boss
     {
       public:
         static const unsigned IDENTIFIER = BOSS_IDENTIFIER_BBB;
@@ -110,9 +110,9 @@ namespace hive
         std::vector<Drone *> drones;
 
       public:
-        BigBadBossA() : Boss(IDENTIFIER) { Drone::setBoss(this); }
+        BigBadBoss() : Boss(IDENTIFIER) { Drone::setBoss(this); }
 
-        virtual ~BigBadBossA() {}
+        virtual ~BigBadBoss() {}
 
       public:
         inline bool canRun() { return !SHOULD_EXIT; }
@@ -122,7 +122,7 @@ namespace hive
 
         inline Drone * createDrone()
         {
-            BigBadBossA & boss = *static_cast<BigBadBossA *>(Drone::getBoss());
+            BigBadBoss & boss = *static_cast<BigBadBoss *>(Drone::getBoss());
 
             hive::Drone & drone = *new Drone();
 

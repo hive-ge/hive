@@ -144,7 +144,10 @@ export async function start() {
 
     await loadAndPossiblyParseGrammarFile();
 
-    loadAndCreatePropHandlers();
+    await loadAndCreatePropHandlers();
+
+    if (end_function)
+        await end_function();
 
     WATCHED_FILE_GUARD = false;
 
@@ -167,15 +170,13 @@ async function loadAndCreatePropHandlers(dir = "./source/library/primitive") {
 
 
             if ((await stats).isDirectory()) {
-                loadAndCreatePropHandlers(obj_path);
+                await loadAndCreatePropHandlers(obj_path);
             } else {
                 if (ext == ".hpp" || ext == ".h") {
                     parseHPPHeader(obj_path);
                 }
             }
         }
-        if (end_function)
-            end_function();
     } catch (e) {
         console.log(e);
     }
@@ -191,7 +192,6 @@ async function parseHPPHeader(obj_path) {
                 hpp = await fsp.readFile(obj_path, { encoding: "utf8" }),
                 d = hc.lrParse(hpp, parser_data, env);
 
-            console.log({ obj_path, d });
             if (d.value && d.value.length > 1) {
 
 
@@ -237,7 +237,6 @@ const type = {
 
 function compileStruct(d) {
 
-    console.log("--start--");
     // filter through props and isolate functions and properties
     const name = d.name.v, properties = [], functions = [];
 

@@ -27,22 +27,23 @@ set (ruminate_VERSION_PATCH 0)
 # define NPI_VERSION
 add_definitions(-DNAPI_VERSION=5)
 
+
 ###########################################
-find_package(OpenGL REQUIRED)
-
-if (OPENGL_FOUND)
-    include_directories(${OPENGL_INCLUDE_DIR})
-    link_libraries(${OPENGL_LIBRARIES})
-endif()
-
-find_package(GLEW REQUIRED)
-
-if (GLEW_FOUND)
-    include_directories(${GLEW_INCLUDE_DIRS})
-    link_libraries(${GLEW_LIBRARIES})
-endif()
-
-link_libraries(glfw)
+#find_package(OpenGL REQUIRED)
+#
+#if (OPENGL_FOUND)
+#    include_directories(${OPENGL_INCLUDE_DIR})
+#    link_libraries(${OPENGL_LIBRARIES})
+#endif()
+#
+#find_package(GLEW REQUIRED)
+#
+#if (GLEW_FOUND)
+#    include_directories(${GLEW_INCLUDE_DIRS})
+#    link_libraries(${GLEW_LIBRARIES})
+#endif()
+#
+#link_libraries(glfw)
 
 
 ###########################################
@@ -52,6 +53,17 @@ link_libraries(glfw)
 set( PROJECT_NAME "hive_dev")
 
 project(${PROJECT_NAME})
+
+add_custom_command(
+    OUTPUT ./interfaces.hpp
+    COMMENT "Creating JS interfaces.hpp file"
+    COMMAND yarn ARGS "build:props"
+    WORKING_DIR ${CMAKE_SOURCE_DIR}
+    USES_TERMINAL
+)
+
+
+
 
 ##########################################
 ## Define the library
@@ -68,8 +80,5 @@ target_include_directories(${PROJECT_NAME} PRIVATE ${CMAKE_JS_INC})
 target_link_libraries(${PROJECT_NAME} ${CMAKE_JS_LIB})
 
 target_link_libraries(${PROJECT_NAME} hive)
-
-
-
 
 
