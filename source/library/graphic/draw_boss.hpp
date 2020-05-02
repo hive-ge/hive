@@ -3,12 +3,10 @@
 #include <vector>
 
 #include "gpu/gpu_primitive.hpp"
-#include "gpu/opengl/program.h"
+#include "gpu/opengl/program.hpp"
 #include "primitive/boss.hpp"
-#include "primitive/drone/drone.h"
-#include "primitive/math/vec2.h"
-#include "primitive/math/vec3.h"
-
+#include "primitive/drone/drone.hpp"
+#include "primitive/math.hpp"
 
 #include "graphic/sprite_boss.hpp"
 #include "graphic/texture_boss.hpp"
@@ -98,6 +96,42 @@ namespace hive
 
     void DrawBoss::update(float step)
     {
+
+        //Determin if any active drones need to be reconfigured.
+          //If a drone has different rendering properties:
+            //Determine if drone has appropriate render props:
+              //Program(s)
+              //Optional Pipeline information
+              //Mesh Data
+              //Uniform data as determined by program
+                // vecs, matrices, and single values
+              //Texture Data
+            
+            //Sprites combine a subset of the above for 2D billboard style rendering
+            
+            //If the drone has appropriate data:
+              // Reorder drone data if necessary for more appropriate render passes
+              // Sort render information for all drones for more appropriate render passes
+              // 
+
+            //If the drone does not have appropriate data:
+              // Create a message of errors and assigne to drone.
+              // Set the unrenderable flag on drone. 
+
+        // Once all drones that have RENDER_PREP cleared:
+          // Start with the left most drone, setup its render
+          // systems, and render the drone. 
+          
+          // Optional, use culling system to determin if a node should be rendered or not.
+
+          //Pipelines and SubPipelines determine the global attributes such as camera orientation.
+
+          // Pipelines may seperate different passes, or need to rely on information
+          // That has been created in other passes. These are ordered depending on it's
+          // dependencies and its dependents. 
+        
+
+
         // For each actve GPU program do:
         //      initialize program
         //      load program data

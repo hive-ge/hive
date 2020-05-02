@@ -24,9 +24,23 @@ const prop_interfaces = [], prop_names = new Map;
 
 utils.onPropParseStart(() => { prop_interfaces.length = 0; });
 
+utils.onHandleProp(struct => {
+    console.log(struct);
+    struct.h_ind = 0;
+
+    prop_names.set(struct.name, struct);
+});
+
 utils.onPropParseEnd(async () => {
 
-    prop_names.forEach(createJSInterface);
+    [...prop_names.entries()].map(([a, struct]) => {
+        for (const prop of struct.heritage) {
+            if (prop_names.has(prop)) {
+                prop_names.get(prop).h_ind++;
+            }
+        }
+        return struct;
+    }).sort((a, b) => a.h_ind > b.h_ind ? -1 : 1).forEach(createJSInterface);
 
     const out_data =
 
@@ -64,6 +78,25 @@ namespace hive{
             return nullptr;
         }
 
+        void napi_inherits(napi_env env, napi_value ctor, napi_value super_ctor) {
+            napi_value global, global_object, set_proto, ctor_proto_prop, super_ctor_proto_prop;
+            napi_value args[2];
+        
+            napi_get_global(env, &global);
+            napi_get_named_property(env, global, "Object", &global_object);
+            napi_get_named_property(env, global_object, "setPrototypeOf", &set_proto);
+            napi_get_named_property(env, ctor, "prototype", &ctor_proto_prop);
+            napi_get_named_property(env, super_ctor, "prototype", &super_ctor_proto_prop);
+        
+            args[0] = ctor_proto_prop;
+            args[1] = super_ctor_proto_prop;
+            napi_call_function(env, global, set_proto, 2, args, NULL);
+        
+            args[0] = ctor;
+            args[1] = super_ctor;
+            napi_call_function(env, global, set_proto, 2, args, NULL);
+        }
+
         ${prop_interfaces.flatMap(p => `napi_ref ${p.name}_reference;`).join("\n")} 
 
         //Forward Declarations
@@ -88,10 +121,6 @@ namespace hive{
     }
 
     process.exit(0);
-});
-
-utils.onHandleProp(struct => {
-    prop_names.set(struct.name, struct);
 });
 
 
@@ -179,12 +208,12 @@ function createJSInterface(struct) {
     for (const method of struct.functions) {
 
         //Ignore overloading for now.
-        if (method.operator) continue;
+        if (method.operator || method.access_type !== "public" || method.type.includes("static")) continue;
 
         const
             member_name = getPropName(method.name);
 
-        if (member_name == "construct" || member_name == "destruct" || method.type.includes("static")) continue;
+        if (member_name == "construct" || member_name == "destruct") continue;
 
         const return_value = getJSToCValue(method),
 
@@ -322,6 +351,7 @@ function createJSInterface(struct) {
         if(status != napi_ok)
             std::cout << "Unable to wrap info for ${name}_Constructor" << std::endl;
 
+
         return this_arg;
     }`;
 
@@ -344,6 +374,24 @@ function createJSInterface(struct) {
             }
 
             status = napi_create_reference(env, result, 1, &${name}_reference);
+
+
+        ${name == "SpriteProp"
+            ? `
+    napi_value super_constr, constr;
+
+    status = napi_get_reference_value(env, ${"Prop"}_reference, &super_constr);
+
+    if (status != napi_ok) {JSError(env, "Unable to dereference ${"Prop"}_reference"); return; };
+
+    status = napi_get_reference_value(env, ${name}_reference, &constr);
+
+    if (status != napi_ok)  {JSError(env, "Unable to dereference ${name}_reference"); return; };
+
+    napi_inherits(env, constr, super_constr);
+    
+    `
+            : ""}
 
             if (status != napi_ok) {
                 std::cout << "FAILED TO CREATE REFERENCE FOR ${name}" << std::endl;
@@ -459,12 +507,12 @@ const conversion_objects = {
         },
         setter(hive_struct_name = "prop", napi_value_name = "value", hive_prop_instance_name = "prop", hive_prop_instance_member = "undefined") {
             return `
-                status = napi_get_value_string_utf8(env, ${napi_value_name}, nullptr, 0, &string_length_${arg_name});
+                status = napi_get_value_string_utf8(env, ${napi_value_name}, nullptr, 0, &${string_val_name});
                 if (status != napi_ok) return JSError(env, "Could not read argument ${arg_name}.");
 
                 std::vector<char> temp_${arg_name}(string_length + 1);
 
-                status = napi_get_value_string_utf8(env, ${napi_value_name}, temp_${arg_name}.data(), temp_${arg_name}.size(), &string_length_${arg_name});
+                status = napi_get_value_string_utf8(env, ${napi_value_name}, temp_${arg_name}.data(), temp_${arg_name}.size(), &${string_val_name});
                 if (status != napi_ok) return JSError(env, "Could not read argument ${arg_name}.");
 
                 std::string s(temp_${arg_name}.begin(), temp_${arg_name}.end());
@@ -474,21 +522,22 @@ const conversion_objects = {
                 if(status != napi_ok) return JSError(env, "Could not read value as a string");`;
         },
         method_arg(hive_struct_name = "", arg_name = "", napi_value_name) {
-            return `napi_valuetype number_val;
+            const string_val_name = "string_length_" + arg_name;
+            return `napi_valuetype number_val${arg_name};
                 
-                status = napi_typeof(env, ${ napi_value_name}, &number_val);
+                status = napi_typeof(env, ${ napi_value_name}, &number_val${arg_name});
                 
                 if(status != napi_ok) return JSError(env, "Could not read argument ${arg_name}.");
-                if(number_val != napi_string) return JSError(env, "Argument ${arg_name} is not a number type.");
+                if(number_val${arg_name} != napi_string) return JSError(env, "Argument ${arg_name} is not a number type.");
 
-                unsigned string_length_${arg_name} = 0;
+                size_t ${string_val_name} = 0;
                 
-                status = napi_get_value_string_utf8(env, ${napi_value_name}, nullptr, 0, &string_length_${arg_name});
+                status = napi_get_value_string_utf8(env, ${napi_value_name}, nullptr, 0, &${string_val_name});
                 if (status != napi_ok) return JSError(env, "Could not read argument ${arg_name}.");
 
-                std::vector<char> temp_${arg_name}(string_length + 1);
+                std::vector<char> temp_${arg_name}(${string_val_name} + 1);
 
-                status = napi_get_value_string_utf8(env, ${napi_value_name}, temp_${arg_name}.data(), temp_${arg_name}.size(), &string_length_${arg_name});
+                status = napi_get_value_string_utf8(env, ${napi_value_name}, temp_${arg_name}.data(), temp_${arg_name}.size(), &${string_val_name});
                 if (status != napi_ok) return JSError(env, "Could not read argument ${arg_name}.");
 
                 std::string ${arg_name}(temp_${arg_name}.begin(), temp_${arg_name}.end());`;
@@ -513,12 +562,12 @@ const conversion_objects = {
                 if(status != napi_ok) return JSError(env, "Could not read value as a float");`;
         },
         method_arg(hive_struct_name = "", arg_name = "", napi_value_name) {
-            return `napi_valuetype number_val;
+            return `napi_valuetype number_val${arg_name};
                 
-                status = napi_typeof(env, ${ napi_value_name}, &number_val);
+                status = napi_typeof(env, ${ napi_value_name}, &number_val${arg_name});
                 
                 if(status != napi_ok) return JSError(env, "Could not read argument ${arg_name}.");
-                if(number_val != napi_number) return JSError(env, "Argument ${arg_name} is not a number type.");
+                if(number_val${arg_name} != napi_number) return JSError(env, "Argument ${arg_name} is not a number type.");
 
                 double temp_${arg_name};
                 float ${arg_name};
@@ -546,12 +595,12 @@ const conversion_objects = {
                     if(status != napi_ok) return JSError(env, "Could not read value as a double");`;
         },
         method_arg(hive_struct_name = "", arg_name = "", napi_value_name) {
-            return `napi_valuetype number_val;
+            return `napi_valuetype number_val${arg_name};
                 
-                status = napi_typeof(env, ${ napi_value_name}, &number_val);
+                status = napi_typeof(env, ${ napi_value_name}, &number_val${arg_name});
                 
                 if(status != napi_ok) return JSError(env, "Could not read argument ${arg_name}.");
-                if(number_val != napi_number) return JSError(env, "Argument ${arg_name} is not a number type.");
+                if(number_val${arg_name} != napi_number) return JSError(env, "Argument ${arg_name} is not a number type.");
     
                 double ${arg_name};
     
@@ -578,12 +627,12 @@ const conversion_objects = {
         },
 
         method_arg(hive_struct_name = "", arg_name = "", napi_value_name) {
-            return `napi_valuetype number_val;
+            return `napi_valuetype number_val${arg_name};
             
-            status = napi_typeof(env, ${ napi_value_name}, &number_val);
+            status = napi_typeof(env, ${ napi_value_name}, &number_val${arg_name});
 
             if(status != napi_ok) return JSError(env, "Could not read argument ${arg_name}.");
-            if(number_val != napi_boolean) return JSError(env, "Argument ${arg_name} is not a number type.");
+            if(number_val${arg_name} != napi_boolean) return JSError(env, "Argument ${arg_name} is not a number type.");
 
             bool ${arg_name};
 
@@ -613,12 +662,12 @@ const conversion_objects = {
         },
 
         method_arg(hive_struct_name = "", arg_name = "", napi_value_name) {
-            return `napi_valuetype number_val;
+            return `napi_valuetype number_val${arg_name};
             
-            status = napi_typeof(env, ${ napi_value_name}, &number_val);
+            status = napi_typeof(env, ${ napi_value_name}, &number_val${arg_name});
 
             if(status != napi_ok) return JSError(env, "Could not read argument ${arg_name}.");
-            if(number_val != napi_number) return JSError(env, "Argument ${arg_name} is not a number type.");
+            if(number_val${arg_name} != napi_number) return JSError(env, "Argument ${arg_name} is not a number type.");
 
             int temp_${arg_name};
             char ${arg_name};
@@ -651,18 +700,18 @@ const conversion_objects = {
         },
 
         method_arg(hive_struct_name = "", arg_name = "", napi_value_name) {
-            return `napi_valuetype number_val;
+            return `napi_valuetype number_val${arg_name};
             
-            status = napi_typeof(env, ${ napi_value_name}, &number_val);
+            status = napi_typeof(env, ${ napi_value_name}, &number_val${arg_name});
 
             if(status != napi_ok) return JSError(env, "Could not read argument ${arg_name}.");
-            if(number_val != napi_number) return JSError(env, "Argument ${arg_name} is not a number type.");
+            if(number_val${arg_name} != napi_number) return JSError(env, "Argument ${arg_name} is not a number type.");
 
             int temp_${arg_name};
             short ${arg_name};
 
             status = napi_get_value_int32(env, ${napi_value_name}, &temp_${arg_name});
-
+            program
             if (status != napi_ok) return JSError(env, "Could not read argument ${arg_name}.");
             
             ${arg_name} = static_cast<short>(temp_${arg_name});`;
@@ -689,12 +738,12 @@ const conversion_objects = {
         },
 
         method_arg(hive_struct_name = "", arg_name = "", napi_value_name) {
-            return `napi_valuetype number_val;
+            return `napi_valuetype number_val${arg_name};
             
-            status = napi_typeof(env, ${ napi_value_name}, &number_val);
+            status = napi_typeof(env, ${ napi_value_name}, &number_val${arg_name});
 
             if(status != napi_ok) return JSError(env, "Could not read argument ${arg_name}.");
-            if(number_val != napi_number) return JSError(env, "Argument ${arg_name} is not a number type.");
+            if(number_val${arg_name} != napi_number) return JSError(env, "Argument ${arg_name} is not a number type.");
 
             unsigned temp_${arg_name};
             unsigned short ${arg_name};
@@ -726,12 +775,12 @@ const conversion_objects = {
                 if(status != napi_ok) return JSError(env, "Could not read value as an unsigned integer");`;
         },
         method_arg(hive_struct_name = "", arg_name = "", napi_value_name) {
-            return `napi_valuetype number_val;
+            return `napi_valuetype number_val${arg_name};
             
-            status = napi_typeof(env, ${ napi_value_name}, &number_val);
+            status = napi_typeof(env, ${ napi_value_name}, &number_val${arg_name});
             
             if(status != napi_ok) return JSError(env, "Could not read argument ${arg_name}.");
-            if(number_val != napi_number) return JSError(env, "Argument ${arg_name} is not a number type.");
+            if(number_val${arg_name} != napi_number) return JSError(env, "Argument ${arg_name} is not a number type.");
 
             unsigned ${arg_name};
 
@@ -740,7 +789,7 @@ const conversion_objects = {
             if(status != napi_ok) return JSError(env, "Could not read argument ${arg_name}.");`;
         },
         method_return(hive_struct_name = "", napi_return_value = "", method_call = "") {
-            return `unsigned val = ${method_call}(int *) 
+            return `unsigned val = ${method_call}
             status = napi_create_uint32(env, val, &${napi_return_value});
             if(status != napi_ok) return JSError(env, "Could not write value as an unsigned integer");`;
         }
@@ -756,12 +805,12 @@ const conversion_objects = {
                 if(status != napi_ok) return JSError(env, "Could not read value as an integer");`;
         },
         method_arg(hive_struct_name = "", arg_name = "", napi_value_name) {
-            return `napi_valuetype number_val;
+            return `napi_valuetype number_val${arg_name};
             
-            status = napi_typeof(env, ${ napi_value_name}, &number_val);
+            status = napi_typeof(env, ${ napi_value_name}, &number_val${arg_name});
             
             if(status != napi_ok) return JSError(env, "Could not read argument ${arg_name}.");
-            if(number_val != napi_number) return JSError(env, "Argument ${arg_name} is not a number type.");
+            if(number_val${arg_name} != napi_number) return JSError(env, "Argument ${arg_name} is not a number type.");
 
             int ${arg_name};
 
@@ -780,19 +829,19 @@ const conversion_objects = {
             return `status = napi_create_int64(env, static_cast<long long>(${hive_prop_instance_name} -> ${hive_prop_instance_member}), &${napi_value_name});
                 if(status != napi_ok) return JSError(env, "Could not read value as a long integer");`;
         },
-        setter(hive_struct_name = "prop", napi_value_name = "value", hive_prop_instance_name = "prop", hive_prop_instance_member = "undefined") {
+        setter(hive_struct_name = "prop", napi_valueprogram_name = "value", hive_prop_instance_name = "prop", hive_prop_instance_member = "undefined") {
             return `int64_t temp;
             status = napi_get_value_int64(env, ${napi_value_name}, &temp);
             if(status != napi_ok) return JSError(env, "Could not read value as a long integer");
             ${hive_prop_instance_name} -> ${hive_prop_instance_member} = static_cast<unsigned long long>(temp);`;
         },
         method_arg(hive_struct_name = "", arg_name = "", napi_value_name) {
-            return `napi_valuetype number_val;
+            return `napi_valuetype number_val${arg_name};
             
-            status = napi_typeof(env, ${ napi_value_name}, &number_val);
+            status = napi_typeof(env, ${ napi_value_name}, &number_val${arg_name});
             
             if(status != napi_ok) return JSError(env, "Could not read argument ${arg_name}.");
-            if(number_val != napi_number) return JSError(env, "Argument ${arg_name} is not a number type.");
+            if(number_val${arg_name} != napi_number) return JSError(env, "Argument ${arg_name} is not a number type.");
             
             long long temp_${arg_name};
             
@@ -819,12 +868,12 @@ const conversion_objects = {
                 if(status != napi_ok) return JSError(env, "Could not read value as a long integer");`;
         },
         method_arg(hive_struct_name = "", arg_name = "", napi_value_name) {
-            return `napi_valuetype number_val;
+            return `napi_valuetype number_val${arg_name};
             
-            status = napi_typeof(env, ${ napi_value_name}, &number_val);
+            status = napi_typeof(env, ${ napi_value_name}, &number_val${arg_name});
             
             if(status != napi_ok) return JSError(env, "Could not read argument ${arg_name}.");
-            if(number_val != napi_number) return JSError(env, "Argument ${arg_name} is not a number type.");
+            if(number_val${arg_name} != napi_number) return JSError(env, "Argument ${arg_name} is not a number type.");
 
             long int ${arg_name};
 
@@ -873,6 +922,7 @@ function getJSToCValue(param) {
 
     } else {
         switch (type) {
+            case "std::string":
             case "string":
                 return { type, name, render: conversion_objects.string };
             case "char":

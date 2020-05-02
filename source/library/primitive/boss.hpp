@@ -1,9 +1,11 @@
 #pragma once
 
-#include "./drone/drone.hpp"
+#include "primitive/drone.hpp"
 
-#include "./typedef.hpp"
+#include "primitive/prop.hpp"
+#include "primitive/typedef.hpp"
 
+#include <iostream>
 #include <string>
 #include <vector>
 
@@ -18,20 +20,18 @@ namespace hive
 {
     // Forward declare the big one.
     class BigBadBoss;
-
     class Boss
     {
         friend BigBadBoss;
 
       public:
         static const unsigned IDENTIFIER = BOSS_IDENTIFIER_NULL;
+        static std::vector<Boss *> bosses;
 
       private:
         ubyte index = 0;
 
       protected:
-        static std::vector<Boss *> bosses;
-
         const unsigned id = 0;
 
         /***
@@ -49,19 +49,16 @@ namespace hive
         {
             ubyte index = 1;
 
-            for (auto boss : bosses) boss->index = index++;
+            for (auto boss : bosses) static_cast<Boss *>(boss)->index = index++;
         }
 
       public:
-        Boss(const unsigned _id = 0) : id(_id)
-        {
-            bosses.push_back(this);
-
-            setIndex();
-        }
+        Boss(const unsigned _id = 0);
 
         virtual ~Boss()
         {
+            std::cout << "PRE DELETE :: Bosses Address " << (unsigned long long)&Boss::bosses
+                      << " Size: " << Boss::bosses.size() << std::endl;
             bosses.erase(bosses.begin() + index - 1);
             setIndex();
         }
@@ -75,9 +72,8 @@ namespace hive
         static Boss * getBoss(unsigned boss_id)
         {
 
-            for (auto boss : bosses) {
-                if (boss->id == boss_id) return boss;
-            }
+            for (auto boss : bosses)
+                if (static_cast<Boss *>(boss)->id == boss_id) return static_cast<Boss *>(boss);
 
             return nullptr;
         };
@@ -96,21 +92,36 @@ namespace hive
 
         // Called periodicolly to update priority values
         virtual int priority() = 0;
+
+        /**
+         * Get a props data value.
+         */
+        template <class T> inline T * getPropData(Prop * prop) { return prop->getData<T>(); }
+
+        /**
+         * Update a props data value.
+         */
+        template <class T> void setPropData(Prop * prop, T * data) { prop->setData<T>(data); }
     };
 
     /**
      * Handles the start up and shutdown of all other bosses
      * plus the main runtime.
      */
-    class BigBadBoss : public Boss
+    class BigBadBoss : Boss
     {
       public:
         static const unsigned IDENTIFIER = BOSS_IDENTIFIER_BBB;
 
-        std::vector<Drone *> drones;
+        std::vector<DroneData *> drones;
 
       public:
-        BigBadBoss() : Boss(IDENTIFIER) { Drone::setBoss(this); }
+        BigBadBoss() : Boss(IDENTIFIER)
+        {
+            std::cout << "Bosses Address " << (unsigned long long)&Boss::bosses
+                      << " Size: " << Boss::bosses.size() << std::endl;
+            Drone::setBoss(this);
+        }
 
         virtual ~BigBadBoss() {}
 
@@ -120,20 +131,18 @@ namespace hive
         virtual void setup();
         void prepareDroneUpdate(hive::Drone * drone) {}
 
-        inline Drone * createDrone()
-        {
-            BigBadBoss & boss = *static_cast<BigBadBoss *>(Drone::getBoss());
+        /*
+          Creates new drone object and assignes a opaque drone pointer to it.
+          DO NOT try manipulate drone pointers. They are not memory pointers
+          and are used by bosses to handle storage of drone objects.
+         */
+        DroneData * createDroneData(Drone * drone);
 
-            hive::Drone & drone = *new Drone();
-
-            drone.id.id = drones.size();
-
-            drones.push_back(&drone);
-
-            return (Drone *)drone.id.id;
-        }
-
-        inline Drone & getDrone(unsigned id) { return *drones[id]; }
+        /*
+          Returns reference to actual drone object. The address of this reference
+          SHOULD NOT be stored for later retrieval.
+        */
+        DroneData * getDroneData(Drone *);
 
       protected:
         virtual void teardown();

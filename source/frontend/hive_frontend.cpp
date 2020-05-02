@@ -1,18 +1,22 @@
-#include <thread>
-#include <vector>
+
+
+#define HIVE_DEBUG
+#define HIVE_USE_OPENGL
+#define HIVE_USE_GLFW
 
 #include <hive.h>
 
 #include <nodejs/src/node_api.h>
+
+#include <thread>
+#include <vector>
 
 
 #include "./interfaces.hpp"
 
 using namespace hive::all;
 
-vec3 vec;
-
-BigBadBossA boss;
+BigBadBoss boss;
 
 GLFWBoss interface_boss(512, 512);
 
@@ -44,7 +48,7 @@ void shouldClose()
 // Run from a detached thread.
 void mainHiveThread()
 {
-    std::cout << vec << std::endl;
+
     while (boss.update())
         ;
 
@@ -54,6 +58,9 @@ void mainHiveThread()
 
 napi_value HiveInitializeFunction(napi_env env, napi_callback_info info)
 {
+
+    std::cout << "PRE SETUP ## Bosses length " << Boss::bosses.size() << std::endl;
+
     size_t argc = 1;
     napi_value argv[1];
 
@@ -71,11 +78,13 @@ napi_value HiveInitializeFunction(napi_env env, napi_callback_info info)
 
         boss.setup();
 
+        // Setup gl system
+
+
         // Setup Main Hive thread
         std::thread main_thread(mainHiveThread);
 
         main_thread.detach();
-
 
         status = napi_create_int32(env, 1, &init_result);
 
@@ -133,8 +142,6 @@ napi_value HiveShouldClose(napi_env env, napi_callback_info info)
 
 NAPI_MODULE_INIT()
 {
-    std::cout << "HELO WORLD" << std::endl;
-
     napi_status status;
 
     napi_value init_fn, close_event_fn;

@@ -155,7 +155,7 @@ export async function start() {
 }
 
 
-async function loadAndCreatePropHandlers(dir = "./source/library/primitive") {
+async function loadAndCreatePropHandlers(dir = "./source/library") {
 
     if (start_function)
         start_function();
@@ -191,6 +191,10 @@ async function parseHPPHeader(obj_path) {
             const
                 hpp = await fsp.readFile(obj_path, { encoding: "utf8" }),
                 d = hc.lrParse(hpp, parser_data, env);
+
+
+            if (obj_path == "/home/anthony/work/active/apps/hive/source/library/primitive/prop.hpp")
+                console.log(d);
 
             if (d.value && d.value.length > 1) {
 
@@ -262,7 +266,7 @@ function compileStruct(d) {
         }
     }
 
-    prop_function({ name, properties, functions });
+    prop_function({ name, properties, functions, heritage: (d.heritage || []).map(v => v.v) });
 }
 export function onPropParseEnd(fn) {
     end_function = fn;

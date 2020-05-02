@@ -245,14 +245,6 @@ namespace hive
             inline void setMat34V(float * v) { glUniformMatrix3x4fv(pointer, length, false, v); };
 
             inline void setMat43V(float * v) { glUniformMatrix4x3fv(pointer, length, false, v); };
-        }; // namespace gl
-
-        void SmartGLUniform::deleteUnderlyingGLResource() {}
-
-        void SmartGLUniform::use() {}
-
-        void SmartGLUniform::release() {}
-
-        bool SmartGLUniform::IS_USABLE() { return false; }
+        };
     } // namespace gl
 } // namespace hive

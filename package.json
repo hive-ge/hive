@@ -12,6 +12,7 @@
         "start": "node ./source/frontend/hive_frontend_entry.cjs",
         "start.electron": "electron ./source/frontend/hive_frontend_entry.js",
         "build:dev": "cmake-js --runtime node --debug build",
+        "rebuild:dev": "cmake-js --runtime node --debug rebuild",
         "build": "cmake-js --runtime node build",
         "build:props": "./source/tools/build.components.js",
         "rebuild": "cmake-js rebuild",

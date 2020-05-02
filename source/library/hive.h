@@ -55,14 +55,17 @@
 // Bosses
 #include "primitive/boss.hpp"
 //#include "graphic/draw_boss.hpp"
-//#include "graphic/sprite_boss.hpp"
+#include "graphic/sprite_boss.hpp"
 //#include "graphic/texture_boss.hpp"
 #include "interface/glfw_interface_boss.hpp"
 #include "interface/interface_boss.hpp"
 
 // Primitives
 #include "gpu/gpu_primitive.hpp"
-#include "primitive/drone/drone.hpp"
+#include "primitive/drone.hpp"
+#include "primitive/mesh.hpp"
+#include "primitive/prop.hpp"
+#include "primitive/shader_program.hpp"
 
 // Resource
 #include "resource/load.hpp"

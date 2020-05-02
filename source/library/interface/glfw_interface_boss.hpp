@@ -2,11 +2,23 @@
 
 #include "interface/interface_boss.hpp"
 
+//#ifdef HIVE_USE_OPENGL
+
+#include <GL/gl.h>
+
+#include <GL/glew.h>
+
+#include "gpu/opengl/gl.hpp"
+
+#define GLFW_INCLUDE_NONE
+
+//#endif
+
 #include <GLFW/glfw3.h>
 #include <iostream>
 #include <vector>
 
-//#ifdef HIVE_USE_GLFW
+//#ifdef HIVE_USE_OPENGLFW
 
 #define makePressCase(KEY_NAME)                                                                    \
     case GLFW_KEY_##KEY_NAME:                                                                      \
@@ -378,7 +390,10 @@ namespace hive
             }
 
           public:
-            GLFWBoss(unsigned int w = 1024, unsigned int h = 720) : InterfaceBoss(w, h){};
+            GLFWBoss(unsigned int w = 1024, unsigned int h = 720) : InterfaceBoss(w, h)
+            {
+                std::cout << "GLFW ## Bosses length " << Boss::bosses.size() << std::endl;
+            };
 
             virtual ~GLFWBoss() { teardown(); };
 
@@ -391,7 +406,7 @@ namespace hive
                 if (window != nullptr) {
                     glfwDestroyWindow(window);
 
-#ifdef HIVE_USE_GL
+#ifdef HIVE_USE_OPENGL
                     glfwTerminate();
 #endif
 #ifdef HIVE_USE_VULKAN
@@ -408,26 +423,23 @@ namespace hive
                 glfwSetErrorCallback(error_callback);
 
                 if (glfwInit() == GLFW_TRUE) {
+                    std::cout << "Pending Created GL Context" << std::endl;
 
 #ifdef HIVE_USE_VULKAN
                     glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
 #endif
 
 
-#ifdef HIVE_USE_GL
+#ifdef HIVE_USE_OPENGL
                     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
 //############################## DEBUG
 #ifdef HIVE_DEBUG
-                    glfwWindowHint(GLFW_OPENGL_DEBUG_CONTEXT, GLFW_TRUE);
-                    window = glfwCreateWindow(width, height, "HIVE DEBUG", NULL, NULL);
 
+                    glfwWindowHint(GLFW_OPENGL_DEBUG_CONTEXT, GLFW_TRUE);
 //############################## END DEBUG
 #else
-#endif
-                    /*make this the current context */
-                    glfwMakeContextCurrent(window);
-#endif
                     glfwWindowHint(GLFW_FLOATING, GLFW_TRUE);
+#endif
 
                     window = glfwCreateWindow(width, height, "HIVE RELEASE", NULL, NULL);
 
@@ -436,6 +448,26 @@ namespace hive
                         fatalError();
                         return;
                     }
+
+                    /*make this the current context */
+                    glfwMakeContextCurrent(window);
+
+                    // Initialize glew
+                    std::cout << "Intializing GLEW" << std::endl;
+
+                    GLenum err = glewInit();
+
+                    if (GLEW_OK != err) {
+                        /* Problem: glewInit failed, something is seriously wrong. */
+                        std::cout << glewGetErrorString(err) << std::endl;
+                        glfwTerminate();
+                        fatalError();
+                        return;
+                    }
+
+                    std::cout << "Created GL Context" << std::endl;
+#endif
+
 
 #ifdef HIVE_USE_VULKAN
 

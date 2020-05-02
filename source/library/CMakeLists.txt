@@ -9,8 +9,8 @@ SET (CMAKE_C_FLAGS_RELEASE_INIT        "-O3 -DNDEBUG")
 SET (CMAKE_C_FLAGS_RELWITHDEBINFO_INIT "-O2 -g")
 
 
-SET (CMAKE_CXX_FLAGS_INIT                "-std=c++17 -pthread -fPIC")
-SET (CMAKE_CXX_FLAGS_DEBUG          	 "-O0 -g")
+SET (CMAKE_CXX_FLAGS_INIT                "-std=c++17 -pthread")
+SET (CMAKE_CXX_FLAGS_DEBUG          	 "-Og -g")
 SET (CMAKE_CXX_FLAGS_MINSIZEREL_INIT     "-O2 -DNDEBUG")
 SET (CMAKE_CXX_FLAGS_RELEASE_INIT        "-O3 -DNDEBUG")
 SET (CMAKE_CXX_FLAGS_RELWITHDEBINFO_INIT "-O2 -g")
@@ -21,10 +21,7 @@ set (HIVE_VERSION_MAJOR 0)
 set (HIVE_VERSION_MINOR 1)
 set (HIVE_VERSION_PATCH 0)
 
-SET (HIVE_USE_OPENGL true)
-
-set(CMAKE_POSITION_INDEPENDENT_CODE ON)
-
+set(CMAKE_SHARED_LINKER_FLAGS "-Wl,--export-all-symbols")
 
 add_definitions(-DHIVE_USE_OPENGL -DHIVE_USE_GLFW)
 
@@ -88,7 +85,7 @@ FILE(GLOB_RECURSE SRCS
 	"./interface/**.cpp"
 	"./network/**.cpp"
 	"./primitive/**.cpp"
-	"./primitive/**.cpp"
+	"./graphic/**.cpp"
 	"./script/**.cpp"
 ) 
 
@@ -101,6 +98,7 @@ FILE(GLOB_RECURSE INCLUDES
 	"interface/**.hpp"
 	"network/**.hpp"
 	"primitive/**.hpp"
+	"graphic/**.cpp"
 	"script/**.hpp"
 ) 
 
@@ -130,6 +128,8 @@ include_directories("./interface/input/keyboard")
 include_directories("./interface/input/mouse")
 include_directories("./interface/input/controller")
 
+
+include_directories( "./graphic")
 include_directories( "./network")
 include_directories( "./script")
 include_directories( "./primitive")
@@ -142,3 +142,4 @@ include_directories( "./node")
 ## Define the library
 
 add_library(${HIVE_LIBRARY_PROJECT} STATIC ${SRCS} ${INCLUDES})
+set_property(TARGET ${HIVE_LIBRARY_PROJECT} PROPERTY POSITION_INDEPENDENT_CODE ON)

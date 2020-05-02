@@ -21,7 +21,7 @@
 //#define GLEW_STATIC
 //#include "/usr/local/include/gl3w/GL/gl3w.h"
 #include <GL/glew.h>
-#define GLFW_INCLUDE_NONE
+
 //#endif // HIVE_USE_GLFW
 
 
@@ -30,7 +30,7 @@
 #include <vector>
 
 #include "primitive/log.hpp"
-#include "primitive/math/hive_math.hpp"
+#include "primitive/math/math.hpp"
 
 #ifndef HIVE_GL_REFERENCE_COUNT_MAX
 #define HIVE_GL_REFERENCE_COUNT_MAX 2048

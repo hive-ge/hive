@@ -1,30 +1,15 @@
 #pragma once
 
-#include "gpu/gpu_primitive.hpp"
-
+//#include "gpu/gpu_primitive.hpp"
 #include "graphic/texture_boss.hpp"
 #include "primitive/boss.hpp"
-#include "primitive/drone/drone.h"
-#include "primitive/math/vec2.h"
+#include "primitive/drone.hpp"
+#include "primitive/math/math.hpp"
 #include <vector>
 
 namespace hive
 {
     using namespace math;
-
-    struct SpriteProp : Prop {
-      public:
-        static const ushort TYPE = SPRITE_PROP_TYPE;
-
-      public:
-        /**
-         * Database identifier of the sprite
-         */
-        unsigned sprite_id;
-
-      public:
-        SpriteProp() : Prop(TYPE, sizeof(SpriteProp)) {}
-    };
 
     struct Sprite {
 
@@ -65,6 +50,30 @@ namespace hive
         vec3 scale;
 
         TextureProp texture;
+    };
+
+
+    //::HIVE DRONE_PROP
+    struct SpriteProp : Prop {
+      public:
+        static const ushort TYPE = SPRITE_PROP_TYPE;
+
+      public:
+        /**
+         * Database identifier of the sprite
+         */
+        unsigned sprite_id;
+
+      public:
+        SpriteProp() : Prop(TYPE, sizeof(SpriteProp)){};
+
+        static SpriteProp * construct() { return new SpriteProp(); }
+
+        // Upload new sprite data.
+
+        // Set sprite bounds.
+
+        // Set sprite offset.
     };
 
     /**
@@ -111,25 +120,4 @@ namespace hive
         // Called periodicolly to update priority values
         virtual int priority() { return 10000; };
     };
-
-    SpriteProp * SpriteBoss::loadSprite(const std::string texture_image)
-    {
-
-        TextureProp * texture;
-
-        texture = tex_boss->createTexture(texture_image);
-
-        SpriteProp & sprite_prop = (*new SpriteProp);
-
-        // Next object in this chain is texture
-        sprite_prop.next = texture;
-
-        Sprite sprite;
-
-        sprite_prop.sprite_id = sprites.size();
-
-        sprites.push_back(sprite);
-
-        return &sprite_prop;
-    }
 } // namespace hive

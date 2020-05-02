@@ -119,7 +119,7 @@ unsigned hive::gl::getGLSLTypePrimitive(GLint t)
     case GL_DOUBLE_MAT3:
         return 3;
     case GL_DOUBLE_MAT4:
-        return 13;
+        return 3;
     case GL_DOUBLE_MAT2x3:
         return 3;
     case GL_DOUBLE_MAT3x2:
@@ -129,9 +129,9 @@ unsigned hive::gl::getGLSLTypePrimitive(GLint t)
     case GL_DOUBLE_MAT4x2:
         return 3;
     case GL_DOUBLE_MAT3x4:
-        return 13;
+        return 3;
     case GL_DOUBLE_MAT4x3:
-        return 13;
+        return 3;
     }
     return 0;
 };
