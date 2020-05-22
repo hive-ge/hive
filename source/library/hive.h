@@ -63,9 +63,12 @@
 // Primitives
 #include "gpu/gpu_primitive.hpp"
 #include "primitive/drone.hpp"
+#include "primitive/image.hpp"
+#include "primitive/matrix.hpp"
 #include "primitive/mesh.hpp"
 #include "primitive/prop.hpp"
 #include "primitive/shader_program.hpp"
+#include "primitive/vector.hpp"
 
 // Resource
 #include "resource/load.hpp"

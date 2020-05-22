@@ -6,6 +6,8 @@
 
 #include "primitive/prop.hpp"
 
+#include "gpu/opengl/gl.hpp"
+
 namespace hive
 {
     using namespace hive::math;
@@ -67,7 +69,11 @@ namespace hive
             }
         }
 
-        void uploadData(unsigned location);
+        void uploadVertexData(int location);
         // void removeVertex();
     };
+
+    inline void MeshProp::uploadVertexData(int gpu_pointer) {
+        void glBindVertexBuffer(GLuint bindingindex​, GLuint buffer​, GLintptr offset​, GLintptr stride​);
+    }
 } // namespace hive

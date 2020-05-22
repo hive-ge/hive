@@ -12,6 +12,12 @@
 #define IMAGE_PROP_TYPE 6
 #define FLOAT_VEC3_PROP 7
 #define DOUBLE_VEC3_PROP 8
+#define FloatMat22Prop 9
+#define DoubleMat22Prop 10
+#define FloatMat33Prop 11
+#define FloatMat44Prop 12
+#define DoubleMat33Prop 13
+#define DoubleMat44Prop 14
 
 namespace hive
 {
