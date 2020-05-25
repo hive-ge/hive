@@ -3,48 +3,31 @@ cmake_minimum_required(VERSION 3.15)
 #SET (CMAKE_CXX_STANDARD 17)
 
 SET (CMAKE_C_FLAGS_INIT                "-std=c11")
-SET (CMAKE_C_FLAGS_DEBUG_INIT          "-O0 -g -w")
+SET (CMAKE_C_FLAGS_DEBUG_INIT          "-O0 -g4 -w")
 SET (CMAKE_C_FLAGS_MINSIZEREL_INIT     "-Os -DNDEBUG")
 SET (CMAKE_C_FLAGS_RELEASE_INIT        "-O3 -DNDEBUG")
 SET (CMAKE_C_FLAGS_RELWITHDEBINFO_INIT "-O2 -g")
 
 
-SET (CMAKE_CXX_FLAGS_INIT                "-std=c++17 -pthread -fPIC")
-SET (CMAKE_CXX_FLAGS_DEBUG          	 "-O0 -g")
+SET (CMAKE_CXX_FLAGS_INIT                "-std=c++17 -pthread -v  -fPIC ")
+SET (CMAKE_CXX_FLAGS_DEBUG          	 "-O0 -g3")
 SET (CMAKE_CXX_FLAGS_MINSIZEREL_INIT     "-O2 -DNDEBUG")
 SET (CMAKE_CXX_FLAGS_RELEASE_INIT        "-O3 -DNDEBUG")
 SET (CMAKE_CXX_FLAGS_RELWITHDEBINFO_INIT "-O2 -g")
 
 
 #set(CMAKE_POSITION_INDEPENDENT_CODE ON)
-
+option(JS_ONLY "Compiles to native JS (No WASM)" OFF)
 
 SET (CMAKE_EXPORT_COMPILE_COMMANDS 1)
 
-set (ruminate_VERSION_MAJOR 0)
-set (ruminate_VERSION_MINOR 1)
-set (ruminate_VERSION_PATCH 0)
-
-# define NPI_VERSION
-add_definitions(-DNAPI_VERSION=5)
+set (HIVE_VERSION_MAJOR 0) 
+set (HIVE_VERSION_MINOR 1)
+set (HIVE_VERSION_PATCH 0)
 
 
-###########################################
-find_package(OpenGL REQUIRED)
-
-if (OPENGL_FOUND)
-    include_directories(${OPENGL_INCLUDE_DIR})
-    link_libraries(${OPENGL_LIBRARIES})
-endif()
-
-find_package(GLEW REQUIRED)
-
-if (GLEW_FOUND)
-    include_directories(${GLEW_INCLUDE_DIRS})
-    link_libraries(${GLEW_LIBRARIES})
-endif()
-
-link_libraries(glfw)
+## Official emscripten information on using WebGL
+## https://emscripten.org/docs/porting/multimedia_and_graphics/OpenGL-support.html
 
 
 ###########################################
@@ -55,31 +38,35 @@ set( PROJECT_NAME "hive_dev")
 
 project(${PROJECT_NAME})
 
+FILE(GLOB_RECURSE INTERFACE_DEPENDENCY_FILES "../library/include/primitive/prop_*.hpp" ) 
+
+message(${INTERFACE_DEPENDENCY_FILES})
+
 add_custom_command(
-    OUTPUT ./interfaces.hpp
+    OUTPUT "${CMAKE_CURRENT_SOURCE_DIR}/interfaces.hpp"
+    DEPENDS ${INTERFACE_DEPENDENCY_FILES}
     COMMENT "Creating JS interfaces.hpp file"
-    COMMAND yarn ARGS "build:props"
-    WORKING_DIR ${CMAKE_SOURCE_DIR}
+    COMMAND "node" ARGS "--experimental-modules" "./source/tools/build.webgl.components.js"
+    WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}"
     USES_TERMINAL
 )
 
 
-
-
 ##########################################
-## Define the library
+include_directories("../library/include")
 include_directories("../library")
 
-include_directories(${CMAKE_JS_INC})
+include_directories("./")
 
-add_library(${PROJECT_NAME} SHARED "hive_frontend.cpp" "./interfaces.hpp" ${CMAKE_JS_SRC} $<TARGET_OBJECTS:hive>)
+add_executable(${PROJECT_NAME} "hive_webassembly.cpp" "interfaces.hpp" $<TARGET_OBJECTS:hive>)
 
-set_target_properties(${PROJECT_NAME} PROPERTIES PREFIX "" SUFFIX ".node")
+set_target_properties(${PROJECT_NAME} PROPERTIES LINK_FLAGS "--bind -s USE_PTHREADS=1 -s USE_WEBGL2=1 -s MIN_WEBGL_VERSION=2 -s MAX_WEBGL_VERSION=2 -s USE_GLFW=3 -s WASM=1 -s EXPORTED_FUNCTIONS='[_main]'")
 
-target_include_directories(${PROJECT_NAME} PRIVATE ${CMAKE_JS_INC})
+set_target_properties(${PROJECT_NAME} PROPERTIES PREFIX "" SUFFIX ".wasm.js")
 
-target_link_libraries(${PROJECT_NAME} ${CMAKE_JS_LIB})
+set_target_properties( ${PROJECT_NAME} 
+    PROPERTIES
+    RUNTIME_OUTPUT_DIRECTORY "${CMAKE_SOURCE_DIR}/bin/web"
+)
 
 target_link_libraries(${PROJECT_NAME} PUBLIC hive)
-
-

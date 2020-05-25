@@ -210,6 +210,23 @@ function createJSInterface(struct) {
         //Ignore overloading for now.
         if (method.operator || method.access_type !== "public" || method.type.includes("static")) continue;
 
+
+        const templates = {
+            get_callback_data(arg_size = 0) {
+                return `  void * data;
+        
+                napi_value this_arg;
+        
+                std::vector<napi_value> args(${arg_size});
+        
+                size_t arg_count = ${arg_size};
+        
+                napi_get_cb_info(env, info, &arg_count, args.data(), &this_arg, nullptr);
+        
+                napi_unwrap(env, this_arg, &data);
+            `;
+            }
+        };
         const
             member_name = getPropName(method.name);
 

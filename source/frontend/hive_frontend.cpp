@@ -20,7 +20,7 @@ BigBadBoss boss;
 
 GLFWBoss interface_boss(512, 512);
 
-// Sentinal agains multiple setup calls if there
+// Sentinal against multiple setup calls if there
 // are more than one NodeJS instances running.
 bool INITIALIZED = false, CLOSING = false;
 

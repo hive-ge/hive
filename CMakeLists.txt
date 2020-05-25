@@ -23,6 +23,10 @@ set (ruminate_VERSION_PATCH 0)
 
 project("HIVE_SYSTEM")
 
+#### PLATFORM SPECIFIC FLAGS
+
+set(HIVE_USE_WEBGL 1)
+
 add_subdirectory("./source/library")
 
 if (CMAKE_JS_VERSION)
@@ -30,32 +34,5 @@ if (CMAKE_JS_VERSION)
 endif()
 
 
-
-
-###########################################
-# SIMPLE PLATFORMER EXE
-###########################################
-
-#set( PROJECT_NAME "platformer")
-
-#project(${PROJECT_NAME})
-
-###########################################
-# LOCATE DEPENDENCIES
-
-
-#find_package(Vulkan REQUIRED)
-#INCLUDE_DIRECTORIES("source/library")
-#INCLUDE_DIRECTORIES("source/sample")
-#INCLUDE_DIRECTORIES("source/electron_frontend")
-
-#INCLUDE_DIRECTORIES(${Vulkan_INCLUDE_DIR})
-
-
-##########################################
-## Define the executable
-
-#add_executable(${PROJECT_NAME} "source/samples/platformer.cpp")
-
-#target_link_libraries( ${PROJECT_NAME} hive)
+add_subdirectory("./source/webassembly")
 

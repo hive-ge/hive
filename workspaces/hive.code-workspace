@@ -71,7 +71,11 @@
 			"cinttypes": "cpp",
 			"cstdbool": "cpp",
 			"typeinfo": "cpp",
-			"__functional_base": "cpp"
+			"__functional_base": "cpp",
+			"list": "cpp",
+			"unordered_set": "cpp",
+			"map": "cpp",
+			"set": "cpp"
 		}
 	}
 }

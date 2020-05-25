@@ -59,11 +59,9 @@ add_custom_command(
     OUTPUT ./interfaces.hpp
     COMMENT "Creating JS interfaces.hpp file"
     COMMAND yarn ARGS "build:props"
-    WORKING_DIR ${CMAKE_SOURCE_DIR}
+    WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
     USES_TERMINAL
 )
-
-
 
 
 ##########################################

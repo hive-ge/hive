@@ -1,1 +1,0 @@
-/usr/bin/clang-9   -rdynamic CMakeFiles/example.dir/test/example.o  -o example  -Wl,-rpath,/home/anthony/work/active/apps/hive/source/library/3rdparty/zlib/cbuild libz.so.1.2.11 

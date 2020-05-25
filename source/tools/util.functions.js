@@ -28,6 +28,29 @@ const env = {
 
             return array;
         },
+
+
+        parseString: (a, b, lex) => {
+
+            console.log("----------------------------------------------------------------------------------------------");
+
+
+            const pk = lex.pk,
+                end = lex.tx;
+
+            lex.next();
+
+            while (!pk.END && pk.tx != end) {
+                if (pk.tx == "\\")
+                    pk.next();
+                pk.next();
+            }
+
+            console.log(lex.tx, "----------------------------------------------------------------------------------------------");
+
+            lex.tl = pk.off - lex.off;
+        },
+
         defaultError: (tk, env, output, lex, prv_lex, ss, lu) => {
 
             //Comments
@@ -155,25 +178,25 @@ export async function start() {
 }
 
 
-async function loadAndCreatePropHandlers(dir = "./source/library") {
+async function loadAndCreatePropHandlers(dir = "./source/library/include/primitive") {
 
     if (start_function)
         start_function();
 
     try {
         for (const name of await fsp.readdir(dir)) {
+
             const
                 obj_path = path.resolve(dir, name),
                 ext = path.extname(obj_path),
                 stats = fsp.stat(obj_path);
 
-
-
             if ((await stats).isDirectory()) {
                 await loadAndCreatePropHandlers(obj_path);
             } else {
+                console.log({ name, ext });
                 if (ext == ".hpp" || ext == ".h") {
-                    parseHPPHeader(obj_path);
+                    await parseHPPHeader(obj_path);
                 }
             }
         }
@@ -192,9 +215,6 @@ async function parseHPPHeader(obj_path) {
                 hpp = await fsp.readFile(obj_path, { encoding: "utf8" }),
                 d = hc.lrParse(hpp, parser_data, env);
 
-
-            if (obj_path == "/home/anthony/work/active/apps/hive/source/library/primitive/prop.hpp")
-                console.log(d);
 
             if (d.value && d.value.length > 1) {
 

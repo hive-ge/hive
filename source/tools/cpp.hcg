@@ -29,9 +29,11 @@
     value 
     | qualified_id \( expression_list? \)   f:return{ {t:"call", name:$sym1, args:$sym3} }
 
-<> value  > 
-    qualified_id 
+<> value >  qualified_id 
     | \-? g:num                 f:return{ {t:"num_literal", val:$sym2} }
+    | string_literal
+
+
 ### Attributes - Attribute Specifier Sequence >= C++11
 
     <> attr > 
@@ -112,8 +114,6 @@
     | ... identifier attr?
     | nested_name_specifier * attr? declarator?
     | noptr_declarator \[ constexpr? \] attr?
-    #| noptr_declarator \( parameter_list \) cv? ref? except? attr?
-    #| \( ptr_declarator \)
 
 <> constexpr > expression
 
@@ -151,7 +151,11 @@
         <> class_or_decltype > qualified_id
 
 ### Template 
-<> template > t:template \< template_specifier(+) \>
+<> template__ > t:template template_tag
+
+<> template_tag > \< template_specifier(+,) \> 
+
+<> template_implementation_tag > \< qualified_id(+,) \> 
 
 <> template_specifier > ( t:class | t:typename ) unqualified_id
 
@@ -168,9 +172,10 @@
                 this.init = $$sym3
             }
 
-            |   template? property_attribs? declarator operator_specifier? \( parameter_list? \) member_function_initializer? function_body? 
+            |   template__? property_attribs? declarator operator_specifier? \( parameter_list? \) member_function_initializer? function_body? 
 
             f:cstr{ 
+                this.template = !!$$sym1;
                 this.t = (env.class_name.v == $sym3.v) ? "constructor function" : "member function";
                 this.specifiers = $$sym2 ? $$sym2.specifiers : [];
                 this.qualifiers = $$sym2 ? $$sym2.qualifiers : [];
@@ -307,7 +312,7 @@
 
 ### Identifiers
 
-<> qualified_id > qualified_id_part                             
+<> qualified_id > qualified_id_part template_implementation_tag? f:return{ $$sym1 }                           
 
 <> qualified_id_part > namespace_names unqualified_id           f:return{ $sym2.namespace = $sym1, $sym2 }
     | unqualified_id 
@@ -320,3 +325,7 @@
 <> identifier > g:id 
     | \_  
     | identifier g:id                                           f:return{ $sym1 + $sym2 }
+
+<> string_literal → ↦^parseString \" \"                                                                     
+    │ ↦^parseString \' \'                                                                                   
+
