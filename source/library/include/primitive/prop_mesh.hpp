@@ -29,26 +29,23 @@ namespace hive
     //::HIVE DRONE_PROP
     struct MeshProp : Prop {
 
+        MeshData * data = nullptr;
+
         static MeshProp * construct() { return new MeshProp(); }
 
         MeshProp() : Prop("PROP_MESH", sizeof(MeshProp))
         {
 
-            MeshData * data = new MeshData;
+            data = new MeshData;
 
             data->native = new NativeMeshData;
             data->gpu    = new GPUMeshData;
-
-            setData<MeshData>(data);
         }
 
         ~MeshProp()
         {
-            MeshData * data = getData<MeshData>();
-
             if (data->native) delete data->native;
             if (data->gpu) delete data->gpu;
-
 
             delete data;
         }
@@ -58,17 +55,28 @@ namespace hive
             vec3 vec = {X, Y, Z};
             vec2 UV  = {U, V};
 
-            MeshData & data = *getData<MeshData>();
+            if (data->native) {
+                data->native->verts.push_back(vec);
+                data->native->UVs.push_back(UV);
+            }
+        }
 
-            if (data.native) {
-                data.native->verts.push_back(vec);
-                data.native->UVs.push_back(UV);
+        void addTriangle(int a, int b, int c)
+        {
+
+            if (data->native) {
+                data->native->faces.push_back({a, b, c});
             }
         }
 
         /** Implemented in active GPU library */
         void uploadVertexData(int location);
 
-        // void removeVertex();
+        /**
+         * Create triangles from point data.
+         */
+        void triangulate();
+
+        bool dataInVRAM();
     };
 } // namespace hive

@@ -60,7 +60,7 @@ include_directories("./")
 
 add_executable(${PROJECT_NAME} "hive_webassembly.cpp" "interfaces.hpp" $<TARGET_OBJECTS:hive>)
 
-set_target_properties(${PROJECT_NAME} PROPERTIES LINK_FLAGS "--bind -s USE_PTHREADS=1 -s USE_WEBGL2=1 -s MIN_WEBGL_VERSION=2 -s MAX_WEBGL_VERSION=2 -s USE_GLFW=3 -s WASM=1 -s EXPORTED_FUNCTIONS='[_main]'")
+set_target_properties(${PROJECT_NAME} PROPERTIES LINK_FLAGS "--bind -s USE_PTHREADS=1 -s DISABLE_EXCEPTION_CATCHING=2 -s USE_WEBGL2=1 -s MIN_WEBGL_VERSION=2 -s MAX_WEBGL_VERSION=2 -s USE_GLFW=3 -s WASM=1 -s EXPORTED_FUNCTIONS='[_main]'")
 
 set_target_properties(${PROJECT_NAME} PROPERTIES PREFIX "" SUFFIX ".wasm.js")
 

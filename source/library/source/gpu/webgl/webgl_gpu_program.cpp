@@ -40,9 +40,7 @@ namespace hive
 
     void reportShaderProgramErrors(int program)
     {
-        int err = glGetError();
-
-        int result, info_length;
+        int err = glGetError(), info_length;
 
         glGetProgramiv(program, GL_INFO_LOG_LENGTH, &info_length);
 

@@ -4,5 +4,9 @@
 
 namespace hive
 {
-    void MeshProp::uploadVertexData(int location){};
+    void MeshProp::triangulate(){
+        // Assuming all tri
+    };
+
+    bool MeshProp::dataInVRAM() { return false; };
 } // namespace hive

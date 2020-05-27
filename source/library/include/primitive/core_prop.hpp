@@ -1,5 +1,6 @@
 #pragma once
 
+#include "include/primitive/core_drone.hpp"
 #include "include/primitive/core_string_hash.hpp"
 #include "include/primitive/core_typedef.hpp"
 
@@ -25,41 +26,23 @@ namespace hive
 
     //::HIVE DRONE_PROP
     struct Prop {
-        friend Drone;
         friend Boss;
-
-      protected:
-        // Generic pointer for custom data structures.
-        void * data = nullptr;
-
-        template <class T> inline T * getData() { return static_cast<T *>(data); }
-
-        template <class T> inline void setData(T * d) { data = static_cast<void *>(d); }
-
-        // ID used by bosses to enable data structure redirection.
-        int ID = -1;
-
-        inline void setID(int id) { ID = id; }
-
-        inline int getID() { return ID; }
 
       public:
         static const ushort TYPE = _NULL_PROP_TYPE;
 
-        static Prop * construct() { return new Prop(); }
+        static Prop * construct() { return new Prop("DEFAULT_PROP_DO_NOT_USE"); }
 
-        DroneData * drone = nullptr;
 
       public:
-        StringHash64 type = "";
-        Prop * prev       = nullptr;
-        Prop * next       = nullptr;
-        ushort byte_size  = 0;
+        const StringHash64 type = "";
+        StringHash64 tag        = "";
+        Prop * prev             = nullptr;
+        Prop * next             = nullptr;
+        DronePointer drone      = 0;
 
-        Prop(const std::string _type = "", const ushort size = sizeof(Prop))
-            : type(_type), byte_size(size)
-        {
-        }
+        Prop(const StringHash64 _type, const ushort size) : type(_type) {}
+        Prop(const StringHash64 _type) : type(_type) {}
 
         ~Prop() { disconnect(); }
 
@@ -71,8 +54,9 @@ namespace hive
          * If the prop is already connected to the
          * the drone then this method will have no effect.
          */
-        void connect(hive::Drone *);
+        void connect(DronePointer drone);
 
+        virtual void onConnect(DronePointer drone) {}
         /**
          * Disconnects the property from it's drone
          * host. If the property has no host then this

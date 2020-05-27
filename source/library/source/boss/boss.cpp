@@ -9,7 +9,7 @@ using namespace hive;
 bool Boss::SHOULD_EXIT = false;
 
 std::vector<Boss *> Boss::bosses;
-std::vector<DroneData *> Boss::drones;
+std::vector<Drone *> Boss::drones;
 
 Boss::Boss(const unsigned _id) : id(_id)
 {
@@ -36,6 +36,7 @@ Boss::Boss(const unsigned _id) : id(_id)
 
 void hive::BigBadBoss::setup()
 {
+    Drone::setBoss(this);
 
     std::cout << "Setup :: Bosses Address " << (unsigned long long)&bosses << " " << bosses.size()
               << std::endl;
@@ -49,8 +50,9 @@ void hive::BigBadBoss::setup()
 
 void BigBadBoss::teardown(){};
 
-int hive::BigBadBoss::priority() { return 0; };
+int BigBadBoss::priority() { return 0; };
 
+BigBadBoss::BigBadBoss() : Boss(IDENTIFIER) {}
 
 void BigBadBoss::update(float delta_t)
 {
@@ -97,27 +99,30 @@ bool BigBadBoss::update()
     return true;
 }
 
-DroneData * BigBadBoss::createDroneData(Drone * drone)
+Drone * BigBadBoss::createDrone()
 {
-    BigBadBoss & boss = *Drone::getBoss();
 
-    DroneData * data = new DroneData();
+#warning "Naked new Allocation [Drone] in BigBadBoss::createDrone"
 
-    drone->id.id = boss.drones.size();
+    int ptr = drones.size();
 
-    drones.push_back(data);
+    std::cout << "Drone pointer " << ptr << std::endl;
 
-    drone->data = data;
+    Drone * drone = new Drone(ptr);
 
-    return data;
+    drones.push_back(drone);
+
+    return drone;
 }
 
-DroneData * BigBadBoss::getDroneData(Drone * drone)
-{
-    unsigned drone_index = drone->id.id;
+Drone * BigBadBoss::retrieveIndexedPointer(unsigned index) { return drones.at(index); };
 
-    // Potentially do some indirection lookup to return either a
-    // stub drone or drone that has been relocated.
+void BigBadBoss::decrementIndexedReference(unsigned){
 
-    return drones[drone_index];
-}
+};
+void BigBadBoss::incrementIndexedReference(unsigned){
+
+};
+
+void BigBadBoss::onMessage(StringHash64 message_id, const char * message_data,
+                           const unsigned message_length){};

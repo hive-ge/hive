@@ -51,11 +51,6 @@ namespace hive
 
                 unsigned BUTTON_STATE_CHANGED = 0;
 
-                /**
-                 * true if the mouse is active / connected.
-                 */
-                bool IS_ALIVE = false;
-
               public:
                 /**
                  * Class for reading the state of a mouse.

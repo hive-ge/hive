@@ -4,6 +4,8 @@
 
 namespace hive
 {
+    MessageBoss * boss = nullptr;
+
     void sendMessage(StringHash64 system_name, StringHash64 message, char * data,
                      unsigned data_size)
     {
@@ -11,7 +13,7 @@ namespace hive
         std::cout << (std::string)system_name << " " << (std::string)message << std::endl;
     };
 
-    MessageBoss::MessageBoss(){};
+    MessageBoss::MessageBoss() : Boss(BOSS_IDENTIFIER_MESSAGE) { boss = this; };
 
     MessageBoss::~MessageBoss(){};
 

@@ -12,19 +12,13 @@ namespace hive
     //::HIVE DRONE_PROP
     struct DoubleMat44Prop : public Prop {
 
+        mat44d * data = nullptr;
+
         static DoubleMat44Prop * construct() { return new DoubleMat44Prop(); }
 
-        DoubleMat44Prop() : Prop("PROP_DMAT4", sizeof(DoubleMat44Prop))
-        {
-            mat44d * data = new mat44d;
-            setData<mat44d>(data);
-        }
+        DoubleMat44Prop() : Prop("PROP_DMAT4", sizeof(DoubleMat44Prop)) { data = new mat44d; }
 
-        ~DoubleMat44Prop()
-        {
-            mat44d * data = getData<mat44d>();
-            delete data;
-        }
+        ~DoubleMat44Prop() { delete data; }
         // void removeVertex();
     };
 } // namespace hive

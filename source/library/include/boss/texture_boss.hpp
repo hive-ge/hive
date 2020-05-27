@@ -129,5 +129,8 @@ namespace hive
          * tranfer data to video memeory.
          */
         void useTexture(TextureID id, unsigned unit = 0);
+
+        virtual void onMessage(StringHash64 message_id, const char * message_data = nullptr,
+                               const unsigned message_length = 0);
     };
 } // namespace hive

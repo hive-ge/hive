@@ -1,30 +1,24 @@
 #pragma once
 
-#include "include/primitive/core_prop.hpp"
+#include "include/boss/boss.hpp"
+#include "include/primitive/core_drone_flag.hpp"
+#include "include/primitive/core_indexed_pointer.hpp"
 #include "include/primitive/core_typedef.hpp"
 
 
 namespace hive
 {
     struct DroneData;
-    struct Drone;
+    struct Prop;
 
-    struct ID {
-        struct {
-            unsigned short padding;
-            unsigned int instance_number;
-            unsigned long long id;
-        };
-    };
+    typedef IndexedPointer<Drone, BigBadBoss> DronePointer;
 
-    struct BigBadBoss;
+    typedef DroneFlagTemplate<0> DroneFlag;
+    static const DroneFlagTemplate<1> DRONE_FLAG_NEED_UPDATE;
 
-    struct DroneData {
-        friend Drone;
-        unsigned long long flags = 0;
-        Prop * props             = nullptr;
-    };
-
+    /**
+     * Primary container class for game objects
+     */
     //::HIVE DRONE_PROP
     struct Drone {
 
@@ -34,30 +28,41 @@ namespace hive
       private:
         static BigBadBoss * boss;
 
+        static inline BigBadBoss * getBoss() { return boss; };
+
+      private:
+        /*
+          Flag structure
+          1 Can Render
+          2 Needs Render Update
+          3 Audio
+          3 Needs Audio Update
+          4 Needs
+          3 Has Parent
+        */
+        const DronePointer this_ptr = -1;
+        DronePointer parent         = -1;
+        DronePointer next_sib       = -1;
+        DronePointer first_child    = -1;
+
+      public:
+        Prop * props = nullptr;
+        DroneFlag flag;
+
+      public:
+        static Drone * construct();
+
+        Drone(DronePointer ptr) : this_ptr(ptr){};
+        ~Drone() {}
+
+        void connect(Prop * prop);
+
+        void disconnect(Prop * prop);
 
         static inline void setBoss(BigBadBoss * ptr)
         {
             if (boss == nullptr) boss = ptr;
         };
-
-        static inline BigBadBoss * getBoss() { return boss; };
-
-      public:
-        ID id;
-
-      private:
-        DroneData * data = nullptr;
-
-      public:
-        static Drone * construct();
-
-        Drone(){};
-        ~Drone() {}
-        // Defined in boss.hpp;
-        void signalUpdate();
-
-        void connect(Prop * prop);
-
-        void disconnect(Prop * prop);
     };
+
 } // namespace hive

@@ -20,14 +20,15 @@ namespace hive{
         EMSCRIPTEN_BINDINGS(hive_property_bindings) {
             emscripten::class_<Prop>("Prop")
 	.constructor(&Prop::construct, emscripten::allow_raw_pointers())
-	.function("connect", &Prop::connect, emscripten::allow_raw_pointers())
+	.function("connect", &Prop::connect)
+	.function("onConnect", &Prop::onConnect)
 	.function("disconnect", &Prop::disconnect);
 
 emscripten::class_<Drone>("Drone")
 	.constructor(&Drone::construct, emscripten::allow_raw_pointers())
-	.function("signalUpdate", &Drone::signalUpdate)
 	.function("connect", &Drone::connect, emscripten::allow_raw_pointers())
-	.function("disconnect", &Drone::disconnect, emscripten::allow_raw_pointers());
+	.function("disconnect", &Drone::disconnect, emscripten::allow_raw_pointers())
+	.function("setBoss", &Drone::setBoss, emscripten::allow_raw_pointers());
 
 emscripten::class_<ShaderProgramProp, emscripten::base<Prop>>("ShaderProgramProp")
 	.constructor(&ShaderProgramProp::construct, emscripten::allow_raw_pointers())
@@ -56,7 +57,10 @@ emscripten::class_<DoubleMat44Prop, emscripten::base<Prop>>("DoubleMat44Prop")
 emscripten::class_<MeshProp, emscripten::base<Prop>>("MeshProp")
 	.constructor(&MeshProp::construct, emscripten::allow_raw_pointers())
 	.function("addVertex", &MeshProp::addVertex)
-	.function("uploadVertexData", &MeshProp::uploadVertexData);
+	.function("addTriangle", &MeshProp::addTriangle)
+	.function("uploadVertexData", &MeshProp::uploadVertexData)
+	.function("triangulate", &MeshProp::triangulate)
+	.function("dataInVRAM", &MeshProp::dataInVRAM);
 
 emscripten::class_<RenderableProp, emscripten::base<Prop>>("RenderableProp")
 	.constructor(&RenderableProp::construct, emscripten::allow_raw_pointers())

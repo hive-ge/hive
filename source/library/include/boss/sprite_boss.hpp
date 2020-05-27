@@ -117,5 +117,8 @@ namespace hive
 
         // Called periodicolly to update priority values
         virtual int priority() { return 10000; };
+
+        virtual void onMessage(StringHash64 message_id, const char * message_data = nullptr,
+                               const unsigned message_length = 0);
     };
 } // namespace hive

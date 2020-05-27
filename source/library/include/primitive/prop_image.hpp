@@ -30,13 +30,9 @@ namespace hive
 
         static ImageProp * construct() { return new ImageProp(); }
 
-        ImageProp() : Prop("PROP_IMAGE", sizeof(ImageProp)) { setData<ImageData>(new ImageData); }
+        ImageProp() : Prop("PROP_IMAGE", sizeof(ImageProp)) {}
 
-        ~ImageProp()
-        {
-            ImageData * data = getData<ImageData>();
-            delete data;
-        }
+        ~ImageProp() {}
 
         /*
             Optional Implmentation, useful for debugging

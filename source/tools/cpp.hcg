@@ -99,7 +99,7 @@
 
 <> virt_specifier_seq > t:final 
 
-<> function_body > compound_statement 
+<> function_body > t:const? compound_statement 
     | = t:delete ;
     | = t:default ;
     | function_try_block
