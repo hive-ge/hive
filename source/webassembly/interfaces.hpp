@@ -60,7 +60,8 @@ emscripten::class_<MeshProp, emscripten::base<Prop>>("MeshProp")
 	.function("addTriangle", &MeshProp::addTriangle)
 	.function("uploadVertexData", &MeshProp::uploadVertexData)
 	.function("triangulate", &MeshProp::triangulate)
-	.function("dataInVRAM", &MeshProp::dataInVRAM);
+	.function("dataInVRAM", &MeshProp::dataInVRAM)
+	.function("numberOfVertices", &MeshProp::numberOfVertices);
 
 emscripten::class_<RenderableProp, emscripten::base<Prop>>("RenderableProp")
 	.constructor(&RenderableProp::construct, emscripten::allow_raw_pointers())

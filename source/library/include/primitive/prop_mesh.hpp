@@ -50,24 +50,9 @@ namespace hive
             delete data;
         }
 
-        void addVertex(float X, float Y, float Z, float U, float V)
-        {
-            vec3 vec = {X, Y, Z};
-            vec2 UV  = {U, V};
+        void addVertex(float X, float Y, float Z, float U, float V);
 
-            if (data->native) {
-                data->native->verts.push_back(vec);
-                data->native->UVs.push_back(UV);
-            }
-        }
-
-        void addTriangle(int a, int b, int c)
-        {
-
-            if (data->native) {
-                data->native->faces.push_back({a, b, c});
-            }
-        }
+        void addTriangle(int a, int b, int c);
 
         /** Implemented in active GPU library */
         void uploadVertexData(int location);
@@ -78,5 +63,7 @@ namespace hive
         void triangulate();
 
         bool dataInVRAM();
+
+        unsigned numberOfVertices() const { return data->native->verts.size(); }
     };
 } // namespace hive

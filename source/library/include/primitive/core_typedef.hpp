@@ -8,7 +8,7 @@ namespace hive
     // Forward Declarations;
     struct DroneData;
     struct Drone;
-    struct Boss;
+    class Boss;
 
     enum HIVE_RESULT : char {
         SUCCESS,

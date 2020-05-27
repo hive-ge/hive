@@ -75,7 +75,9 @@
 			"list": "cpp",
 			"unordered_set": "cpp",
 			"map": "cpp",
-			"set": "cpp"
+			"set": "cpp",
+			"*.ipp": "cpp",
+			"__split_buffer": "cpp"
 		}
 	}
 }

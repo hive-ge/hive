@@ -157,77 +157,77 @@ unsigned hive::getGLSLTypeSize(GLint t)
     return 0;
 }
 // Quick primitive type reference for GLSL types.
-unsigned hive::getGLSLTypePrimitive(GLint t)
+int hive::getGLSLTypePrimitive(GLint t)
 {
     switch (t) {
     case GL_FLOAT:
-        return 2;
+        return (int)ShaderArtifact::ElementPrimitiveType::FLOAT;
     case GL_FLOAT_VEC2:
-        return 2;
+        return (int)ShaderArtifact::ElementPrimitiveType::FLOAT;
     case GL_FLOAT_VEC3:
-        return 2;
+        return (int)ShaderArtifact::ElementPrimitiveType::FLOAT;
     case GL_FLOAT_VEC4:
-        return 2;
+        return (int)ShaderArtifact::ElementPrimitiveType::FLOAT;
     case GL_FLOAT_MAT2:
-        return 2;
+        return (int)ShaderArtifact::ElementPrimitiveType::FLOAT;
     case GL_FLOAT_MAT3:
-        return 2;
+        return (int)ShaderArtifact::ElementPrimitiveType::FLOAT;
     case GL_FLOAT_MAT4:
-        return 2;
+        return (int)ShaderArtifact::ElementPrimitiveType::FLOAT;
     case GL_FLOAT_MAT2x3:
-        return 2;
+        return (int)ShaderArtifact::ElementPrimitiveType::FLOAT;
     case GL_FLOAT_MAT3x2:
-        return 2;
+        return (int)ShaderArtifact::ElementPrimitiveType::FLOAT;
     case GL_FLOAT_MAT2x4:
-        return 2;
+        return (int)ShaderArtifact::ElementPrimitiveType::FLOAT;
     case GL_FLOAT_MAT4x2:
-        return 2;
+        return (int)ShaderArtifact::ElementPrimitiveType::FLOAT;
     case GL_FLOAT_MAT3x4:
-        return 2;
+        return (int)ShaderArtifact::ElementPrimitiveType::FLOAT;
     case GL_FLOAT_MAT4x3:
-        return 2;
+        return (int)ShaderArtifact::ElementPrimitiveType::FLOAT;
     case GL_INT:
-        return 1;
+        return (int)ShaderArtifact::ElementPrimitiveType::INTEGER;
     case GL_INT_VEC2:
-        return 1;
+        return (int)ShaderArtifact::ElementPrimitiveType::INTEGER;
     case GL_INT_VEC3:
-        return 1;
+        return (int)ShaderArtifact::ElementPrimitiveType::INTEGER;
     case GL_INT_VEC4:
-        return 1;
+        return (int)ShaderArtifact::ElementPrimitiveType::INTEGER;
     case GL_UNSIGNED_INT:
-        return 0;
+        return (int)ShaderArtifact::ElementPrimitiveType::UNSIGNED_INTEGER;
     case GL_UNSIGNED_INT_VEC2:
-        return 0;
+        return (int)ShaderArtifact::ElementPrimitiveType::UNSIGNED_INTEGER;
     case GL_UNSIGNED_INT_VEC3:
-        return 0;
+        return (int)ShaderArtifact::ElementPrimitiveType::UNSIGNED_INTEGER;
     case GL_UNSIGNED_INT_VEC4:
-        return 0;
+        return (int)ShaderArtifact::ElementPrimitiveType::UNSIGNED_INTEGER;
     case GL_DOUBLE:
-        return 3;
+        return (int)ShaderArtifact::ElementPrimitiveType::DOUBLE;
     case GL_DOUBLE_VEC2:
-        return 3;
+        return (int)ShaderArtifact::ElementPrimitiveType::DOUBLE;
     case GL_DOUBLE_VEC3:
-        return 3;
+        return (int)ShaderArtifact::ElementPrimitiveType::DOUBLE;
     case GL_DOUBLE_VEC4:
-        return 3;
+        return (int)ShaderArtifact::ElementPrimitiveType::DOUBLE;
     case GL_DOUBLE_MAT2:
-        return 3;
+        return (int)ShaderArtifact::ElementPrimitiveType::DOUBLE;
     case GL_DOUBLE_MAT3:
-        return 3;
+        return (int)ShaderArtifact::ElementPrimitiveType::DOUBLE;
     case GL_DOUBLE_MAT4:
-        return 3;
+        return (int)ShaderArtifact::ElementPrimitiveType::DOUBLE;
     case GL_DOUBLE_MAT2x3:
-        return 3;
+        return (int)ShaderArtifact::ElementPrimitiveType::DOUBLE;
     case GL_DOUBLE_MAT3x2:
-        return 3;
+        return (int)ShaderArtifact::ElementPrimitiveType::INTEGER;
     case GL_DOUBLE_MAT2x4:
-        return 3;
+        return (int)ShaderArtifact::ElementPrimitiveType::INTEGER;
     case GL_DOUBLE_MAT4x2:
-        return 3;
+        return (int)ShaderArtifact::ElementPrimitiveType::INTEGER;
     case GL_DOUBLE_MAT3x4:
-        return 3;
+        return (int)ShaderArtifact::ElementPrimitiveType::INTEGER;
     case GL_DOUBLE_MAT4x3:
-        return 3;
+        return (int)ShaderArtifact::ElementPrimitiveType::INTEGER;
     }
 
     return t;

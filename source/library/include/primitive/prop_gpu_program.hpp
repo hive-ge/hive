@@ -19,10 +19,9 @@ namespace hive
     //::HIVE DRONE_PROP
     struct ShaderProgramProp : Prop {
 
-      private:
+      public:
         ShaderProgramPropData * data = nullptr;
 
-      public:
         inline static ShaderProgramProp * construct() { return new ShaderProgramProp(); }
 
         ShaderProgramProp();

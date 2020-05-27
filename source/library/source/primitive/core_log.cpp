@@ -34,4 +34,6 @@ namespace hive
 
         return 0;
     };
+
+    print_o print_e;
 } // namespace hive

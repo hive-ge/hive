@@ -56,6 +56,8 @@ namespace hive
 
         constexpr void construct(const char * string, const unsigned size)
         {
+
+
             u_ull num = 0;
             /**
              * Compress ASCII strings into a 2^48 space
@@ -218,7 +220,6 @@ namespace hive
     };
 
     const StringHash64 NullStringHash("");
-
 
     // Static tests
     static_assert(StringHash64("11d2222222222222222222222222222") ==

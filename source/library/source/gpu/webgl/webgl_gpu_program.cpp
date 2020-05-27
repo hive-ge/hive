@@ -85,19 +85,20 @@ namespace hive
         glGetProgramiv(program, GL_ACTIVE_ATTRIBUTES, &number_of_elements);
 
         for (int attrib_index = 0; attrib_index < number_of_elements; attrib_index++) {
+
             glGetActiveAttrib(program, attrib_index, string_buffer_size, &written_length,
                               &attrib_size, &attrib_type, name);
 
             ShaderArtifact artifact = {
 
                 // interface_type
-                ShaderArtifact::ArtifactType::DataInput,
+                ShaderArtifact::ArtifactType::VertexData,
 
                 // element_type
-                (ShaderArtifact::ElementType)getGLSLTypePrimitive(attrib_type),
+                (ShaderArtifact::ElementPrimitiveType)getGLSLTypePrimitive(attrib_type),
 
                 // element_size - scalar or vector or matrix or custom
-                (int)getGLSLTypeElementCount(attrib_size),
+                (int)getGLSLTypeElementCount(attrib_type),
 
                 // byte size
                 (int)getGLSLTypeSize(attrib_type),
@@ -132,10 +133,10 @@ namespace hive
             ShaderArtifact artifact = {
 
                 // interface_type
-                ShaderArtifact::ArtifactType::DataInput,
+                ShaderArtifact::ArtifactType::Uniform,
 
                 // element_type
-                (ShaderArtifact::ElementType)getGLSLTypePrimitive(uniform_type),
+                (ShaderArtifact::ElementPrimitiveType)getGLSLTypePrimitive(uniform_type),
 
                 // element_size - scalar or vector or matrix or custom
                 (int)getGLSLTypeElementCount(uniform_size),

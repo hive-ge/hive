@@ -22,4 +22,25 @@ namespace hive
 
     int __ERROR(std::string message, unsigned error_number, std::string filename,
                 unsigned line_number);
+
+
+
+    struct print_o {
+        inline print_o & print(const unsigned line, const char * file)
+        {
+            std::cout << "In file " << file << "::" << line << ": \n";
+            return *this;
+        }
+        template <class T> inline print_o & operator,(const T & data)
+        {   
+
+            std::cout << data << std::endl;
+
+            return *this;
+        }
+    };
+
+    extern print_o print_e;
+
+#define print print_e.print(__LINE__, __FILE__),
 } // namespace hive
