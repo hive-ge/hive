@@ -158,8 +158,6 @@ namespace hive
 
                     unsigned long long offset = 0;
 
-                    print stride_size;
-
                     if (vert) {
                         glEnableVertexAttribArray(vert->shader_location);
                         glVertexAttribPointer(vert->shader_location, 3, GL_FLOAT, GL_FALSE,
@@ -220,8 +218,6 @@ namespace hive
             glUseProgram(renderable.program);
 
             glBindVertexArray(renderable.vao);
-
-            // glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, renderable.indice_data);
 
             glDrawElements(GL_TRIANGLES, renderable.element_count, GL_UNSIGNED_INT, 0);
         }

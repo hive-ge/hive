@@ -1,6 +1,97 @@
 #include "include/hive.h"
 
 
+hive::ShaderArtifact::ArtifactType hive::getGLSLSamplerArtifactType(GLint t)
+{
+    switch (t) {
+    case GL_SAMPLER_1D:
+    case GL_SAMPLER_1D_SHADOW:
+    case GL_SAMPLER_1D_ARRAY:
+    case GL_SAMPLER_1D_ARRAY_SHADOW:
+    case GL_SAMPLER_BUFFER:
+    case GL_INT_SAMPLER_1D:
+    case GL_INT_SAMPLER_1D_ARRAY:
+    case GL_INT_SAMPLER_BUFFER:
+    case GL_UNSIGNED_INT_SAMPLER_1D:
+    case GL_UNSIGNED_INT_SAMPLER_1D_ARRAY:
+    case GL_UNSIGNED_INT_SAMPLER_BUFFER:
+        return hive::ShaderArtifact::ArtifactType::Texture1D;
+    case GL_SAMPLER_2D:
+    case GL_SAMPLER_2D_SHADOW:
+    case GL_SAMPLER_2D_ARRAY:
+    case GL_SAMPLER_2D_ARRAY_SHADOW:
+    case GL_SAMPLER_2D_MULTISAMPLE:
+    case GL_SAMPLER_2D_MULTISAMPLE_ARRAY:
+    case GL_SAMPLER_CUBE_SHADOW:
+    case GL_SAMPLER_2D_RECT:
+    case GL_SAMPLER_2D_RECT_SHADOW:
+    case GL_INT_SAMPLER_2D:
+    case GL_INT_SAMPLER_2D_ARRAY:
+    case GL_INT_SAMPLER_2D_MULTISAMPLE:
+    case GL_INT_SAMPLER_2D_MULTISAMPLE_ARRAY:
+    case GL_INT_SAMPLER_2D_RECT:
+    case GL_UNSIGNED_INT_SAMPLER_2D:
+    case GL_UNSIGNED_INT_SAMPLER_2D_ARRAY:
+    case GL_UNSIGNED_INT_SAMPLER_2D_MULTISAMPLE:
+    case GL_UNSIGNED_INT_SAMPLER_2D_MULTISAMPLE_ARRAY:
+        return hive::ShaderArtifact::ArtifactType::Texture2D;
+    case GL_SAMPLER_3D:
+    case GL_INT_SAMPLER_3D:
+    case GL_UNSIGNED_INT_SAMPLER_3D:
+        return hive::ShaderArtifact::ArtifactType::Texture3D;
+    case GL_SAMPLER_CUBE:
+    case GL_INT_SAMPLER_CUBE:
+    case GL_UNSIGNED_INT_SAMPLER_CUBE:
+    case GL_UNSIGNED_INT_SAMPLER_2D_RECT:
+        return hive::ShaderArtifact::ArtifactType::TextureCube;
+    }
+    return hive::ShaderArtifact::ArtifactType::TextureCube;
+}
+
+bool hive::isUniformTypeSampler(GLint t)
+{
+    switch (t) {
+    case GL_SAMPLER_1D:
+    case GL_SAMPLER_2D:
+    case GL_SAMPLER_3D:
+    case GL_SAMPLER_CUBE:
+    case GL_SAMPLER_1D_SHADOW:
+    case GL_SAMPLER_2D_SHADOW:
+    case GL_SAMPLER_1D_ARRAY:
+    case GL_SAMPLER_2D_ARRAY:
+    case GL_SAMPLER_1D_ARRAY_SHADOW:
+    case GL_SAMPLER_2D_ARRAY_SHADOW:
+    case GL_SAMPLER_2D_MULTISAMPLE:
+    case GL_SAMPLER_2D_MULTISAMPLE_ARRAY:
+    case GL_SAMPLER_CUBE_SHADOW:
+    case GL_SAMPLER_BUFFER:
+    case GL_SAMPLER_2D_RECT:
+    case GL_SAMPLER_2D_RECT_SHADOW:
+    case GL_INT_SAMPLER_1D:
+    case GL_INT_SAMPLER_2D:
+    case GL_INT_SAMPLER_3D:
+    case GL_INT_SAMPLER_CUBE:
+    case GL_INT_SAMPLER_1D_ARRAY:
+    case GL_INT_SAMPLER_2D_ARRAY:
+    case GL_INT_SAMPLER_2D_MULTISAMPLE:
+    case GL_INT_SAMPLER_2D_MULTISAMPLE_ARRAY:
+    case GL_INT_SAMPLER_BUFFER:
+    case GL_INT_SAMPLER_2D_RECT:
+    case GL_UNSIGNED_INT_SAMPLER_1D:
+    case GL_UNSIGNED_INT_SAMPLER_2D:
+    case GL_UNSIGNED_INT_SAMPLER_3D:
+    case GL_UNSIGNED_INT_SAMPLER_CUBE:
+    case GL_UNSIGNED_INT_SAMPLER_1D_ARRAY:
+    case GL_UNSIGNED_INT_SAMPLER_2D_ARRAY:
+    case GL_UNSIGNED_INT_SAMPLER_2D_MULTISAMPLE:
+    case GL_UNSIGNED_INT_SAMPLER_2D_MULTISAMPLE_ARRAY:
+    case GL_UNSIGNED_INT_SAMPLER_BUFFER:
+    case GL_UNSIGNED_INT_SAMPLER_2D_RECT:
+        return true;
+    }
+    return false;
+}
+
 // Byte size of a single element of type.
 unsigned hive::getGLSLTypeSize(GLint t)
 {
@@ -157,80 +248,80 @@ unsigned hive::getGLSLTypeSize(GLint t)
     return 0;
 }
 // Quick primitive type reference for GLSL types.
-int hive::getGLSLTypePrimitive(GLint t)
+hive::ShaderArtifact::ElementPrimitiveType hive::getGLSLTypePrimitive(GLint t)
 {
     switch (t) {
     case GL_FLOAT:
-        return (int)ShaderArtifact::ElementPrimitiveType::FLOAT;
+        return ShaderArtifact::ElementPrimitiveType::FLOAT;
     case GL_FLOAT_VEC2:
-        return (int)ShaderArtifact::ElementPrimitiveType::FLOAT;
+        return ShaderArtifact::ElementPrimitiveType::FLOAT;
     case GL_FLOAT_VEC3:
-        return (int)ShaderArtifact::ElementPrimitiveType::FLOAT;
+        return ShaderArtifact::ElementPrimitiveType::FLOAT;
     case GL_FLOAT_VEC4:
-        return (int)ShaderArtifact::ElementPrimitiveType::FLOAT;
+        return ShaderArtifact::ElementPrimitiveType::FLOAT;
     case GL_FLOAT_MAT2:
-        return (int)ShaderArtifact::ElementPrimitiveType::FLOAT;
+        return ShaderArtifact::ElementPrimitiveType::FLOAT;
     case GL_FLOAT_MAT3:
-        return (int)ShaderArtifact::ElementPrimitiveType::FLOAT;
+        return ShaderArtifact::ElementPrimitiveType::FLOAT;
     case GL_FLOAT_MAT4:
-        return (int)ShaderArtifact::ElementPrimitiveType::FLOAT;
+        return ShaderArtifact::ElementPrimitiveType::FLOAT;
     case GL_FLOAT_MAT2x3:
-        return (int)ShaderArtifact::ElementPrimitiveType::FLOAT;
+        return ShaderArtifact::ElementPrimitiveType::FLOAT;
     case GL_FLOAT_MAT3x2:
-        return (int)ShaderArtifact::ElementPrimitiveType::FLOAT;
+        return ShaderArtifact::ElementPrimitiveType::FLOAT;
     case GL_FLOAT_MAT2x4:
-        return (int)ShaderArtifact::ElementPrimitiveType::FLOAT;
+        return ShaderArtifact::ElementPrimitiveType::FLOAT;
     case GL_FLOAT_MAT4x2:
-        return (int)ShaderArtifact::ElementPrimitiveType::FLOAT;
+        return ShaderArtifact::ElementPrimitiveType::FLOAT;
     case GL_FLOAT_MAT3x4:
-        return (int)ShaderArtifact::ElementPrimitiveType::FLOAT;
+        return ShaderArtifact::ElementPrimitiveType::FLOAT;
     case GL_FLOAT_MAT4x3:
-        return (int)ShaderArtifact::ElementPrimitiveType::FLOAT;
+        return ShaderArtifact::ElementPrimitiveType::FLOAT;
     case GL_INT:
-        return (int)ShaderArtifact::ElementPrimitiveType::INTEGER;
+        return ShaderArtifact::ElementPrimitiveType::INTEGER;
     case GL_INT_VEC2:
-        return (int)ShaderArtifact::ElementPrimitiveType::INTEGER;
+        return ShaderArtifact::ElementPrimitiveType::INTEGER;
     case GL_INT_VEC3:
-        return (int)ShaderArtifact::ElementPrimitiveType::INTEGER;
+        return ShaderArtifact::ElementPrimitiveType::INTEGER;
     case GL_INT_VEC4:
-        return (int)ShaderArtifact::ElementPrimitiveType::INTEGER;
+        return ShaderArtifact::ElementPrimitiveType::INTEGER;
     case GL_UNSIGNED_INT:
-        return (int)ShaderArtifact::ElementPrimitiveType::UNSIGNED_INTEGER;
+        return ShaderArtifact::ElementPrimitiveType::UNSIGNED_INTEGER;
     case GL_UNSIGNED_INT_VEC2:
-        return (int)ShaderArtifact::ElementPrimitiveType::UNSIGNED_INTEGER;
+        return ShaderArtifact::ElementPrimitiveType::UNSIGNED_INTEGER;
     case GL_UNSIGNED_INT_VEC3:
-        return (int)ShaderArtifact::ElementPrimitiveType::UNSIGNED_INTEGER;
+        return ShaderArtifact::ElementPrimitiveType::UNSIGNED_INTEGER;
     case GL_UNSIGNED_INT_VEC4:
-        return (int)ShaderArtifact::ElementPrimitiveType::UNSIGNED_INTEGER;
+        return ShaderArtifact::ElementPrimitiveType::UNSIGNED_INTEGER;
     case GL_DOUBLE:
-        return (int)ShaderArtifact::ElementPrimitiveType::DOUBLE;
+        return ShaderArtifact::ElementPrimitiveType::DOUBLE;
     case GL_DOUBLE_VEC2:
-        return (int)ShaderArtifact::ElementPrimitiveType::DOUBLE;
+        return ShaderArtifact::ElementPrimitiveType::DOUBLE;
     case GL_DOUBLE_VEC3:
-        return (int)ShaderArtifact::ElementPrimitiveType::DOUBLE;
+        return ShaderArtifact::ElementPrimitiveType::DOUBLE;
     case GL_DOUBLE_VEC4:
-        return (int)ShaderArtifact::ElementPrimitiveType::DOUBLE;
+        return ShaderArtifact::ElementPrimitiveType::DOUBLE;
     case GL_DOUBLE_MAT2:
-        return (int)ShaderArtifact::ElementPrimitiveType::DOUBLE;
+        return ShaderArtifact::ElementPrimitiveType::DOUBLE;
     case GL_DOUBLE_MAT3:
-        return (int)ShaderArtifact::ElementPrimitiveType::DOUBLE;
+        return ShaderArtifact::ElementPrimitiveType::DOUBLE;
     case GL_DOUBLE_MAT4:
-        return (int)ShaderArtifact::ElementPrimitiveType::DOUBLE;
+        return ShaderArtifact::ElementPrimitiveType::DOUBLE;
     case GL_DOUBLE_MAT2x3:
-        return (int)ShaderArtifact::ElementPrimitiveType::DOUBLE;
+        return ShaderArtifact::ElementPrimitiveType::DOUBLE;
     case GL_DOUBLE_MAT3x2:
-        return (int)ShaderArtifact::ElementPrimitiveType::INTEGER;
+        return ShaderArtifact::ElementPrimitiveType::INTEGER;
     case GL_DOUBLE_MAT2x4:
-        return (int)ShaderArtifact::ElementPrimitiveType::INTEGER;
+        return ShaderArtifact::ElementPrimitiveType::INTEGER;
     case GL_DOUBLE_MAT4x2:
-        return (int)ShaderArtifact::ElementPrimitiveType::INTEGER;
+        return ShaderArtifact::ElementPrimitiveType::INTEGER;
     case GL_DOUBLE_MAT3x4:
-        return (int)ShaderArtifact::ElementPrimitiveType::INTEGER;
+        return ShaderArtifact::ElementPrimitiveType::INTEGER;
     case GL_DOUBLE_MAT4x3:
-        return (int)ShaderArtifact::ElementPrimitiveType::INTEGER;
+        return ShaderArtifact::ElementPrimitiveType::INTEGER;
     }
 
-    return t;
+    return ShaderArtifact::ElementPrimitiveType::UNSIGNED_INTEGER;
 };
 
 // Number of elements per type

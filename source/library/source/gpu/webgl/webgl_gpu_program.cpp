@@ -130,10 +130,18 @@ namespace hive
             glGetActiveUniform(program, uniform_index, string_buffer_size, &written_length,
                                &uniform_size, &uniform_type, name);
 
+            ShaderArtifact::ArtifactType type;
+
+            if (isUniformTypeSampler(uniform_type)) {
+                type = getGLSLSamplerArtifactType(uniform_type);
+            } else {
+                type = ShaderArtifact::ArtifactType::Uniform;
+            }
+
             ShaderArtifact artifact = {
 
                 // interface_type
-                ShaderArtifact::ArtifactType::Uniform,
+                type,
 
                 // element_type
                 (ShaderArtifact::ElementPrimitiveType)getGLSLTypePrimitive(uniform_type),

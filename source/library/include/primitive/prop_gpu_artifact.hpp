@@ -18,7 +18,11 @@ namespace hive
             Uniform,
             DataBlock,
             TextureInput,
-            BufferInput, //
+            BufferInput,
+            Texture1D,
+            Texture2D,
+            Texture3D,
+            TextureCube,
         } type;
 
         enum struct ElementPrimitiveType : int {
