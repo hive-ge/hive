@@ -9,16 +9,18 @@ namespace hive
 {
     using namespace hive::math;
 
-    //::HIVE DRONE_PROP
+    /**::HIVE DRONE_PROP::*/
     struct DoubleMat44Prop : public Prop {
+
+        CONSTRUCT_PROP(DoubleMat44Prop, "PropMat44d");
 
         mat44d * data = nullptr;
 
-        static DoubleMat44Prop * construct() { return new DoubleMat44Prop(); }
-
-        DoubleMat44Prop() : Prop("PROP_DMAT4", sizeof(DoubleMat44Prop)) { data = new mat44d; }
+        DoubleMat44Prop() : Prop() { data = new mat44d; }
 
         ~DoubleMat44Prop() { delete data; }
         // void removeVertex();
     };
+
+    REGISTER_PROP(DoubleMat44Prop);
 } // namespace hive

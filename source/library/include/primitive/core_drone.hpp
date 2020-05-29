@@ -3,15 +3,50 @@
 #include "include/boss/boss.hpp"
 #include "include/primitive/core_drone_flag.hpp"
 #include "include/primitive/core_indexed_pointer.hpp"
+#include "include/primitive/core_memory_pool.hpp"
 #include "include/primitive/core_typedef.hpp"
 
 
 namespace hive
 {
+
+
+    constexpr unsigned getDroneDataType(StringHash64 type)
+    {
+        unsigned i = 1;
+        switch (type) {
+        default:
+            return DroneDataPool::DroneDataNullObjectType;
+        case StringHash64("DroneDataChain"):
+            return 1;
+        case StringHash64("Drone"):
+            return 0;
+        case StringHash64("PropGPUProgram"):
+            i++;
+        case StringHash64("PropMat44d"):
+            i++;
+        case StringHash64("PropRender"):
+            i++;
+        case StringHash64("PropVec3f"):
+            i++;
+        case StringHash64("PropVec3d"):
+            i++;
+        case StringHash64("PropFloat"):
+            i++;
+        case StringHash64("PropVec2F"):
+            i++;
+        case StringHash64("PropVec3F"):
+            i++;
+        case StringHash64("PropMesh"):
+            i++;
+        case StringHash64("PropImage"):
+            i++;
+            return i;
+        }
+    }
+
     struct DroneData;
     struct Prop;
-
-    typedef IndexedPointer<Drone, BigBadBoss> DronePointer;
 
     typedef DroneFlagTemplate<0> DroneFlag;
     static const DroneFlagTemplate<1> DRONE_FLAG_NEED_UPDATE;
@@ -22,13 +57,7 @@ namespace hive
     //::HIVE DRONE_PROP
     struct Drone {
 
-        friend BigBadBoss;
-        friend Prop;
-
-      private:
-        static BigBadBoss * boss;
-
-        static inline BigBadBoss * getBoss() { return boss; };
+        static const ushort DroneDataType = getDroneDataType("Drone");
 
       private:
         /*
@@ -40,29 +69,24 @@ namespace hive
           4 Needs
           3 Has Parent
         */
-        const DronePointer this_ptr = -1;
-        DronePointer parent         = -1;
-        DronePointer next_sib       = -1;
-        DronePointer first_child    = -1;
-
       public:
-        Prop * props = nullptr;
-        DroneFlag flag;
+        DroneDataHandle prop              = 0;
+        DroneDataHandle observation_chain = 0;
+        DroneFlag flags;
 
       public:
         static Drone * construct();
 
-        Drone(DronePointer ptr) : this_ptr(ptr){};
+        Drone(){};
         ~Drone() {}
 
-        void connect(Prop * prop);
+        void connect(DroneDataHandle prop);
 
-        void disconnect(Prop * prop);
-
-        static inline void setBoss(BigBadBoss * ptr)
-        {
-            if (boss == nullptr) boss = ptr;
-        };
+        void disconnect(DroneDataHandle prop);
     };
+
+    static_assert(offsetof(Drone, prop) == 0, "Prop reference is not at root of Drone");
+    static_assert(sizeof(Drone) <= DroneDataPool::DroneDataStructSize,
+                  "Prop size is greater than the pool allocation unit size");
 
 } // namespace hive

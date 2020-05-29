@@ -6,13 +6,32 @@
 namespace hive
 {
 
+    struct TextureBinding {
+        unsigned short texture;
+        unsigned short unit;
+        unsigned short slot;
+    };
 
+    struct UniformBinding {
+        void * uniform_data;
+        GLuint uniform_type;
+        GLint uniform_loc;
+    };
+
+    /*
+     */
     struct CachedRenderableObject {
         GLint program          = 0;
         GLuint vao             = 0;
         GLuint vert_data       = 0;
         GLuint indice_data     = 0;
         unsigned element_count = 0;
+
+        /* This should be rebuilt if any Texture PROPS are changed on the object. */
+        TextureBinding texture;
+
+        /* This should be rebuilt if any general vector PROPS are changed on the object. */
+        std::vector<UniformBinding> uniforms;
     };
 
     static std::vector<CachedRenderableObject> render_cache;
@@ -48,12 +67,14 @@ namespace hive
 
             if (drone->flag == DRONE_FLAG_CAN_RENDER) {
 
-
                 auto * prop = drone->props;
 
                 MeshProp * mesh = nullptr;
 
                 ShaderProgramProp * program = nullptr;
+
+                std::vector<ImageProp *> images;
+                std::vector<FloatProp *> floats;
 
                 while (prop != nullptr) {
 
@@ -63,6 +84,12 @@ namespace hive
                     if (prop->type == StringHash64("PROP_MESH"))
                         mesh = static_cast<MeshProp *>(prop);
 
+                    if (prop->type == StringHash64("PROP_IMAGE"))
+                        images.push_back(static_cast<ImageProp *>(prop));
+
+                    if (prop->type == StringHash64("PROP_FLOAT"))
+                        floats.push_back(static_cast<FloatProp *>(prop));
+
                     prop = prop->next;
                 }
 
@@ -71,11 +98,13 @@ namespace hive
 
                     const ShaderArtifact *vert = nullptr, *normal = nullptr, *uv = nullptr;
 
+                    std::vector<const ShaderArtifact *> uniforms;
+
+                    std::vector<const ShaderArtifact *> textures;
+
                     for (auto & artifact : program->getInputMap()) {
 
                         if (artifact.type == ShaderArtifact::ArtifactType::VertexData) {
-
-                            print artifact;
 
                             switch (artifact.name_hash) {
                             case StringHash64("vert"):
@@ -98,7 +127,89 @@ namespace hive
                                 break;
                             }
                         }
+
+                        if (artifact.type == ShaderArtifact::ArtifactType::Uniform)
+                            uniforms.push_back(&artifact);
+
+                        if (artifact.type == ShaderArtifact::ArtifactType::Texture1D ||
+                            artifact.type == ShaderArtifact::ArtifactType::Texture2D ||
+                            artifact.type == ShaderArtifact::ArtifactType::Texture3D ||
+                            artifact.type == ShaderArtifact::ArtifactType::TextureCube) {
+                            textures.push_back(&artifact);
+                        }
                     }
+
+                    CachedRenderableObject obj;
+
+                    /**
+                     * Setup Textures
+                     */
+                    if (textures.size() > 0) {
+
+                        unsigned slot = 0;
+
+                        for (auto texture_artifact : textures) {
+
+                            print * texture_artifact;
+
+                            StringHash64 name = texture_artifact->name_hash;
+
+                            for (auto image : images) {
+
+                                if (image->getTagHash() == name) {
+                                    // Make sure the texture is uploaded to the GPU.
+                                    image->uploadToVRAM();
+
+                                    unsigned texture_point = image->gpu_handle;
+
+                                    obj.texture.texture = texture_point;
+                                    obj.texture.unit    = texture_artifact->shader_location;
+                                    obj.texture.slot    = slot;
+
+                                    slot++;
+                                }
+                            }
+                        }
+                    }
+
+
+                    /**
+                     * Setup Uniforms
+                     *
+                     * TODO Fill out with the rest of the uniform types
+                     * currently only doing floats.
+                     */
+                    if (uniforms.size() > 0) {
+
+                        for (auto uniform_artifact : uniforms) {
+
+
+                            StringHash64 name = uniform_artifact->name_hash;
+
+                            for (auto _float : floats) {
+
+                                print * uniform_artifact;
+
+                                if (_float->getTagHash() == name) {
+                                    // Make sure the texture is uploaded to the GPU.
+                                    UniformBinding binding;
+
+                                    binding.uniform_data = (void *)&(_float->data->field);
+
+                                    binding.uniform_type = GL_FLOAT;
+
+                                    binding.uniform_loc = uniform_artifact->shader_location;
+
+                                    obj.uniforms.push_back(binding);
+                                }
+                            }
+                        }
+                    }
+
+                    /**
+                     *  Setup Vertex Uniforms.
+                     */
+
 
                     unsigned element_count = mesh->numberOfVertices();
 
@@ -127,6 +238,7 @@ namespace hive
 
                     print mesh_data.verts[0], mesh_data.verts[1], mesh_data.verts[2],
                         mesh_data.verts[3];
+
 
                     print mesh_data.faces[0], mesh_data.faces[1];
 
@@ -195,11 +307,14 @@ namespace hive
                     glBindBuffer(GL_ARRAY_BUFFER, 0);
 
 
-                    CachedRenderableObject obj = {program->data->program, vao, vbo, vbo_i,
-                                                  indice_count * 3};
+                    obj.program       = program->data->program;
+                    obj.vao           = vao;
+                    obj.vert_data     = vbo;
+                    obj.indice_data   = vbo_i;
+                    obj.element_count = indice_count * 3;
 
                     render_cache.push_back(obj);
-                }
+                };
             }
         }
 
@@ -213,9 +328,27 @@ namespace hive
 
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
+
         for (auto renderable : render_cache) {
 
             glUseProgram(renderable.program);
+
+            glUniform1i(renderable.texture.unit, 0);
+
+            glActiveTexture(GL_TEXTURE0 + 0);
+
+            glBindTexture(GL_TEXTURE_2D, renderable.texture.texture);
+
+            // glActiveTexture(0);
+            //
+            // glBindTexture(GL_TEXTURE_2D, 0);
+
+            for (auto uniform : renderable.uniforms) {
+
+                float rot = *static_cast<float *>(uniform.uniform_data);
+
+                glUniform1f(uniform.uniform_loc, rot);
+            }
 
             glBindVertexArray(renderable.vao);
 
@@ -226,7 +359,7 @@ namespace hive
 
         // For render objects
         // If there
-    };
+    }; // namespace hive
 
     void RenderBoss::teardown(){
 

@@ -2,6 +2,7 @@
 
 #include <vector>
 
+#include "include/primitive/core_drone.hpp"
 #include "include/primitive/core_math.hpp"
 #include "include/primitive/core_prop.hpp"
 
@@ -26,18 +27,18 @@ namespace hive
         GPUMeshData * gpu       = nullptr;
     };
 
-    //::HIVE DRONE_PROP
+    /**::HIVE DRONE_PROP::*/
     struct MeshProp : Prop {
+
+        static const ushort DroneDataType = getDroneDataType("PropMesh");
 
         MeshData * data = nullptr;
 
         static MeshProp * construct() { return new MeshProp(); }
 
-        MeshProp() : Prop("PROP_MESH", sizeof(MeshProp))
+        MeshProp() : Prop()
         {
-
-            data = new MeshData;
-
+            data         = new MeshData;
             data->native = new NativeMeshData;
             data->gpu    = new GPUMeshData;
         }
@@ -66,4 +67,6 @@ namespace hive
 
         unsigned numberOfVertices() const { return data->native->verts.size(); }
     };
+
+    REGISTER_PROP(MeshProp);
 } // namespace hive

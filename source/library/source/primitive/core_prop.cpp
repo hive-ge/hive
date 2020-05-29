@@ -21,4 +21,6 @@ void Prop::connect(DronePointer drone)
     onConnect(drone);
 }
 
-void Prop::disconnect() {}
+void Prop::disconnect(DronePointer drone) { onConnect(drone); }
+
+

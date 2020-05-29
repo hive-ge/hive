@@ -3,7 +3,9 @@ namespace hive
     template <class T, class D> struct IndexedPointer {
 
       private:
-        int i = -1;
+        char type           = 0;
+        unsigned i          = 0;
+        unsigned generation = 0;
 
       public:
         IndexedPointer(const int v) : i(v) {}

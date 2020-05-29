@@ -3,6 +3,7 @@
 #include <string>
 #include <vector>
 
+#include "include/primitive/core_datafield.hpp"
 #include "include/primitive/core_math.hpp"
 #include "include/primitive/core_prop.hpp"
 #include "include/primitive/core_string_hash.hpp"
@@ -16,13 +17,13 @@ namespace hive
         int program = 0;
     };
 
-    //::HIVE DRONE_PROP
+    /**::HIVE DRONE_PROP::*/
     struct ShaderProgramProp : Prop {
 
-      public:
-        ShaderProgramPropData * data = nullptr;
+        CONSTRUCT_PROP(ShaderProgramProp, "PropGPUProgram");
 
-        inline static ShaderProgramProp * construct() { return new ShaderProgramProp(); }
+      public:
+        DataField<ShaderProgramPropData> * data = nullptr;
 
         ShaderProgramProp();
 
@@ -56,4 +57,6 @@ namespace hive
          */
         const std::vector<ShaderArtifact> & getOutputMap();
     };
+
+    REGISTER_PROP(ShaderProgramProp);
 } // namespace hive

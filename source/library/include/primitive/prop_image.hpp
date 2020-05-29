@@ -10,6 +10,8 @@ namespace hive
 {
     using namespace hive::math;
 
+    typedef unsigned char u_char;
+
     struct ImageData {
         void * data = nullptr;
         // Texture location on gpu side.
@@ -28,9 +30,20 @@ namespace hive
     //::HIVE DRONE_PROP
     struct ImageProp : Prop {
 
-        static ImageProp * construct() { return new ImageProp(); }
+        CONSTRUCT_PROP(ImageProp, "PropImage");
 
-        ImageProp() : Prop("PROP_IMAGE", sizeof(ImageProp)) {}
+        unsigned gpu_handle         = 0;
+        unsigned short width        = 0;
+        unsigned short height       = 0;
+        unsigned short depth        = 0;
+        unsigned char channel_depth = 8;
+        bool USE_MIP                = false;
+
+        /**
+         * Changes this to a dynamic pointer that can point to:
+         * GridProp * buffer
+         */
+        std::vector<u_char> data;
 
         ~ImageProp() {}
 
@@ -43,6 +56,9 @@ namespace hive
          */
         bool loadFromRawBinaryData(const char * buffer, const unsigned size, const unsigned width,
                                    const unsigned height, const bool STREAM_TO_VRAM = false);
+
+        void setPixel(unsigned x = 0, unsigned y = 0, unsigned r = 0, unsigned g = 0,
+                      unsigned b = 0, unsigned a = 0);
 
         bool uploadToVRAM();
 
@@ -60,6 +76,10 @@ namespace hive
 
         bool clearRenderTarget();
 
+        void setSize(unsigned width = 1, unsigned height = 1, unsigned depth = 1);
+
         template <class T> T getTextureHandle();
     };
+
+    REGISTER_PROP(ImageProp);
 } // namespace hive

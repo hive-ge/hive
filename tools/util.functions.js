@@ -194,7 +194,6 @@ async function loadAndCreatePropHandlers(dir = "./source/library/include/primiti
             if ((await stats).isDirectory()) {
                 await loadAndCreatePropHandlers(obj_path);
             } else {
-                console.log({ name, ext });
                 if (ext == ".hpp" || ext == ".h") {
                     await parseHPPHeader(obj_path);
                 }
@@ -215,7 +214,7 @@ async function parseHPPHeader(obj_path) {
                 hpp = await fsp.readFile(obj_path, { encoding: "utf8" }),
                 d = hc.lrParse(hpp, parser_data, env);
 
-
+            console.log(obj_path, d);
             if (d.value && d.value.length > 1) {
 
 

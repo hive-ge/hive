@@ -10,12 +10,10 @@ namespace hive
 {
     using namespace hive::math;
 
-    //::HIVE DRONE_PROP
+
     struct GridProp : Prop {
 
-        static GridProp * construct() { return new GridProp(); }
-
-        GridProp() : Prop("PROP_GRID", sizeof(GridProp)) {}
+        CONSTRUCT_PROP(GridProp, "PropGrid");
 
         ~GridProp() {}
 
@@ -47,4 +45,6 @@ namespace hive
 
         template <class T> T getTextureHandle();
     };
+
+    REGISTER_PROP(GridProp);
 } // namespace hive

@@ -41,6 +41,6 @@ int main()
     emscripten_set_main_loop(frame, 0, 1);
 
     boss = nullptr;
-    std::cout << "DEAD!" << std::endl;
+
     return 0;
 }

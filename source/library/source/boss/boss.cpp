@@ -20,26 +20,11 @@ Boss::Boss(const unsigned _id) : id(_id)
     std::cout << (unsigned long long)this << std::endl;
 
     setIndex();
-
-    std::cout << "Create :: Bosses Address " << (unsigned long long)&bosses << " " << bosses.size()
-              << std::endl;
-
-    std::cout << "Create :: Bosses Address " << (unsigned long long)&bosses << " " << bosses.size()
-              << std::endl;
-
-    std::cout << "Create :: Bosses Address " << (unsigned long long)&bosses << " " << bosses.size()
-              << std::endl;
-
-    std::cout << "Create :: Bosses Address " << (unsigned long long)&bosses << " " << bosses.size()
-              << std::endl;
 }
 
 void hive::BigBadBoss::setup()
 {
     Drone::setBoss(this);
-
-    std::cout << "Setup :: Bosses Address " << (unsigned long long)&bosses << " " << bosses.size()
-              << std::endl;
 
     for (auto boss : Boss::bosses) {
         if (boss == this) continue;
@@ -105,8 +90,6 @@ Drone * BigBadBoss::createDrone()
 #warning "Naked new Allocation [Drone] in BigBadBoss::createDrone"
 
     int ptr = drones.size();
-
-    std::cout << "Drone pointer " << ptr << std::endl;
 
     Drone * drone = new Drone(ptr);
 

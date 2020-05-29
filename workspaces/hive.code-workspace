@@ -77,7 +77,13 @@
 			"map": "cpp",
 			"set": "cpp",
 			"*.ipp": "cpp",
-			"__split_buffer": "cpp"
+			"__split_buffer": "cpp",
+			"forward_list": "cpp",
+			"valarray": "cpp",
+			"__bit_reference": "cpp",
+			"__config": "cpp",
+			"__hash_table": "cpp",
+			"__tree": "cpp"
 		}
 	}
 }

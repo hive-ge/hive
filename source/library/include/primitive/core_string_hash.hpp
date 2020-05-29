@@ -54,7 +54,7 @@ namespace hive
 
         static void setLongString(u_ull, std::string);
 
-        constexpr void construct(const char * string, const unsigned size)
+        constexpr bool construct(const char * string, const unsigned size)
         {
 
 
@@ -98,7 +98,7 @@ namespace hive
                 if (invalid < 128) {
                     if (NUM != type) {
                         val = num | STRING_HASH_STRING_FLAG | STRING_HASH_SMALL_STRING_FLAG;
-                        return;
+                        return true;
                     };
                 };
             }
@@ -122,15 +122,10 @@ namespace hive
 
             if (num < ULLONG_MAX && lu == NUM) {
                 val = num;
-                return;
+                return true;
             }
 
-            val = (hashLongString(string, size) | STRING_HASH_STRING_FLAG) &
-                  STRING_HASH_LONG_STRING_MASK;
-
-            setLongString(val, std::string(string, size));
-
-            return;
+            return false;
         }
 
         // Assumes check for short string storage performed prior to calling.
@@ -141,15 +136,12 @@ namespace hive
 
         u_ull val;
 
-        static const std::size_t NULL_TERMINATED_SIZE_LIMIT = 16;
+        static const std::size_t NULL_TERMINATED_SIZE_LIMIT = 128;
 
       public:
         StringHash64(const std::string string) : val(0) { construct(string.data(), string.size()); }
 
-        constexpr StringHash64(const char * string, const unsigned size) : val(0)
-        {
-            construct(string, size);
-        }
+        StringHash64(const char * string, const unsigned size) : val(0) { construct(string, size); }
 
         constexpr StringHash64(const u_ull num) : val(num & ~STRING_HASH_STRING_FLAG) {}
 
@@ -166,7 +158,11 @@ namespace hive
             // check for null. Limit to 64 characters.
             for (int i = 0; i < NULL_TERMINATED_SIZE_LIMIT; i++) {
                 if (string[i] == 0) {
-                    if (i > 0) construct(string, i);
+                    if (i > 0)
+                        if (!construct(string, i)) {
+                            val = (hashLongString(string, i) | STRING_HASH_STRING_FLAG) &
+                                  STRING_HASH_LONG_STRING_MASK;
+                        };
                     return;
                 }
             }
@@ -222,8 +218,10 @@ namespace hive
     const StringHash64 NullStringHash("");
 
     // Static tests
-    static_assert(StringHash64("11d2222222222222222222222222222") ==
-                      StringHash64("11d2222222222222222222222222222"),
+    static_assert(StringHash64("a11d22222222222222222222a22222222am") !=
+                      StringHash64("a11d22222222222222222222a22222222as"),
+                  "Expected Expression to match");
+    static_assert(StringHash64("1PropGPUProgram1") == StringHash64("1PropGPUProgram1"),
                   "Expected Expression to match");
     static_assert(StringHash64(10) == StringHash64(10), "Expected Expression to match");
     static_assert(StringHash64(10) == 10ull, "Expected Expression to match");

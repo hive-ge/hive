@@ -1,4 +1,5 @@
 #include "include/hive.h"
+
 #include <sys/types.h>
 
 namespace hive
@@ -63,7 +64,7 @@ namespace hive
         } while (err);
     };
 
-    void configureProgramInterfaces(GLint program, ShaderProgramPropData & data)
+    void configureProgramInterfaces(GLint program, DataField<ShaderProgramPropData> & data)
     {
 
 
@@ -89,6 +90,8 @@ namespace hive
             glGetActiveAttrib(program, attrib_index, string_buffer_size, &written_length,
                               &attrib_size, &attrib_type, name);
 
+            GLint attribute_location = glGetAttribLocation(program, name);
+
             ShaderArtifact artifact = {
 
                 // interface_type
@@ -107,7 +110,7 @@ namespace hive
                 attrib_size,
 
                 // shader location
-                attrib_index,
+                attribute_location,
 
                 // short_name
                 StringHash64(name, written_length)};
@@ -129,6 +132,8 @@ namespace hive
 
             glGetActiveUniform(program, uniform_index, string_buffer_size, &written_length,
                                &uniform_size, &uniform_type, name);
+
+            GLint uniform_location = glGetUniformLocation(program, name);
 
             ShaderArtifact::ArtifactType type;
 
@@ -156,7 +161,7 @@ namespace hive
                 uniform_size,
 
                 // shader location
-                uniform_index,
+                uniform_location,
 
                 // short_name
                 StringHash64(name, written_length)};
@@ -166,11 +171,10 @@ namespace hive
             artifacts.push_back(artifact);
         }
 
-        data.artifacts = artifacts;
+        data.field.artifacts = artifacts;
     }
 
-
-    ShaderProgramProp::ShaderProgramProp() : Prop("PROP_GPU_PROGRAM", sizeof(ShaderProgramProp)) {}
+    ShaderProgramProp::ShaderProgramProp() : Prop() {}
 
     ShaderProgramProp::~ShaderProgramProp() {}
 
@@ -303,9 +307,9 @@ namespace hive
 
 #warning "Program Boss should control allocation and release of ShaderProgramPropData"
 
-                        data = new ShaderProgramPropData;
+                        data = DataField<ShaderProgramPropData>::construct();
 
-                        data->program = program;
+                        data->field.program = program;
 
                         //!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
                         //!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -341,21 +345,21 @@ namespace hive
     bool ShaderProgramProp::IS_AVAILABLE_ON_GPU()
     {
         if (data == nullptr) return false;
-        if (data->program == 0) return false;
+        if (data->field.program == 0) return false;
         return true;
     }
 
     const std::vector<ShaderArtifact> & ShaderProgramProp::getInputMap()
     {
         if (data == nullptr) throw "Shader Program Not Initialized";
-        if (data->artifacts.size() == 0) throw "Shader Program Not Initialized";
-        return data->artifacts;
+        if (data->field.artifacts.size() == 0) throw "Shader Program Not Initialized";
+        return data->field.artifacts;
     }
 
     const std::vector<ShaderArtifact> & ShaderProgramProp::getOutputMap()
     {
         if (data == nullptr) throw "Shader Program Not Initialized";
-        if (data->artifacts.size() == 0) throw "Shader Program Not Initialized";
-        return data->artifacts;
+        if (data->field.artifacts.size() == 0) throw "Shader Program Not Initialized";
+        return data->field.artifacts;
     }
 } // namespace hive
