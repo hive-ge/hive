@@ -103,6 +103,22 @@ namespace hive
 
         Type & operator*() const { return *ptr(); }
 
+        constexpr operator Type *()
+        {
+            static_assert(Type::DroneDataType >= 0 && Type::DroneDataType <= 255,
+                          "Should Have DroneDataType Type");
+
+            return ptr();
+        }
+
+        constexpr operator Type &()
+        {
+            static_assert(Type::DroneDataType >= 0 && Type::DroneDataType <= 255,
+                          "Should Have DroneDataType Type");
+
+            return *ptr();
+        }
+
         Type * operator->() { return ptr(); }
 
         Type * ptr() { return static_cast<Type *>(Allocator::retrieveIndexedPointer(getIndex())); }
@@ -148,6 +164,52 @@ namespace hive
         } * data;
 
       public:
+        template <class T> class iterator
+        {
+            unsigned index         = 0;
+            unsigned element_count = data->element_count;
+            ObjectPointer * LU     = data->LU;
+
+
+          public:
+            iterator(int index) : index(index) {}
+            iterator() : index(0) {}
+
+            iterator & operator++()
+            {
+                while (index++ < element_count) {
+                    if (LU[index].template is<T>()) return *this;
+                }
+
+                index = element_count;
+
+                return *this;
+            }
+
+            iterator operator++(int)
+            {
+                while (index++ < element_count) {
+                    if (LU[index].template is<T>()) return *this;
+                }
+
+                index = element_count;
+
+                return *this;
+            }
+
+            bool operator==(iterator other) const { return (index == other.index); }
+            bool operator!=(iterator other) const { return !(index == other.index); }
+            ObjectPointer operator*() { return data->LU[index]; }
+            // iterator traits
+            using difference_type   = long;
+            using value_type        = ObjectPointer;
+            using pointer           = const ObjectPointer *;
+            using reference         = const ObjectPointer &;
+            using iterator_category = std::forward_iterator_tag;
+        };
+        template <class T> iterator<T> begin() { return iterator<T>(); }
+        template <class T> iterator<T> end() { return iterator<T>(data->element_count); }
+
         constexpr ObjectMemPool()
         {
             if (!data) {

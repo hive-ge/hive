@@ -85,9 +85,12 @@ namespace hive
         void connect(DroneDataHandle prop);
 
         void disconnect(DroneDataHandle prop);
+
+        DroneDataHandle getProp(StringHash64 tag);
     };
 
     static_assert(offsetof(Drone, props) == 0, "Props reference is not at root of Drone");
+
     static_assert(sizeof(Drone) <= DroneDataPool::DroneDataStructSize,
                   "Prop size is greater than the pool allocation unit size");
 

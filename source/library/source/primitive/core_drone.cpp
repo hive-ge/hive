@@ -18,3 +18,20 @@ Drone * Drone::construct()
 void hive::Drone::connect(DroneDataHandle prop) { prop.reinterpret<Prop>()->connect(this); };
 
 void hive::Drone::disconnect(DroneDataHandle prop) { prop.reinterpret<Prop>()->disconnect(this); };
+
+DroneDataHandle hive::Drone::getProp(StringHash64 tag)
+{
+    if (props) {
+
+        DroneDataHandle prop = props, root = prop;
+
+        while (prop && !prop.is<Drone>()) {
+            Prop::Ref ref = prop;
+
+            if (ref->tag == tag) return ref;
+
+            prop = ref->next;
+        }
+    }
+    return DroneDataHandle();
+}
