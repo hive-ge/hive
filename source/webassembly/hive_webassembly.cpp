@@ -36,8 +36,6 @@ int main()
 
     boss->setup();
 
-    glClearColor(0, 0, 0, 1.0);
-
     emscripten_set_main_loop(frame, 0, 1);
 
     boss = nullptr;

@@ -37,22 +37,28 @@ namespace hive
 
     void ImageProp::setPixel(unsigned x, unsigned y, unsigned r, unsigned g, unsigned b, unsigned a)
     {
+        unsigned width  = data->field.width;
+        unsigned height = data->field.height;
+        unsigned depth  = data->field.depth;
+        auto image_data = data->field.data;
+
         const unsigned index = (x + y * width) * 3;
 
         if (index > width * height * depth * 3) return;
 
         if (index > 0) {
-            data[index]     = r;
-            data[index + 1] = g;
-            data[index + 2] = b;
+            image_data[index]     = r;
+            image_data[index + 1] = g;
+            image_data[index + 2] = b;
         }
     }
 
     void ImageProp::setSize(unsigned w, unsigned h, unsigned d)
     {
-        width  = w;
-        height = h;
-        depth  = d;
-        data.resize(w * h * d * 3);
+        auto image_data    = data->field.data;
+        data->field.width  = w;
+        data->field.height = h;
+        data->field.depth  = d;
+        image_data.resize(w * h * d * 3);
     }
 } // namespace hive

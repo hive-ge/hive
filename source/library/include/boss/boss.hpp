@@ -148,4 +148,6 @@ namespace hive
         static void decrementIndexedReference(unsigned);
         static void incrementIndexedReference(unsigned);
     };
+
+    extern BigBadBoss * global_boss;
 } // namespace hive

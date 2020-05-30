@@ -3,24 +3,20 @@
 
 using namespace hive;
 
-void Prop::connect(DronePointer drone)
+void Prop::connect(Drone * drone)
 {
+    DroneDataPool pool;
 
-    if (!drone->props) {
-        drone->props = this;
+    if (drone->props == DroneDataHandle::UNDEFINED) {
+        drone->props = pool.getReference(this);
     } else {
-        Prop * current = drone->props;
+        Prop::Reference current = drone->props;
 
-        while (current->next) current = current->next;
+        while (current.reinterpret<Prop>()->next != DroneDataHandle::UNDEFINED)
+            current = current.reinterpret<Prop>()->next;
 
-        current->next = this;
-
-        prev = current;
+        current->next = pool.getReference(this);
     }
-
-    onConnect(drone);
 }
 
-void Prop::disconnect(DronePointer drone) { onConnect(drone); }
-
-
+void Prop::disconnect(Drone * drone) {}

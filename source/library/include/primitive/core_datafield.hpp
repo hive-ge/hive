@@ -1,3 +1,6 @@
+
+#pragma once
+
 #include "include/boss/message_boss.hpp"
 #include "include/primitive/core_drone.hpp"
 
@@ -17,24 +20,6 @@ namespace hive
         DroneDataHandle prev_observer_link;
     };
 
-
-    /**
-     * Store for referencing drones from memory updates.
-     *
-     * Must be threadable.
-     */
-    struct DroneLookup {
-
-        std::vector<std::vector<DronePointer>> drone_pointer_lu;
-
-        unsigned addDrone(DronePointer pointer, unsigned index = 0) { return 0; }
-
-        unsigned removeDrone(DronePointer pointer, unsigned index = 0) { return 0; }
-
-        DronePointer getDronePointer(unsigned index = 0) { return 0; }
-
-    } static DroneLookup;
-
     template <class D> struct DataField {
 
         static_assert(sizeof(D) >= 4, "DataField structures must be 4 bytes or more.");
@@ -43,12 +28,12 @@ namespace hive
 
         D field;
 
-        DataField<D>() {}
+        DataField<D>() { new (&field) D(); }
         ~DataField<D>() {}
 
         static DataField<D> * construct() noexcept { return new DataField<D>; }
-        static void destruct(DataField<D> * d) noexcept { delete d; }
 
+        static void destruct(DataField<D> * d) noexcept { delete d; }
         /**
          * Moves the data to a new buffer location or returns false if a move
          * is unsuccessful.
@@ -69,48 +54,15 @@ namespace hive
             update();
         }
 
-        void update()
-        {
-            if (have_drone_pointer) {
-                if (have_drone_lu) {
-
-                } else {
-                    sendMessage("Update Drone", "Drone Updating");
-                }
-            }
-        }
+        void update() {}
 
         // get affected drones.
-        void addDronePointer(DronePointer _drone)
-        {
-            if (!have_drone_pointer) {
-                drone              = _drone;
-                have_drone_pointer = true;
-                return;
-            }
+        void addDronePointer(DroneDataHandle _drone){};
 
-            if (!have_drone_lu) {
-
-                unsigned lu_index = DroneLookup.addDrone(drone);
-
-                lu_index = DroneLookup.addDrone(_drone, lu_index);
-
-                drone_lu_pointer = lu_index;
-
-                have_drone_lu = true;
-
-                return;
-            }
-
-            unsigned lu_index = DroneLookup.addDrone(_drone, lu_index);
-
-            drone_lu_pointer = lu_index;
-        };
-
-        void removeDronePointer(DronePointer drone){};
+        void removeDronePointer(DroneDataHandle drone){};
 
         unsigned getDroneRefCount() { return 0; };
 
-        void getDroneRefs(DronePointer[], unsigned array_size){};
+        void getDroneRefs(DroneDataHandle[], unsigned array_size){};
     };
 } // namespace hive

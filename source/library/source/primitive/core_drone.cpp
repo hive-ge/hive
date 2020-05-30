@@ -4,18 +4,17 @@
 
 using namespace hive;
 
-BigBadBoss * hive::Drone::boss = nullptr;
 
 //*
 Drone * Drone::construct()
 {
-    if (!boss) return nullptr;
+    if (!global_boss) return nullptr;
 
-    Drone * drone = boss->createDrone();
+    Drone * drone = global_boss->createDrone();
 
     return drone;
 }
 //*/
-void hive::Drone::connect(Prop * prop) { prop->connect(this_ptr); };
+void hive::Drone::connect(DroneDataHandle prop) { prop.reinterpret<Prop>()->connect(this); };
 
-void hive::Drone::disconnect(Prop * prop) { prop->connect(this_ptr); };
+void hive::Drone::disconnect(DroneDataHandle prop) { prop.reinterpret<Prop>()->disconnect(this); };

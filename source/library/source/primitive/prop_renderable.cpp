@@ -16,11 +16,12 @@ namespace hive
 
 
             if (FLAG)
-                drone->flag |= DRONE_FLAG_CAN_RENDER;
+                drone.reinterpret<Drone>()->flags |= DRONE_FLAG_CAN_RENDER;
             else
-                drone->flag ^= DRONE_FLAG_CAN_RENDER;
+                drone.reinterpret<Drone>()->flags ^= DRONE_FLAG_CAN_RENDER;
 
-            drone->flag |= DRONE_FLAG_NEED_RENDER_UPDATE | DRONE_FLAG_CAN_RENDER;
+            drone.reinterpret<Drone>()->flags |=
+                DRONE_FLAG_NEED_RENDER_UPDATE | DRONE_FLAG_CAN_RENDER;
 
             sendMessage("REN_BOSSES_TEST", "U_DRONES");
         }
@@ -29,6 +30,4 @@ namespace hive
     };
 
     bool RenderableProp::ALLOW_RENDER() const { return CAN_RENDER; };
-
-    void RenderableProp::onConnect(DronePointer dr) { drone = dr; }
 } // namespace hive

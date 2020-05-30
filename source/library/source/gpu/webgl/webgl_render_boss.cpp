@@ -61,34 +61,28 @@ namespace hive
 
             // Candidate for threading using a work queueing system.
 
-            if (drone->flag != DRONE_FLAG_NEED_RENDER_UPDATE) continue;
+            if (drone->flags != DRONE_FLAG_NEED_RENDER_UPDATE) continue;
 
-            drone->flag ^= DRONE_FLAG_NEED_RENDER_UPDATE;
+            drone->flags ^= DRONE_FLAG_NEED_RENDER_UPDATE;
 
-            if (drone->flag == DRONE_FLAG_CAN_RENDER) {
+            if (drone->flags == DRONE_FLAG_CAN_RENDER) {
 
-                auto * prop = drone->props;
+                Prop::Ref prop = (drone->props);
 
-                MeshProp * mesh = nullptr;
+                MeshProp::Ref mesh             = 0;
+                ShaderProgramProp::Ref program = 0;
+                std::vector<ImageProp::Ref> images;
+                std::vector<FloatProp::Ref> floats;
 
-                ShaderProgramProp * program = nullptr;
+                while (prop != DroneDataHandle::UNDEFINED) {
 
-                std::vector<ImageProp *> images;
-                std::vector<FloatProp *> floats;
+                    if (prop.is<ShaderProgramProp>()) program = prop;
 
-                while (prop != nullptr) {
+                    if (prop.is<MeshProp>()) mesh = prop;
 
-                    if (prop->type == StringHash64("PROP_GPU_PROGRAM"))
-                        program = static_cast<ShaderProgramProp *>(prop);
+                    if (prop.is<ImageProp>()) images.push_back(prop);
 
-                    if (prop->type == StringHash64("PROP_MESH"))
-                        mesh = static_cast<MeshProp *>(prop);
-
-                    if (prop->type == StringHash64("PROP_IMAGE"))
-                        images.push_back(static_cast<ImageProp *>(prop));
-
-                    if (prop->type == StringHash64("PROP_FLOAT"))
-                        floats.push_back(static_cast<FloatProp *>(prop));
+                    if (prop.is<FloatProp>()) floats.push_back(prop);
 
                     prop = prop->next;
                 }
@@ -160,7 +154,7 @@ namespace hive
                                     // Make sure the texture is uploaded to the GPU.
                                     image->uploadToVRAM();
 
-                                    unsigned texture_point = image->gpu_handle;
+                                    unsigned texture_point = image->data->field.gpu_handle;
 
                                     obj.texture.texture = texture_point;
                                     obj.texture.unit    = texture_artifact->shader_location;
@@ -307,7 +301,7 @@ namespace hive
                     glBindBuffer(GL_ARRAY_BUFFER, 0);
 
 
-                    obj.program       = program->data->program;
+                    obj.program       = program->data->field.program;
                     obj.vao           = vao;
                     obj.vert_data     = vbo;
                     obj.indice_data   = vbo_i;
@@ -356,9 +350,6 @@ namespace hive
         }
 
         glBindVertexArray(0);
-
-        // For render objects
-        // If there
     }; // namespace hive
 
     void RenderBoss::teardown(){

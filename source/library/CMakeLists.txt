@@ -27,6 +27,8 @@ set(CMAKE_SHARED_LINKER_FLAGS "-Wl,--export-all-symbols")
 # HIVE LIBRARY
 ###########################################
 
+enable_testing()
+
 set( HIVE_LIBRARY_PROJECT "hive" )
 
 project(${HIVE_LIBRARY_PROJECT})
@@ -142,3 +144,4 @@ set_target_properties( ${PROJECT_NAME}
     LIBRARY_OUTPUT_DIRECTORY "${CMAKE_SOURCE_DIR}/bin/lib"
 )
 
+add_subdirectory("./test")

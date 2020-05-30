@@ -2,8 +2,8 @@
 
 #include <vector>
 
+#include "include/primitive/core_datafield.hpp"
 #include "include/primitive/core_math.hpp"
-
 #include "include/primitive/core_prop.hpp"
 
 namespace hive
@@ -13,7 +13,7 @@ namespace hive
     typedef unsigned char u_char;
 
     struct ImageData {
-        void * data = nullptr;
+        std::vector<unsigned char> data;
         // Texture location on gpu side.
         unsigned gpu_handle   = 0;
         unsigned short width  = 0;
@@ -27,23 +27,18 @@ namespace hive
         bool IN_VRAM : 1, IN_RAM;
     };
 
-    //::HIVE DRONE_PROP
+    /**::HIVE DRONE_PROP::*/
     struct ImageProp : Prop {
 
         CONSTRUCT_PROP(ImageProp, "PropImage");
-
-        unsigned gpu_handle         = 0;
-        unsigned short width        = 0;
-        unsigned short height       = 0;
-        unsigned short depth        = 0;
-        unsigned char channel_depth = 8;
-        bool USE_MIP                = false;
 
         /**
          * Changes this to a dynamic pointer that can point to:
          * GridProp * buffer
          */
-        std::vector<u_char> data;
+        DataField<ImageData> * data = nullptr;
+
+        ImageProp() { data = new DataField<ImageData>(); }
 
         ~ImageProp() {}
 

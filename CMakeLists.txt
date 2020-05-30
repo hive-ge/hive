@@ -27,12 +27,14 @@ project("HIVE_SYSTEM")
 
 set(HIVE_USE_WEBGL 1)
 
+include(CTest)
+
 add_subdirectory("./source/library")
 
-if (CMAKE_JS_VERSION)
+if (CMAKE_CREATE_NODE_EDITOR)
     add_subdirectory("./source/frontend")
 endif()
 
-
-add_subdirectory("./source/webassembly")
-
+if (CMAKE_CREATE_WASM)
+    add_subdirectory("./source/webassembly")
+endif()

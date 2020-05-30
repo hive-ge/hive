@@ -17,6 +17,7 @@ class Type(object):
     def __init__(self, type_object):
         self.is_pointer = type_object.get_pointee().kind != clang.TypeKind.INVALID
         self.name = type_object.spelling
+        
 
     def __str__(self):
         return ("{}: is_pointer: {}".format(self.name, self.is_pointer))
@@ -26,6 +27,7 @@ class DestructorDeclaration(object):
         self.name = node.spelling
         self.arguments = list(map(lambda node: Type(node.type), node.get_arguments()))
         self.return_type = Type(node.type)
+        self.comment = node.brief_comment
 
     def __str__(self):
         return str(self.__dict__)
@@ -35,6 +37,7 @@ class ConstructorDeclaration(object):
         self.name = node.spelling
         self.arguments = map(lambda node: Type(node.type), node.get_arguments())
         self.return_type = Type(node.type)
+        self.comment = node.brief_comment
 
     def __str__(self):
         return str(self.__dict__)
@@ -44,7 +47,8 @@ class MethodDeclaration(object):
         self.name = node.spelling
         self.arguments = map(lambda node: Type(node.type), node.get_arguments())
         self.return_type = Type(node.type)
-        self.uses_pointers = len(list(filter(lambda type: type.is_pointer,self.arguments))) > 0
+        self.uses_pointers = len(list(filter(lambda type: type.is_pointer,self.arguments))) > 0 or self.return_type.is_pointer
+        self.comment = node.brief_comment
 
     def __str__(self):
         return str(self.__dict__)
@@ -57,11 +61,10 @@ class StructDeclaration(object):
         self.destructor = destructor
         self.methods = methods
         self.properties = properties
+        self.comment = node.brief_comment
 
     def __str__(self):
         return str(self.__dict__)
-
-    
 
 def setBaseClass(node):
     return Type(node.type)
@@ -79,12 +82,12 @@ def setProperty(node):
     return
 
 
-def find_props(node, structs, location):
+def find_props(node, structs, location, comment_header):
 
     if node.kind.is_declaration():
 
         
-        if node.brief_comment and node.brief_comment == "::HIVE DRONE_PROP::" :
+        if node.brief_comment and comment_header in node.brief_comment:
             # Grab All References, check for pointers and create objects that can be used
             # by integration parsers.
             #Check to make sure declaration is a class or struct:
@@ -92,7 +95,7 @@ def find_props(node, structs, location):
             if node.kind == clang.CursorKind.STRUCT_DECL or node.kind == clang.CursorKind.CLASS_DECL:
 
                 token_source_file = os.path.join(cwd, node.get_tokens().__next__().location.file.name)                
-            
+
 
                 if(token_source_file == location):
 
@@ -124,11 +127,12 @@ def find_props(node, structs, location):
                 
 
     for c in node.get_children():
-        find_props(c, structs, location)
+        find_props(c, structs, location, comment_header)
 
 
-
-def getPropStructs(folder, args):
+## Return Objects that represent structs and classes that have the comment_header flag 
+# immediately preceding the struct/class declaration.
+def getPropStructs(folder, args, comment_header):
 
     structs = []
 
@@ -146,6 +150,6 @@ def getPropStructs(folder, args):
         
         tu = index.parse(location, args)
         
-        find_props(tu.cursor, structs, location)
+        find_props(tu.cursor, structs, location, comment_header)
     
     return structs

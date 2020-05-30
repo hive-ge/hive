@@ -1,4 +1,6 @@
 #pragma once
+
+#include "include/primitive/core_drone.hpp"
 #include "include/primitive/core_memory_pool.hpp"
 #include "include/primitive/core_string_hash.hpp"
 #include "include/primitive/core_typedef.hpp"
@@ -6,8 +8,10 @@
 namespace hive
 {
 #define CONSTRUCT_PROP(prop, prop_id)                                                              \
-    static const ushort DroneDataType = getDroneDataType(prop_id);                                 \
-    static prop * construct() { return DroneDataPool::createObject<prop>(); }
+    static const ushort DroneDataType       = getDroneDataType(prop_id);                           \
+    static constexpr StringHash64 global_id = StringHash64(prop_id);                               \
+    static prop * construct() { return DroneDataPool::createObject<prop>(); }                      \
+    ADD_DRONE_DATA_REFERENCES(prop)
 
 
 #define REGISTER_PROP(prop)                                                                        \
@@ -22,16 +26,14 @@ namespace hive
         friend Boss;
 
       public:
-        static const ushort DroneDataType = getDroneDataType("PropRoot");
-
-        static Prop * construct() { return new Prop(); }
+        CONSTRUCT_PROP(Prop, "PropRoot")
 
         DroneDataHandle next  = 0;
         StringHash64 tag      = 0;
         DroneDataHandle drone = 0;
 
       protected:
-        // char type = DroneDataType;
+        // char type = DroneDataType
 
       public:
         Prop() {}
@@ -45,14 +47,14 @@ namespace hive
          * If the prop is already connected to the
          * the drone then this method will have no effect.
          */
-        void connect(DroneDataHandle drone);
+        void connect(Drone * drone);
 
         /**
          * Disconnects the property from it's drone
          * host. If the property has no host then this
          * method will have no effect.
          */
-        void disconnect(DroneDataHandle drone);
+        void disconnect(Drone * drone);
 
         inline StringHash64 getTagHash() { return tag; }
 

@@ -8,8 +8,9 @@ using namespace hive;
 
 bool Boss::SHOULD_EXIT = false;
 
-std::vector<Boss *> Boss::bosses;
-std::vector<Drone *> Boss::drones;
+std::vector<Boss *> hive::Boss::bosses;
+std::vector<Drone *> hive::Boss::drones;
+
 
 Boss::Boss(const unsigned _id) : id(_id)
 {
@@ -24,7 +25,6 @@ Boss::Boss(const unsigned _id) : id(_id)
 
 void hive::BigBadBoss::setup()
 {
-    Drone::setBoss(this);
 
     for (auto boss : Boss::bosses) {
         if (boss == this) continue;
@@ -37,7 +37,15 @@ void BigBadBoss::teardown(){};
 
 int BigBadBoss::priority() { return 0; };
 
-BigBadBoss::BigBadBoss() : Boss(IDENTIFIER) {}
+hive::BigBadBoss * hive::global_boss = nullptr;
+
+BigBadBoss::BigBadBoss() : Boss(IDENTIFIER)
+{
+    if (!global_boss)
+        global_boss = this;
+    else
+        throw "BigBadBoss Already declared";
+}
 
 void BigBadBoss::update(float delta_t)
 {
@@ -86,14 +94,9 @@ bool BigBadBoss::update()
 
 Drone * BigBadBoss::createDrone()
 {
+    DroneDataPool pool;
 
-#warning "Naked new Allocation [Drone] in BigBadBoss::createDrone"
-
-    int ptr = drones.size();
-
-    Drone * drone = new Drone(ptr);
-
-    drones.push_back(drone);
+    Drone * drone = pool.createObject<Drone>();
 
     return drone;
 }

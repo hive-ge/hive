@@ -30,11 +30,9 @@ namespace hive
     /**::HIVE DRONE_PROP::*/
     struct MeshProp : Prop {
 
-        static const ushort DroneDataType = getDroneDataType("PropMesh");
+        CONSTRUCT_PROP(MeshProp, "PropImage");
 
         MeshData * data = nullptr;
-
-        static MeshProp * construct() { return new MeshProp(); }
 
         MeshProp() : Prop()
         {

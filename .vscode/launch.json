@@ -13,6 +13,26 @@
             "args": [
                 "${workspaceFolder}/source/frontend/hive_frontend_entry.cjs"
             ],
+        },
+        {
+            "name": "Memory Test",
+            "type": "lldb",
+            "request": "launch",
+            "program": "${workspaceFolder}/linux_build/test/memory_test",
+            "cwd": "${workspaceFolder}",
+            "args": [
+                ""
+            ],
+        },
+        {
+            "name": "Property Test",
+            "type": "lldb",
+            "request": "launch",
+            "program": "${workspaceFolder}/linux_build/test/prop_test",
+            "cwd": "${workspaceFolder}",
+            "args": [
+                ""
+            ],
         }
         /*
         {

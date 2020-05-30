@@ -10,7 +10,7 @@ SET (CMAKE_C_FLAGS_RELWITHDEBINFO_INIT "-O2 -g")
 
 
 SET (CMAKE_CXX_FLAGS_INIT                "-std=c++17 -pthread -v  -fPIC ")
-SET (CMAKE_CXX_FLAGS_DEBUG          	 "-O0 -g3")
+SET (CMAKE_CXX_FLAGS_DEBUG          	 "-O0 -g3 -std=c++17 -pthread -Wall -fcolor-diagnostics")
 SET (CMAKE_CXX_FLAGS_MINSIZEREL_INIT     "-O2 -DNDEBUG")
 SET (CMAKE_CXX_FLAGS_RELEASE_INIT        "-O3 -DNDEBUG")
 SET (CMAKE_CXX_FLAGS_RELWITHDEBINFO_INIT "-O2 -g")
@@ -40,13 +40,11 @@ project(${PROJECT_NAME})
 
 FILE(GLOB_RECURSE INTERFACE_DEPENDENCY_FILES "../library/include/primitive/prop_*.hpp" ) 
 
-message(${INTERFACE_DEPENDENCY_FILES})
-
 add_custom_command(
     OUTPUT "${CMAKE_CURRENT_SOURCE_DIR}/interfaces.hpp"
     DEPENDS ${INTERFACE_DEPENDENCY_FILES}
-    COMMENT "Creating JS interfaces.hpp file"
-    COMMAND "node" ARGS "--experimental-modules" "./source/tools/build.webgl.components.js"
+    COMMENT "Creating WebAssembly -> JavaScript interfaces.hpp file"
+    COMMAND "./tools/build_webgl_components.py"
     WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}"
     USES_TERMINAL
 )
@@ -55,7 +53,6 @@ add_custom_command(
 ##########################################
 include_directories("../library/include")
 include_directories("../library")
-
 include_directories("./")
 
 add_executable(${PROJECT_NAME} "hive_webassembly.cpp" "interfaces.hpp" $<TARGET_OBJECTS:hive>)

@@ -9,10 +9,14 @@ namespace hive
 
     bool ImageProp::uploadToVRAM()
     {
+        auto image_data = data->field.data;
 
-        if (!IS_IN_VRAM() && data.size() > 0) {
+        if (!IS_IN_VRAM() && image_data.size() > 0) {
 
-            print data.size();
+            unsigned width  = data->field.width;
+            unsigned height = data->field.height;
+            unsigned depth  = data->field.depth;
+            auto gpu_handle = data->field.gpu_handle;
 
             glGenTextures(1, &gpu_handle);
 
@@ -20,7 +24,7 @@ namespace hive
 
 
             glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, MANDATORY_BORDER_SIZE, GL_RGB,
-                         GL_UNSIGNED_BYTE, data.data());
+                         GL_UNSIGNED_BYTE, image_data.data());
 
             // glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
             // glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);

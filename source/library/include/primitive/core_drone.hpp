@@ -1,6 +1,5 @@
 #pragma once
 
-#include "include/boss/boss.hpp"
 #include "include/primitive/core_drone_flag.hpp"
 #include "include/primitive/core_indexed_pointer.hpp"
 #include "include/primitive/core_memory_pool.hpp"
@@ -54,8 +53,11 @@ namespace hive
     /**
      * Primary container class for game objects
      */
-    //::HIVE DRONE_PROP
+
+    /**::HIVE DRONE_PROP::*/
     struct Drone {
+
+        ADD_DRONE_DATA_REFERENCES(Drone)
 
         static const ushort DroneDataType = getDroneDataType("Drone");
 
@@ -70,7 +72,7 @@ namespace hive
           3 Has Parent
         */
       public:
-        DroneDataHandle prop              = 0;
+        DroneDataHandle props             = 0;
         DroneDataHandle observation_chain = 0;
         DroneFlag flags;
 
@@ -85,7 +87,7 @@ namespace hive
         void disconnect(DroneDataHandle prop);
     };
 
-    static_assert(offsetof(Drone, prop) == 0, "Prop reference is not at root of Drone");
+    static_assert(offsetof(Drone, props) == 0, "Props reference is not at root of Drone");
     static_assert(sizeof(Drone) <= DroneDataPool::DroneDataStructSize,
                   "Prop size is greater than the pool allocation unit size");
 
