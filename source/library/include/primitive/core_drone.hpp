@@ -4,7 +4,6 @@
 #include "include/primitive/core_indexed_pointer.hpp"
 #include "include/primitive/core_memory_pool.hpp"
 #include "include/primitive/core_type_information.hpp"
-#include "include/primitive/core_typedef.hpp"
 #include <shared_mutex>
 
 
@@ -40,9 +39,27 @@ namespace hive
           3 Has Parent
         */
       public:
-        DroneDataHandle props             = 0;
+        /**
+         * Linked list of attached props.
+         */
+        DroneDataHandle props = 0;
+
+        /**
+         * Linked list of observerables.
+         */
         DroneDataHandle observation_chain = 0;
+
+        /**
+         * Set of flags to indicate different states of the Drone.
+         *
+         * Possibly unecessary in light of the cache property???
+         */
         DroneFlag flags;
+
+        /**
+         * Flags indicating what prop types are attached to the drone.
+         */
+        DronePropLU cache;
 
       public:
         static Drone * construct();

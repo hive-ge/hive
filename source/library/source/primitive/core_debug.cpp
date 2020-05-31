@@ -1,6 +1,5 @@
 #include "include/hive.h"
 
-
 namespace hive
 {
     /* Basic Log will only output the error message to stdout*/

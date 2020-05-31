@@ -1,7 +1,7 @@
 #pragma once
 
 #include "include/boss/boss.hpp"
-#include "include/primitive/core_log.hpp"
+#include "include/primitive/core_debug.hpp"
 #include "include/primitive/interface_controller.hpp"
 #include "include/primitive/interface_keyboard.hpp"
 #include "include/primitive/interface_mouse.hpp"

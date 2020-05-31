@@ -4,8 +4,6 @@
 #include "include/primitive/core_memory_pool.hpp"
 #include "include/primitive/core_string_hash.hpp"
 #include "include/primitive/core_type_information.hpp"
-#include "include/primitive/core_typedef.hpp"
-
 namespace hive
 {
 #define CONSTRUCT_PROP(prop, prop_id)                                                              \
@@ -48,14 +46,14 @@ namespace hive
          * If the prop is already connected to the
          * the drone then this method will have no effect.
          */
-        void connect(Drone * drone);
+        void connect(Drone::Ref drone);
 
         /**
          * Disconnects the property from it's drone
          * host. If the property has no host then this
          * method will have no effect.
          */
-        void disconnect(Drone * drone);
+        void disconnect(Drone::Ref drone);
 
         inline StringHash64 getTagHash() { return tag; }
 

@@ -1,9 +1,8 @@
 #pragma once
 
-#include "include/primitive/core_const_info.hpp"
 #include "include/primitive/core_error.hpp"
 #include "include/primitive/core_string_hash.hpp"
-#include "include/primitive/core_typedef.hpp"
+#include "include/primitive/core_type_information.hpp"
 #include <atomic>
 #include <cstdlib>
 #include <new>
@@ -144,6 +143,15 @@ namespace hive
     /**
      * Storage to use for dynamic objects,
      * memory relocation, and small object pointers (32bit);
+     *
+     * Uses the monostate pattern:
+     *  Objects can be created using:
+     *      ObjectMemPool<*>::createObject<OBJ>()
+     *      or
+     *      ObjectMemPool<*>().createObject<OBJ>()
+     *      or
+     *      ObjectMemPool<*> pool;
+     *      pool.createObject<OBJ>()
      */
     template <const int object_size> struct ObjectMemPool {
 

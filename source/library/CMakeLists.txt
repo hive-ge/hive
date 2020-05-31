@@ -119,8 +119,6 @@ if(HIVE_GRAPHICS_API STREQUAL "OpenGL" OR NOT HIVE_GRAPHICS_API)
 
 	FILE(GLOB_RECURSE GPU_SRC_INC "./source/gpu/opengl/**.*" ) 
 
-	include_directories( "./include/gpu/opengl")
-
 	MESSAGE("USING OPENGL GRAPHICS API")
 	MESSAGE("${GPU_SRC_INC}")
 endif()

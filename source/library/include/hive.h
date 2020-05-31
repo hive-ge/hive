@@ -21,7 +21,8 @@
 #define HIVE_APP_PATCH_VERSION 0
 #endif
 
-#include "include/primitive/core_typedef.hpp"
+#include "include/primitive/core_debug.hpp"
+#include "include/primitive/core_type_information.hpp"
 
 // MATHS Stuff
 #include "include/primitive/math_line.hpp"
@@ -46,10 +47,9 @@
 
 // Primitives
 #include "include/primitive/core_drone.hpp"
-#include "include/primitive/core_log.hpp"
 #include "include/primitive/core_math.hpp"
 #include "include/primitive/core_prop.hpp"
-
+// Primitive Props
 #include "include/primitive/prop_gpu_program.hpp"
 #include "include/primitive/prop_image.hpp"
 #include "include/primitive/prop_matrix.hpp"

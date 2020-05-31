@@ -1,4 +1,3 @@
-
 #pragma once
 
 #include <climits>
@@ -8,22 +7,35 @@
 
 namespace hive
 {
+    typedef unsigned long long hive_string_hash_64_ull;
+    typedef hive_string_hash_64_ull str_ull;
+    /**
+     * If this bit is set then the StringHash64 instance contains a hash of a regular string.
+     * If it is not set, then the hash is a literal 2^63 natural number.
+     */
+    constexpr static const str_ull STRING_HASH_STRING_FLAG = (str_ull)1 << 63;
 
-    typedef unsigned long long u_ull;
-
-    constexpr static const u_ull STRING_HASH_STRING_FLAG           = (u_ull)1 << 63;
-    constexpr static const u_ull STRING_HASH_SMALL_STRING_FLAG     = (u_ull)1 << 62;
-    constexpr static const u_ull STRING_HASH_LONG_STRING_MASK      = ~((u_ull)1 << 62);
-    constexpr static const u_ull STRING_HASH_SMALL_STRING_SENTINEL = (u_ull)0xF;
-    constexpr static const unsigned STRING_HASH_MAX_INLINE_SIZE    = 10;
-    constexpr static const u_short INV                             = 0xFF00;
-    constexpr static const u_short SPC                             = 0x20;
-    constexpr static const u_short HYP                             = (0x2D - 1);
-    constexpr static const u_short NUM                             = (0x30 - 2);
-    constexpr static const u_short UPC                             = (0x41 - 12);
-    constexpr static const u_short UND                             = (0x5F - 1);
-    constexpr static const u_short LWC                             = (0x61 - 38);
-    constexpr static const u_short ASCII_LU[128]                   = {
+    /**
+     * If this bit is set then the StringHash64 instance store a compressed string
+     * up to 10 characters long. The set of characters that it stores are described in
+     * this regular expression:
+     *      [0-9a-zA-Z_-\ ]
+     *
+     * If this bit is not set then the StringHash64 instance either contains a
+     * long string hash if STRING_HASH_STRING_FLAG is set, or a 2^63 natural number.
+     */
+    constexpr static const str_ull STRING_HASH_SMALL_STRING_FLAG     = (str_ull)1 << 62;
+    constexpr static const str_ull STRING_HASH_LONG_STRING_MASK      = ~((str_ull)1 << 62);
+    constexpr static const str_ull STRING_HASH_SMALL_STRING_SENTINEL = (str_ull)0xF;
+    constexpr static const unsigned STRING_HASH_MAX_INLINE_SIZE      = 10;
+    constexpr static const u_short INV                               = 0xFF00;
+    constexpr static const u_short SPC                               = 0x20;
+    constexpr static const u_short HYP                               = (0x2D - 1);
+    constexpr static const u_short NUM                               = (0x30 - 2);
+    constexpr static const u_short UPC                               = (0x41 - 12);
+    constexpr static const u_short UND                               = (0x5F - 1);
+    constexpr static const u_short LWC                               = (0x61 - 38);
+    constexpr static const u_short ASCII_LU[128]                     = {
         INV, INV, INV, INV, INV, INV, INV, INV, INV, INV, INV, INV, INV, INV, INV, INV,
         INV, INV, INV, INV, INV, INV, INV, INV, INV, INV, INV, INV, INV, INV, INV, INV,
         SPC, INV, INV, INV, INV, INV, INV, INV, INV, INV, INV, INV, INV, HYP, INV, INV,
@@ -38,27 +50,30 @@ namespace hive
 
 
       private:
-        constexpr static u_ull hashLongString(const char * string, const unsigned size)
+        /**
+         * Fowler-Noll-Vo Hash Function
+         */
+        constexpr static str_ull FNVHash(const char * string, const unsigned size)
         {
-            u_ull seed = 0X15F23100121;
-            u_ull hash = 0;
+            const str_ull prime = 0x100000001b3;
+            const str_ull basis = 0xcbf29ce484222325;
+            str_ull hash        = prime;
 
-            for (int i = 0; i < size; i++) hash = (hash * seed) + string[i];
+            for (int i = 0; i < size; i++) hash = (hash * basis) ^ string[i];
 
             return hash;
         };
 
-
         // These two functions may need to be adjusted to handle threaded access.
-        static std::string getLongString(u_ull);
+        static std::string getLongString(str_ull);
 
-        static void setLongString(u_ull, std::string);
+        static void setLongString(str_ull, std::string);
 
         constexpr bool construct(const char * string, const unsigned size)
         {
 
 
-            u_ull num = 0;
+            str_ull num = 0;
             /**
              * Compress ASCII strings into a 2^48 space
              * This will leave 16 bits for irregular strings
@@ -82,7 +97,7 @@ namespace hive
 
                 for (; i < size; i++) {
 
-                    const u_ull c = string[i];
+                    const str_ull c = string[i];
 
                     lu = ASCII_LU[c & 0xFF];
 
@@ -105,11 +120,11 @@ namespace hive
 
             num = 0;
 
-            u_ull int_offset = 1;
+            str_ull int_offset = 1;
 
             for (int i = 0; i < size; i++) {
 
-                const u_ull c = string[size - 1 - i];
+                const str_ull c = string[size - 1 - i];
 
                 lu = ASCII_LU[c & 0xFF];
 
@@ -127,6 +142,36 @@ namespace hive
 
             return false;
         }
+        /**
+         * @brief Hashes a string with unknown characters or that is longer than 10 characters.
+         * Stores the string an a lookup table and sets val to hash value of the string
+         * with a bitwise OR with @name STRING_HASH_STRING_FLAG and AND with @name
+         * STRING_HASH_LONG_STRING_MASK.
+         *
+         */
+        str_ull createLongStringHashAndStore(const char * string, const unsigned length)
+        {
+            str_ull hash = createLongStringHash(string, length);
+
+            setLongString(hash, std::string(string, length));
+
+            return hash;
+        }
+
+        /**
+         * @brief Hashes a string with unknown characters or that is longer than 10 characters.
+         * Stores the string an a lookup table and sets val to hash value of the string
+         * with a bitwise OR with @name STRING_HASH_STRING_FLAG and AND with @name
+         * STRING_HASH_LONG_STRING_MASK.
+         *
+         */
+        constexpr str_ull createLongStringHash(const char * string, const unsigned length)
+        {
+            val =
+                (FNVHash(string, length) | STRING_HASH_STRING_FLAG) & STRING_HASH_LONG_STRING_MASK;
+
+            return val;
+        }
 
         // Assumes check for short string storage performed prior to calling.
         // Extracts and recompiles char string buffer from [val].
@@ -134,16 +179,26 @@ namespace hive
         // [number] - store for the length of string
         void getShortString(char * string, unsigned & number) const;
 
-        u_ull val;
+        str_ull val;
 
         static const std::size_t NULL_TERMINATED_SIZE_LIMIT = 128;
 
       public:
-        StringHash64(const std::string string) : val(0) { construct(string.data(), string.size()); }
+        /**
+         * Constructs the hash of the string
+         */
+        StringHash64(const std::string string) : val(0)
+        {
+            if (!construct(string.data(), string.size()))
+                createLongStringHashAndStore(string.data(), string.size());
+        }
 
-        StringHash64(const char * string, const unsigned size) : val(0) { construct(string, size); }
+        StringHash64(const char * string, const unsigned size) : val(0)
+        {
+            if (!construct(string, size)) createLongStringHashAndStore(string, size);
+        }
 
-        constexpr StringHash64(const u_ull num) : val(num & ~STRING_HASH_STRING_FLAG) {}
+        constexpr StringHash64(const str_ull num) : val(num & ~STRING_HASH_STRING_FLAG) {}
 
         constexpr StringHash64(const unsigned num) : val(num) {}
 
@@ -159,10 +214,7 @@ namespace hive
             for (int i = 0; i < NULL_TERMINATED_SIZE_LIMIT; i++) {
                 if (string[i] == 0) {
                     if (i > 0)
-                        if (!construct(string, i)) {
-                            val = (hashLongString(string, i) | STRING_HASH_STRING_FLAG) &
-                                  STRING_HASH_LONG_STRING_MASK;
-                        };
+                        if (!construct(string, i)) createLongStringHash(string, i);
                     return;
                 }
             }
@@ -170,7 +222,7 @@ namespace hive
 
         constexpr StringHash64(const StringHash64 & sh) : val(sh.val) {}
 
-        constexpr bool operator==(const u_ull & v) const { return val == v; }
+        constexpr bool operator==(const str_ull & v) const { return val == v; }
 
         constexpr bool operator==(const StringHash64 & v) const { return val == v.val; }
 
@@ -192,7 +244,7 @@ namespace hive
             return stream;
         }
 
-        constexpr operator u_ull() const { return val; }
+        constexpr operator str_ull() const { return val; }
 
         explicit operator std::string() const
         {
@@ -216,6 +268,8 @@ namespace hive
     };
 
     const StringHash64 NullStringHash("");
+
+    const unsigned long long test_string = StringHash64("a11d22222222222222222222a22222222am");
 
     // Static tests
     static_assert(StringHash64("a11d22222222222222222222a22222222am") !=

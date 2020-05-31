@@ -1,22 +1,8 @@
-#include "include/hive.h"
+#include "hive.h"
 #include <iostream>
 
 using namespace hive;
 
-void Prop::connect(Drone * drone)
-{
-    DroneDataPool pool;
+void Prop::disconnect(Drone::Ref drone) { drone->disconnect(DroneDataPool::getReference(this)); }
 
-    if (drone->props == DroneDataHandle::UNDEFINED) {
-        drone->props = pool.getReference(this);
-    } else {
-        Prop::Reference current = drone->props;
-
-        while (current.reinterpret<Prop>()->next != DroneDataHandle::UNDEFINED)
-            current = current.reinterpret<Prop>()->next;
-
-        current->next = pool.getReference(this);
-    }
-}
-
-void Prop::disconnect(Drone * drone) {}
+void Prop::connect(Drone::Ref new_drone) { new_drone->connect(DroneDataPool::getReference(this)); }
