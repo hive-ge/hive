@@ -21,7 +21,7 @@ namespace hive
     /**::HIVE DRONE_PROP::*/
     struct ShaderProgramProp : Prop {
 
-        CONSTRUCT_PROP(ShaderProgramProp, "PropGPUProgram");
+        CONSTRUCT_PROP(ShaderProgramProp, "gpu_program");
 
       public:
         GPUProgramDataField::PTR data = nullptr;

@@ -13,7 +13,7 @@ namespace hive
 
     struct GridProp : Prop {
 
-        CONSTRUCT_PROP(GridProp, "PropGrid");
+        CONSTRUCT_PROP(GridProp, "grid");
 
         ~GridProp() {}
 

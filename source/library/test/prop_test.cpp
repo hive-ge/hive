@@ -51,9 +51,9 @@ int main(int arg_ct, char ** args)
     // TODO: Concurrent update of properties.
 
     // Cache flag comparison
-    ASSERT(drone->cache == DronePropLU::PropRender);
-    ASSERT(drone->cache == DronePropLU::PropImage);
-    ASSERT(drone->cache != DronePropLU::PropParent);
+    ASSERT(drone->cache == DronePropLU::render);
+    ASSERT(drone->cache == DronePropLU::image);
+    ASSERT(drone->cache != DronePropLU::parent);
 
     // Lookup Property By Tag
     ASSERT(drone->getProp("test") == prop)

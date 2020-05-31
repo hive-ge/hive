@@ -16,7 +16,7 @@ namespace hive
 
     /**::HIVE DRONE_PROP::*/
     struct RenderableProp : Prop {
-        CONSTRUCT_PROP(RenderableProp, "PropRender");
+        CONSTRUCT_PROP(RenderableProp, "render");
 
       private:
         bool CAN_RENDER = false;

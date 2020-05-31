@@ -73,33 +73,37 @@ namespace hive
             i++;
 
             // Complex Systems
-            SetPropIndexLookup(PropMesh);
-            SetPropIndexLookup(PropImage);
-            SetPropIndexLookup(PropScript);
-            SetPropIndexLookup(PropMaterial);
-            SetPropIndexLookup(PropGPUProgram);
-            SetPropIndexLookup(PropParent);
-            SetPropIndexLookup(PropAnimation);
-            SetPropIndexLookup(PropAudio);
+            SetPropIndexLookup(mesh);
+            SetPropIndexLookup(image);
+            SetPropIndexLookup(grid);
+            SetPropIndexLookup(script);
+            SetPropIndexLookup(material);
+            SetPropIndexLookup(gpu_program);
+            SetPropIndexLookup(parent);
+            SetPropIndexLookup(animation);
+            SetPropIndexLookup(audio);
 
             // Numerics
-            SetPropIndexLookup(PropMat44d);
-            SetPropIndexLookup(PropMat44f);
-            SetPropIndexLookup(PropMat33d);
-            SetPropIndexLookup(PropMat33f);
-            SetPropIndexLookup(PropQuatf);
-            SetPropIndexLookup(PropQuatd);
-            SetPropIndexLookup(PropVec3d);
-            SetPropIndexLookup(PropVec3f);
-            SetPropIndexLookup(PropVec2d);
-            SetPropIndexLookup(PropVec2f);
-            SetPropIndexLookup(PropFloat);
-            SetPropIndexLookup(PropInt);
-            SetPropIndexLookup(PropUint);
+            SetPropIndexLookup(mat44d);
+            SetPropIndexLookup(mat44);
+            SetPropIndexLookup(mat33d);
+            SetPropIndexLookup(mat33);
+            SetPropIndexLookup(quat);
+            SetPropIndexLookup(quatd);
+            SetPropIndexLookup(vec3d);
+            SetPropIndexLookup(vec3);
+            SetPropIndexLookup(vec2d);
+            SetPropIndexLookup(vec2);
+            SetPropIndexLookup(float32);
+            SetPropIndexLookup(float64);
+            SetPropIndexLookup(int32);
+            SetPropIndexLookup(uint32);
+            SetPropIndexLookup(int64);
+            SetPropIndexLookup(uint64);
 
             // Attributes
-            SetPropIndexLookup(PropRender);
-            SetPropIndexLookup(PropTag);
+            SetPropIndexLookup(render);
+            SetPropIndexLookup(tag);
 
             return i;
         }
@@ -111,30 +115,33 @@ namespace hive
 
     struct DronePropLU {
         enum : hive_ull {
-            setDroneLUStaticBITFlag(PropMat),
-            setDroneLUStaticBITFlag(PropMesh),
-            setDroneLUStaticBITFlag(PropImage),
-            setDroneLUStaticBITFlag(PropScript),
-            setDroneLUStaticBITFlag(PropMaterial),
-            setDroneLUStaticBITFlag(PropGPUProgram),
-            setDroneLUStaticBITFlag(PropParent),
-            setDroneLUStaticBITFlag(PropAnimation),
-            setDroneLUStaticBITFlag(PropAudio),
-            setDroneLUStaticBITFlag(PropMat44d),
-            setDroneLUStaticBITFlag(PropMat44f),
-            setDroneLUStaticBITFlag(PropMat33d),
-            setDroneLUStaticBITFlag(PropMat33f),
-            setDroneLUStaticBITFlag(PropQuatf),
-            setDroneLUStaticBITFlag(PropQuatd),
-            setDroneLUStaticBITFlag(PropVec3d),
-            setDroneLUStaticBITFlag(PropVec3f),
-            setDroneLUStaticBITFlag(PropVec2d),
-            setDroneLUStaticBITFlag(PropVec2f),
-            setDroneLUStaticBITFlag(PropFloat),
-            setDroneLUStaticBITFlag(PropInt),
-            setDroneLUStaticBITFlag(PropUint),
-            setDroneLUStaticBITFlag(PropRender),
-            setDroneLUStaticBITFlag(PropTag)
+            setDroneLUStaticBITFlag(material),
+            setDroneLUStaticBITFlag(mesh),
+            setDroneLUStaticBITFlag(grid),
+            setDroneLUStaticBITFlag(image),
+            setDroneLUStaticBITFlag(script),
+            setDroneLUStaticBITFlag(gpu_program),
+            setDroneLUStaticBITFlag(parent),
+            setDroneLUStaticBITFlag(animation),
+            setDroneLUStaticBITFlag(audio),
+            setDroneLUStaticBITFlag(mat44d),
+            setDroneLUStaticBITFlag(mat44),
+            setDroneLUStaticBITFlag(mat33d),
+            setDroneLUStaticBITFlag(mat33),
+            setDroneLUStaticBITFlag(quat),
+            setDroneLUStaticBITFlag(quatd),
+            setDroneLUStaticBITFlag(vec3d),
+            setDroneLUStaticBITFlag(vec3),
+            setDroneLUStaticBITFlag(vec2d),
+            setDroneLUStaticBITFlag(vec2),
+            setDroneLUStaticBITFlag(float32),
+            setDroneLUStaticBITFlag(float64),
+            setDroneLUStaticBITFlag(int32),
+            setDroneLUStaticBITFlag(uint32),
+            setDroneLUStaticBITFlag(int64),
+            setDroneLUStaticBITFlag(uint64),
+            setDroneLUStaticBITFlag(render),
+            setDroneLUStaticBITFlag(tag)
         };
 
         hive_ull flag;

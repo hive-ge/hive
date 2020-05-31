@@ -17,7 +17,7 @@ namespace hive
     static_assert(sizeof(prop) <= DroneDataPool::DroneDataStructSize,                              \
                   "##prop size is greater than the pool allocation unit size");                    \
     static_assert(prop::DroneDataType != getDroneDataType("PropRoot"),                             \
-                  "Prop int type is not defined.");
+                  "Prop DroneDataType is not defined.");
 
 
     /**::HIVE DRONE_PROP::*/
