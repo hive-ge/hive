@@ -46,6 +46,15 @@ int main(int arg_ct, char ** args)
     drone3->connect(prop3);
     drone3->connect(render_prop3);
 
+    // TODO: Move property memory around.
+    // TODO: Concurrent access of properties.
+    // TODO: Concurrent update of properties.
+
+    // Cache flag comparison
+    ASSERT(drone->cache == DronePropLU::PropRender);
+    ASSERT(drone->cache == DronePropLU::PropImage);
+    ASSERT(drone->cache != DronePropLU::PropParent);
+
     // Lookup Property By Tag
     ASSERT(drone->getProp("test") == prop)
     ASSERT(drone->getProp("render_tag") == render_prop)

@@ -1,5 +1,6 @@
 #pragma once
 
+#include "core_debug.hpp"
 #include "include/primitive/core_string_hash.hpp"
 #include <shared_mutex>
 
@@ -109,7 +110,7 @@ namespace hive
 #define setDroneLUStaticBITFlag(prop) prop = 1 << getDroneDataType(#prop)
 
     struct DronePropLU {
-        enum Flag : hive_ull {
+        enum : hive_ull {
             setDroneLUStaticBITFlag(PropMat),
             setDroneLUStaticBITFlag(PropMesh),
             setDroneLUStaticBITFlag(PropImage),
@@ -136,10 +137,67 @@ namespace hive
             setDroneLUStaticBITFlag(PropTag)
         };
 
-        Flag flag;
-    };
+        hive_ull flag;
 
-    constexpr DronePropLU::Flag flag = DronePropLU::Flag::PropMesh;
+        constexpr DronePropLU() : DronePropLU((unsigned int)0) {}
+
+        constexpr DronePropLU(const unsigned int val) : flag(1ull << val) {}
+
+        constexpr DronePropLU(const hive_ull val) : flag(val) {}
+
+        constexpr DronePropLU & operator+=(const hive_ull val)
+        {
+            flag |= val;
+            return *this;
+        }
+
+        constexpr DronePropLU & operator-=(const hive_ull val)
+        {
+            flag &= ~val;
+            return *this;
+        }
+
+
+        constexpr DronePropLU & operator=(const hive_ull val)
+        {
+            flag = val;
+            return *this;
+        }
+
+
+        constexpr DronePropLU & operator+=(const unsigned val)
+        {
+            flag += 1ull << val;
+            return *this;
+        }
+
+        constexpr DronePropLU & operator-=(const unsigned val)
+        {
+            flag -= 1ull << val;
+            return *this;
+        }
+
+
+        constexpr DronePropLU & operator=(const unsigned val)
+        {
+            flag = 1ull << val;
+            return *this;
+        }
+
+        constexpr bool operator==(const hive_ull val) const { return (flag & val) == val; }
+
+        constexpr bool operator!=(const hive_ull val) const { return (flag & val) != val; }
+
+        constexpr bool operator==(const unsigned val) const { return flag == 1ull << val; }
+
+        constexpr bool operator!=(const unsigned val) const { return flag != 1ull << val; }
+
+        constexpr bool operator==(const DronePropLU & other) const { return other.flag == flag; }
+
+        constexpr bool operator!=(const DronePropLU & other) const { return other.flag != flag; }
+
+        constexpr operator bool() const { return flag != 0ull; }
+    };
 
     static_assert(getDroneDataType("DEFAULT_VALUE_MAX") < MEM_MAX_ELEMENT_TYPE_COUNT,
                   "Field left for type information in DroneDataHandle is too small! Adjust bit "

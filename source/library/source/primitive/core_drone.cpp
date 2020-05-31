@@ -1,3 +1,4 @@
+#include "core_type_information.hpp"
 #include "include/hive.h"
 
 #include <iostream>
@@ -15,12 +16,12 @@ namespace hive
         return drone;
     }
 
-    void hive::Drone::connect(DroneDataHandle prop)
+    void Drone::connect(DroneDataHandle prop)
     {
 
         // TODO: Should lock drone for threading?
-
         DroneDataPool pool;
+
 
         if (prop) {
 
@@ -35,23 +36,27 @@ namespace hive
 
                 current->next = prop;
             }
+
+            cache += prop.getType();
+
         } else {
             HIVE_DEBUG_WARN("Attempt to connect drone to undefined prop.");
         }
     };
 
-    void hive::Drone::disconnect(DroneDataHandle prop)
+    void Drone::disconnect(DroneDataHandle prop)
     {
         HIVE_DEBUG_WARN("Drone::disconnect not yet implemented!");
     };
 
-    DroneDataHandle hive::Drone::getProp(StringHash64 tag)
+    DroneDataHandle Drone::getProp(StringHash64 tag)
     {
         if (props) {
 
             DroneDataHandle prop = props, root = prop;
 
             while (prop && !prop.is<Drone>()) {
+
                 Prop::Ref ref = prop;
 
                 if (ref->tag == tag) return ref;
