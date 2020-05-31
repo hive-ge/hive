@@ -2,38 +2,6 @@
     <img src="./design/logo/hive_logo_alpha.svg" type="text/svg" rel="svg" height=481>
 </h1>
 
-Steps to completion ->
-    
-Get sprites working->
-    Need to be able load sprite data from file or from buffer. 
-    Get it presented on screen
-    Be able to adjust it's position
-
-    Get a texture drawing system working->
-        Use web technologies for this interface.
-
-Get Basic Game Object working->
-    Use drone props to determine what order something should be drawn to screen
-    Use props for basic physics interaction.
-
-Get Text system working->
-    Use some library to load text textures.
-    Create basic string implementation -> May use string packs. 
-
-Get standalone system working->
-
-Create Basic levels
-    Item interaction    
-    Exit / Entry
-
-
-Threading Options
-    Each nood should have it's own counter
-        
-
-Mesh: 
-    Make attribs, meshes, etc, responsible for uploading data to GPU.
-
 # Current Dev Environment
 - Visual Studio Code
     - Plugins:
