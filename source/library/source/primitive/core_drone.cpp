@@ -33,7 +33,7 @@ namespace hive
                 while (current.reinterpret<Prop>()->next != DroneDataHandle::UNDEFINED)
                     current = current.reinterpret<Prop>()->next;
 
-                current->next = pool.getReference(this);
+                current->next = prop;
             }
         } else {
             HIVE_DEBUG_WARN("Attempt to connect drone to undefined prop.");
