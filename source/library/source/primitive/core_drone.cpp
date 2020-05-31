@@ -42,7 +42,7 @@ namespace hive
 
     void hive::Drone::disconnect(DroneDataHandle prop)
     {
-        HIVE_DEBUG_WARN("Drone::disconnect to yet implemented!");
+        HIVE_DEBUG_WARN("Drone::disconnect not yet implemented!");
     };
 
     DroneDataHandle hive::Drone::getProp(StringHash64 tag)
