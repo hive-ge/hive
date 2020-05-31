@@ -422,6 +422,7 @@ namespace hive
 
         void InterfaceBoss::update(float delta_t)
         {
+
             if (!glfwWindowShouldClose(window)) {
 
                 glfwSwapBuffers(window);
@@ -483,6 +484,7 @@ namespace hive
 
                 std::cout << "Created GL Context" << std::endl;
 
+                glfwSwapInterval(0);
 
                 // Setup inputs
                 glfwSetKeyCallback(window, GLFWKeyboardCallback);

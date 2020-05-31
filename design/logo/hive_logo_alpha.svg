@@ -28,12 +28,12 @@
      id="namedview1451"
      showgrid="false"
      inkscape:zoom="0.65186406"
-     inkscape:cx="203.02841"
-     inkscape:cy="334.28421"
+     inkscape:cx="829.4229"
+     inkscape:cy="498.29598"
      inkscape:window-x="1315"
      inkscape:window-y="456"
      inkscape:window-maximized="0"
-     inkscape:current-layer="text1199-9" />
+     inkscape:current-layer="layer1" />
   <defs
      id="defs1352" />
   <metadata
@@ -52,10 +52,10 @@
      transform="translate(0,-26.06665)"
      id="layer1">
     <path
-       transform="matrix(3.5275343,2.0538233,-2.0538233,3.5275343,-6.4578803,-290.8476)"
-       style="display:inline;opacity:1;fill:#800080;stroke-width:0.30153257"
-       d="M 109.64855,89.164959 83.077519,104.42335 56.577849,89.041358 56.64921,58.400975 83.220241,43.142583 109.71991,58.524575 Z"
-       id="path3741-7-1-0-7" />
+       style="display:inline;opacity:1;fill:#800080;stroke-width:1.21484005"
+       d="M 196.3987,247.47271 72.953989,246.73471 11.870756,139.45946 74.232237,32.922198 197.67695,33.660193 258.76018,140.93545 Z"
+       id="path3741-7-1-0-7"
+       inkscape:connector-curvature="0" />
     <path
        transform="matrix(3.5249847,2.0523387,-2.0523387,3.5249847,-7.6447945,-290.24701)"
        style="display:inline;opacity:1;fill:none;fill-opacity:1;stroke:#ffd42a;stroke-width:2.3896184;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"

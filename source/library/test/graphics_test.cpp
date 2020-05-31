@@ -52,9 +52,11 @@ int main(int arg_ct, char ** args)
 
     boss.setup();
 
+    // Setup first game object
+
     Drone::Ref drone = pool.createObjectReturnRef<Drone>();
 
-    ShaderProgramProp::Ref shader = pool.createObjectReturnRef<ShaderProgramProp>();
+    ShaderProgramProp::Ref shader = DroneDataPool::createObjectReturnRef<ShaderProgramProp>();
     drone->connect(shader);
 
     shader->fromString(shader_string);
@@ -64,13 +66,12 @@ int main(int arg_ct, char ** args)
     drone->connect(renderable);
 
     MeshProp::Ref mesh_prop = pool.createObjectReturnRef<MeshProp>();
-    mesh_prop->addVertex(1, 1.0, 0, 1.0, 1.0);
+    mesh_prop->addVertex(1, .5, 0, 1.0, 1.0);
     mesh_prop->addVertex(-1, 1.0, 0, 1.0, 1.0);
     mesh_prop->addVertex(-1, -1.0, 0, 1.0, 1.0);
     mesh_prop->addVertex(1, -1.0, 0, 1.0, 1.0);
     mesh_prop->addTriangle(0, 1, 2);
     mesh_prop->addTriangle(2, 3, 0);
-    mesh_prop->setTag("color_t");
     drone->connect(mesh_prop);
 
 
@@ -83,7 +84,7 @@ int main(int arg_ct, char ** args)
     // AnimationBoss
     // AssetBoss
 
-    int timout = 120;
+    int timout = 1200;
 
     float i = 0.0;
 

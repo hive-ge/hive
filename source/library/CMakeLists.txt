@@ -122,6 +122,7 @@ if(HIVE_GRAPHICS_API STREQUAL "OpenGL" OR NOT HIVE_GRAPHICS_API)
 	include_directories( "./include/gpu/opengl")
 
 	MESSAGE("USING OPENGL GRAPHICS API")
+	MESSAGE("${GPU_SRC_INC}")
 endif()
 
 
