@@ -56,8 +56,13 @@ namespace hive
 
     void RenderBoss::update(float)
     {
+
+        auto from = DroneDataPool::begin<Drone>();
+        auto to   = DroneDataPool::end<Drone>();
         // Check the drones for update render settings.
-        for (auto & drone : drones) {
+        for (auto it = from; it != to; it++) {
+
+            Drone::Ref drone = *it;
 
             // Candidate for threading using a work queueing system.
 

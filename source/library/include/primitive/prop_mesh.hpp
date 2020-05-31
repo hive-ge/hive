@@ -31,7 +31,7 @@ namespace hive
     /**::HIVE DRONE_PROP::*/
     struct MeshProp : Prop {
 
-        CONSTRUCT_PROP(MeshProp, "PropImage");
+        CONSTRUCT_PROP(MeshProp, "PropMesh");
 
         MeshDataField::PTR data = nullptr;
 

@@ -7,6 +7,8 @@ namespace hive
     GLuint createShader(const char * shader_str, const int shader_str_length, GLenum shader_type,
                         const std::string info_label)
     {
+
+        std::cout << std::string(shader_str, shader_str_length) << std::endl;
         GLuint shader = glCreateShader(shader_type);
 
         if (shader > 0) { // Must be a non-zero value
@@ -225,7 +227,7 @@ namespace hive
                 for (; j < number_of_shader_stages; j++)
                     if (c == stage_names[j][1]) break;
 
-                if (i < number_of_shader_stages) {
+                if (j < number_of_shader_stages) {
                     pending_stage_index = j;
                     parse_name_index    = 2;
                     i++;
@@ -235,11 +237,13 @@ namespace hive
 
             if (pending_stage_index > -1) {
                 if (d == stage_names[pending_stage_index][parse_name_index]) {
-                    if (++parse_name_index == shader_stage_flag_length) {
+                    if (++parse_name_index ==
+                        (shader_stage_flag_length - 1) /*omit null terminator*/) {
 
                         if (IS_PARSING_SHADER_STAGE)
-                            stageptr[current_stage_index] = {
-                                &string[parse_start], (i - shader_stage_flag_length) - parse_start};
+                            stageptr[current_stage_index] = {&string[parse_start],
+                                                             (i - (shader_stage_flag_length - 1)) -
+                                                                 parse_start};
 
                         IS_PARSING_SHADER_STAGE = true;
                         parse_start             = i;
@@ -255,7 +259,7 @@ namespace hive
 
         if (IS_PARSING_SHADER_STAGE)
             stageptr[current_stage_index] = {&string[parse_start],
-                                             (i - shader_stage_flag_length) - parse_start};
+                                             (unsigned)(string_data.size() - parse_start)};
 
         if (stages.vert.string || stages.frag.string || stages.geom.string || stages.eval.string ||
             stages.tess.string || stages.comp.string) {

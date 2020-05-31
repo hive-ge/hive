@@ -2,6 +2,39 @@
 
 using namespace hive;
 
+std::string shader_string(
+    "[vert]\n"
+    "#version 300 es\n"
+    ""
+    "in vec3 vertex;"
+    ""
+    "uniform float rot;"
+    ""
+    "out vec2 tex_coord;"
+    ""
+    "void main()"
+    "{"
+    ""
+    "gl_Position = vec4(vertex.xy * vec2(cos(rot), cos(rot)) + vertex.yx * vec2(-sin(rot), "
+    "sin(rot)),"
+    "(vertex.z), 1.0);"
+    ""
+    "tex_coord = vec2(1., 1.) - (vertex.xy + vec2(1.0, 1.0)) / 2.0;"
+    "}"
+    ""
+    "[frag]\n"
+    "#version 300 es\n"
+    "precision mediump float;"
+    ""
+    "uniform sampler2D color_t;"
+    ""
+    "in vec2 tex_coord;"
+    ""
+    "out vec4 FragColor;"
+    ""
+    "void main() { FragColor = vec4(0.1, 0.8, 0.1, 1.0) + texture(color_t, tex_coord); }");
+
+
 // Create Global Memory Object.
 hive::DataPool hive::general_data_pool(4096);
 
@@ -16,16 +49,48 @@ int main(int arg_ct, char ** args)
     hive::interface::InterfaceBoss interface_boss(1280, 720);
 
     RenderBoss render;
+
+    boss.setup();
+
+    Drone::Ref drone = pool.createObjectReturnRef<Drone>();
+
+    ShaderProgramProp::Ref shader = pool.createObjectReturnRef<ShaderProgramProp>();
+    drone->connect(shader);
+
+    shader->fromString(shader_string);
+
+    RenderableProp::Ref renderable = pool.createObjectReturnRef<RenderableProp>();
+    renderable->SET_RENDER_STATE(true);
+    drone->connect(renderable);
+
+    MeshProp::Ref mesh_prop = pool.createObjectReturnRef<MeshProp>();
+    mesh_prop->addVertex(1, 1.0, 0, 1.0, 1.0);
+    mesh_prop->addVertex(-1, 1.0, 0, 1.0, 1.0);
+    mesh_prop->addVertex(-1, -1.0, 0, 1.0, 1.0);
+    mesh_prop->addVertex(1, -1.0, 0, 1.0, 1.0);
+    mesh_prop->addTriangle(0, 1, 2);
+    mesh_prop->addTriangle(2, 3, 0);
+    mesh_prop->setTag("color_t");
+    drone->connect(mesh_prop);
+
+
+    FloatProp::Ref float_prop = pool.createObjectReturnRef<FloatProp>();
+    float_prop->setTag("rot");
+    drone->connect(float_prop);
+
+
     // AudioBoss
     // AnimationBoss
     // AssetBoss
 
-    boss.setup();
-
     int timout = 120;
 
-    while (boss.update() && timout-- > 0)
-        ;
+    float i = 0.0;
+
+    while (boss.update() && timout-- > 0) {
+        // float_prop->set(i += 0.01);
+    }
+
 
     SUCCESS();
 }

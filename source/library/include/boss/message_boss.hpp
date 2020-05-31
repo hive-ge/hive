@@ -38,6 +38,6 @@ namespace hive
         virtual void teardown();
 
         virtual void onMessage(StringHash64 message_id, const char * message_data = nullptr,
-                               const unsigned message_length = 0);
+                               const unsigned message_length = 0){};
     };
 } // namespace hive

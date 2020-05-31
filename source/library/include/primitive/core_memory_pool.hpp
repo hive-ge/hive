@@ -212,8 +212,8 @@ namespace hive
             using reference         = const ObjectPointer &;
             using iterator_category = std::forward_iterator_tag;
         };
-        template <class T> iterator<T> begin() { return iterator<T>(); }
-        template <class T> iterator<T> end() { return iterator<T>(data->element_count); }
+        template <class T> static iterator<T> begin() { return iterator<T>(); }
+        template <class T> static iterator<T> end() { return iterator<T>(data->element_count); }
 
         constexpr ObjectMemPool()
         {
@@ -632,7 +632,7 @@ namespace hive
 
                             // Split up free memory field.
                             FreeMemoryLink & new_link = *reinterpret_cast<FreeMemoryLink *>(
-                                reinterpret_cast<char *>(link) + (data_field_word_size >> 2));
+                                reinterpret_cast<char *>(link) + (data_field_word_size << 2));
 
                             new_link.word_size = fit - MemLinkWordSize;
 

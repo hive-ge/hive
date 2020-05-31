@@ -16,14 +16,12 @@ namespace hive
 
     /**::HIVE DRONE_PROP::*/
     struct RenderableProp : Prop {
-        static const ushort DroneDataType = getDroneDataType("PropRender");
+        CONSTRUCT_PROP(RenderableProp, "PropRender");
 
       private:
         bool CAN_RENDER = false;
 
       public:
-        static RenderableProp * construct() { return new RenderableProp(); }
-
         RenderableProp() : Prop() {}
 
         ~RenderableProp() {}
