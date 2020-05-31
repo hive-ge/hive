@@ -171,8 +171,8 @@ namespace hive
 
                     float getAxis(AxisName axis) const
                     {
-                        if (controller.IS_ALIVE && (char)axis < controller.MAX_AXES)
-                            return controller.axes[(char)axis];
+                        if (controller.IS_ALIVE && (unsigned char)axis < controller.MAX_AXES)
+                            return controller.axes[(unsigned char)axis];
 
                         return 0.;
                     }

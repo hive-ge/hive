@@ -1,10 +1,9 @@
 #pragma once
 
+
 #include "include/primitive/core_math.hpp"
 
 #include "include/primitive/core_prop.hpp"
-
-#include "include/primitive/core_datafield.hpp"
 
 #include <vector>
 
@@ -12,16 +11,20 @@ namespace hive
 {
     using namespace hive::math;
 
+    typedef DataPool::DataField<vec3> Vec3FloatDataField;
+    typedef DataPool::DataField<vec3d> Vec3DoubleDataField;
+    typedef DataPool::DataField<float> FloatDataField;
+
     /**::HIVE DRONE_PROP::*/
     struct FloatVec3Prop : Prop {
 
         CONSTRUCT_PROP(FloatVec3Prop, "PropVec3f");
 
-        DataField<vec3> * data = nullptr;
+        Vec3FloatDataField::PTR data = nullptr;
 
-        FloatVec3Prop() { data = DataField<vec3>::construct(); }
+        FloatVec3Prop() { data = general_data_pool.allocate<vec3>(); }
 
-        ~FloatVec3Prop() { delete data; }
+        ~FloatVec3Prop() {}
         // void removeVertex();
     };
 
@@ -32,11 +35,11 @@ namespace hive
 
         CONSTRUCT_PROP(FloatVec3Prop, "PropVec3d");
 
-        DataField<vec3d> * data = nullptr;
+        Vec3DoubleDataField::PTR data = nullptr;
 
-        DoubleVec3Prop() { data = DataField<vec3d>::construct(); }
+        DoubleVec3Prop() { data = general_data_pool.allocate<vec3d>(); }
 
-        ~DoubleVec3Prop() { delete data; }
+        ~DoubleVec3Prop() {}
         // void removeVertex();
     };
 
@@ -48,19 +51,15 @@ namespace hive
 
         CONSTRUCT_PROP(FloatVec3Prop, "PropFloat");
 
-        DataField<float> * data = nullptr;
+        FloatDataField::PTR data = nullptr;
 
-        FloatProp() : Prop() { data = DataField<float>::construct(); }
+        FloatProp() : Prop() { data = general_data_pool.allocate<float>(); }
 
-        ~FloatProp() { delete data; }
+        ~FloatProp() {}
 
-        void set(float d)
-        {
-            data->field = d;
-            data->update();
-        }
+        void set(float d) { data = d; }
         // void removeVertex();
     };
 
     REGISTER_PROP(FloatProp)
-} // namespace hive
+} // namespace hivetimout

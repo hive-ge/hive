@@ -60,9 +60,17 @@
 
 // -- VULKAN
 #include "include/gpu/vulkan/vulkan_wrap.hpp"
+
 // -- WEBGL
+#ifdef HIVE_USE_WEBGL
 #include "include/gpu/webgl/webgl.hpp"
+#endif
+
 // -- Opengl
+
+#ifdef HIVE_USE_OPENGL
+#include "include/gpu/opengl/gl.hpp"
+#endif
 // -- DirectX
 
 /*

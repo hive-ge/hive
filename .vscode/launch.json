@@ -8,7 +8,7 @@
             "name": "Launch",
             "type": "lldb",
             "request": "launch",
-            "program": "/home/anthony/.nvm/versions/node/v13.11.0/bin/node",
+            "program": "node",
             "cwd": "${workspaceFolder}",
             "args": [
                 "${workspaceFolder}/source/frontend/hive_frontend_entry.cjs"
@@ -18,7 +18,7 @@
             "name": "Memory Test",
             "type": "lldb",
             "request": "launch",
-            "program": "${workspaceFolder}/linux_build/test/memory_test",
+            "program": "${workspaceFolder}/build/test/memory_test",
             "cwd": "${workspaceFolder}",
             "args": [
                 ""
@@ -28,7 +28,27 @@
             "name": "Property Test",
             "type": "lldb",
             "request": "launch",
-            "program": "${workspaceFolder}/linux_build/test/prop_test",
+            "program": "${workspaceFolder}/build/test/prop_test",
+            "cwd": "${workspaceFolder}",
+            "args": [
+                ""
+            ],
+        },
+        {
+            "name": "Threading Test",
+            "type": "lldb",
+            "request": "launch",
+            "program": "${workspaceFolder}/build/test/threading_test",
+            "cwd": "${workspaceFolder}",
+            "args": [
+                ""
+            ],
+        },
+        {
+            "name": "Graphics Test",
+            "type": "lldb",
+            "request": "launch",
+            "program": "${workspaceFolder}/build/test/graphics_test",
             "cwd": "${workspaceFolder}",
             "args": [
                 ""

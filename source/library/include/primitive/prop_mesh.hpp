@@ -2,7 +2,6 @@
 
 #include <vector>
 
-#include "include/primitive/core_drone.hpp"
 #include "include/primitive/core_math.hpp"
 #include "include/primitive/core_prop.hpp"
 
@@ -27,16 +26,18 @@ namespace hive
         GPUMeshData * gpu       = nullptr;
     };
 
+    typedef DataPool::DataField<MeshData> MeshDataField;
+
     /**::HIVE DRONE_PROP::*/
     struct MeshProp : Prop {
 
         CONSTRUCT_PROP(MeshProp, "PropImage");
 
-        MeshData * data = nullptr;
+        MeshDataField::PTR data = nullptr;
 
         MeshProp() : Prop()
         {
-            data         = new MeshData;
+            data         = general_data_pool.allocate<MeshData>();
             data->native = new NativeMeshData;
             data->gpu    = new GPUMeshData;
         }
@@ -45,8 +46,6 @@ namespace hive
         {
             if (data->native) delete data->native;
             if (data->gpu) delete data->gpu;
-
-            delete data;
         }
 
         void addVertex(float X, float Y, float Z, float U, float V);

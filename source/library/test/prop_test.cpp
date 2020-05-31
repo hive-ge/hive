@@ -4,6 +4,8 @@
 
 using namespace hive;
 
+hive::DataPool hive::general_data_pool(4096);
+
 int main(int arg_ct, char ** args)
 {
     // Create pool for drone's and prop's
@@ -63,10 +65,8 @@ int main(int arg_ct, char ** args)
     auto to                  = pool.end<Drone>();
 
     unsigned found = 0;
-    for (auto it = from; it != to; it++) {
-        std::cout << (*it).getIndex() << std::endl;
-        found++;
-    }
+    for (auto it = from; it != to; it++) found++;
+
 
     unsigned long long end = getCPUCycles();
     timeMeasureEndAndReport();

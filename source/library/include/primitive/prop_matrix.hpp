@@ -9,16 +9,18 @@ namespace hive
 {
     using namespace hive::math;
 
+    typedef DataPool::DataField<mat44d> Mat44DoubleDataField;
+
     /**::HIVE DRONE_PROP::*/
     struct DoubleMat44Prop : public Prop {
 
         CONSTRUCT_PROP(DoubleMat44Prop, "PropMat44d");
 
-        mat44d * data = nullptr;
+        Mat44DoubleDataField::PTR data = nullptr;
 
-        DoubleMat44Prop() : Prop() { data = new mat44d; }
+        DoubleMat44Prop() : Prop() { data = general_data_pool.allocate<mat44d>(); }
 
-        ~DoubleMat44Prop() { delete data; }
+        ~DoubleMat44Prop() {}
         // void removeVertex();
     };
 

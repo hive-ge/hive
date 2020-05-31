@@ -6,6 +6,7 @@
 #include "include/primitive/core_math.hpp"
 #include "include/primitive/core_prop.hpp"
 
+
 namespace hive
 {
     using namespace hive::math;

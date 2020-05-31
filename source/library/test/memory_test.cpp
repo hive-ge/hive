@@ -1,7 +1,9 @@
 #include "includes.hpp"
-#include <hive.h>
 
 using namespace hive;
+// Create Global Memory Object.
+hive::DataPool hive::general_data_pool(4096);
+
 
 int main(int arg_ct, char ** args)
 {
@@ -61,6 +63,15 @@ int main(int arg_ct, char ** args)
     ASSERT(pool.getReference(prop_ptr) == prop);
 
     std::cout << hive::Prop::global_id << std::endl;
+
+    // Data Field Memory Allocation
+    auto char_buffer = general_data_pool.allocate<char[512]>();
+
+    auto & d = char_buffer.raw();
+
+    d[0] = 2;
+
+    char_buffer.update();
 
     SUCCESS();
 }

@@ -3,46 +3,14 @@
 #include "include/primitive/core_drone_flag.hpp"
 #include "include/primitive/core_indexed_pointer.hpp"
 #include "include/primitive/core_memory_pool.hpp"
+#include "include/primitive/core_type_information.hpp"
 #include "include/primitive/core_typedef.hpp"
+#include <shared_mutex>
 
 
 namespace hive
 {
 
-
-    constexpr unsigned getDroneDataType(StringHash64 type)
-    {
-        unsigned i = 1;
-        switch (type) {
-        default:
-            return DroneDataPool::DroneDataNullObjectType;
-        case StringHash64("DroneDataChain"):
-            return 1;
-        case StringHash64("Drone"):
-            return 0;
-        case StringHash64("PropGPUProgram"):
-            i++;
-        case StringHash64("PropMat44d"):
-            i++;
-        case StringHash64("PropRender"):
-            i++;
-        case StringHash64("PropVec3f"):
-            i++;
-        case StringHash64("PropVec3d"):
-            i++;
-        case StringHash64("PropFloat"):
-            i++;
-        case StringHash64("PropVec2F"):
-            i++;
-        case StringHash64("PropVec3F"):
-            i++;
-        case StringHash64("PropMesh"):
-            i++;
-        case StringHash64("PropImage"):
-            i++;
-            return i;
-        }
-    }
 
     struct DroneData;
     struct Prop;

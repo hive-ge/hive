@@ -2,8 +2,8 @@
 
 #include <vector>
 
-#include "include/primitive/core_datafield.hpp"
 #include "include/primitive/core_math.hpp"
+#include "include/primitive/core_memory_pool.hpp"
 #include "include/primitive/core_prop.hpp"
 
 namespace hive
@@ -27,6 +27,8 @@ namespace hive
         bool IN_VRAM : 1, IN_RAM;
     };
 
+    typedef DataPool::DataField<ImageData> ImageDataField;
+
     /**::HIVE DRONE_PROP::*/
     struct ImageProp : Prop {
 
@@ -36,9 +38,9 @@ namespace hive
          * Changes this to a dynamic pointer that can point to:
          * GridProp * buffer
          */
-        DataField<ImageData> * data = nullptr;
+        ImageDataField::PTR data = nullptr;
 
-        ImageProp() { data = new DataField<ImageData>(); }
+        ImageProp() { data = general_data_pool.allocate<ImageData>(); }
 
         ~ImageProp() {}
 

@@ -44,33 +44,37 @@ FILE(GLOB_RECURSE INCLUDES
 	"./include/**.hpp"
 ) 
 
+## Use all the *.cpp files we found under this folder for the project
+FILE(GLOB_RECURSE SRCS
+	"./source/boss/**.cpp"
+	"./source/primitive/**.cpp"
+) 
+
 ##########################################
 ##### GPU LIBRARIES
 ##########################################
 
-if(HIVE_USE_DIRECTX)
+if(HIVE_GRAPHICS_API STREQUAL "DirectX")
 	FILE(GLOB_RECURSE GPU_SRC_INC "./gpu/direct3d/**.*" ) 
 endif()
 
+if(HIVE_GRAPHICS_API STREQUAL "Metal")
+endif()
 
-if(HIVE_USE_WEBGL)
 
-	## Use all the *.cpp files we found under this folder for the project
-	FILE(GLOB_RECURSE SRCS
-	"./source/boss/**.cpp"
-	"./source/primitive/**.cpp"
-	"./source/gpu/webgl/**.cpp"
-	) 
+if(HIVE_GRAPHICS_API STREQUAL "WebGL")
 
 	add_definitions(-DHIVE_USE_WEBGL=1)
 #
 	FILE(GLOB_RECURSE GPU_SRC_INC "./source/gpu/webgl/**.*" ) 
+	LIST(APPEND GPU_SRC_INC "./source/gpu/gl/gl.cpp" )
+	LIST(APPEND GPU_SRC_INC "./source/gpu/gl/gl_glfw_interface_boss.cpp")
 	
 endif()
 
 
 
-if(HIVE_USE_VULKAN)
+if(HIVE_GRAPHICS_API STREQUAL "Vulkan")
 
 add_definitions(-DHIVE_USE_VULKAN=1 -DHIVE_USE_GLFW)
 	
@@ -90,12 +94,13 @@ endif()
 
 
 
-if(HIVE_USE_OPENGL)
+if(HIVE_GRAPHICS_API STREQUAL "OpenGL" OR NOT HIVE_GRAPHICS_API)
+
 
 	add_definitions(-DHIVE_USE_OPENGL -DHIVE_USE_GLFW)
 
 	find_package(OpenGL REQUIRED)
-	
+
 	if (OPENGL_FOUND)
 		include_directories(${OPENGL_INCLUDE_DIR})
 		link_libraries(${OPENGL_LIBRARIES})
@@ -112,10 +117,14 @@ if(HIVE_USE_OPENGL)
 
 	INCLUDE_DIRECTORIES("glfw/include")
 
-	FILE(GLOB_RECURSE GPU_SRC_INC "gpu/opengl/**.*" ) 
+	FILE(GLOB_RECURSE GPU_SRC_INC "./source/gpu/opengl/**.*" ) 
 
-	include_directories( "./gpu/opengl")
+	include_directories( "./include/gpu/opengl")
+
+	MESSAGE("USING OPENGL GRAPHICS API")
 endif()
+
+
 
 ##########################################
 ## Add Include Objects

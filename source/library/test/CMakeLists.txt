@@ -21,8 +21,6 @@ FILE(GLOB_RECURSE TEST_UNITS "*.cpp" )
 
  foreach(TEST_PATH IN LISTS TEST_UNITS)
 
-    message(dd: ${TEST_PATH})
-
     string(REGEX REPLACE "([^\\\\/]*[\\\\/])+" "" FILE_NAME_WITH_EXT ${TEST_PATH})
 
     string(REGEX REPLACE "\\..*" "" TEST_NAME ${FILE_NAME_WITH_EXT})

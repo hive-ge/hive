@@ -37,10 +37,10 @@ namespace hive
 
     void ImageProp::setPixel(unsigned x, unsigned y, unsigned r, unsigned g, unsigned b, unsigned a)
     {
-        unsigned width  = data->field.width;
-        unsigned height = data->field.height;
-        unsigned depth  = data->field.depth;
-        auto image_data = data->field.data;
+        unsigned width  = data->width;
+        unsigned height = data->height;
+        unsigned depth  = data->depth;
+        auto image_data = data->data;
 
         const unsigned index = (x + y * width) * 3;
 
@@ -55,10 +55,10 @@ namespace hive
 
     void ImageProp::setSize(unsigned w, unsigned h, unsigned d)
     {
-        auto image_data    = data->field.data;
-        data->field.width  = w;
-        data->field.height = h;
-        data->field.depth  = d;
+        auto image_data = data->data;
+        data->width     = w;
+        data->height    = h;
+        data->depth     = d;
         image_data.resize(w * h * d * 3);
     }
 } // namespace hive

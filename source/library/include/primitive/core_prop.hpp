@@ -3,6 +3,7 @@
 #include "include/primitive/core_drone.hpp"
 #include "include/primitive/core_memory_pool.hpp"
 #include "include/primitive/core_string_hash.hpp"
+#include "include/primitive/core_type_information.hpp"
 #include "include/primitive/core_typedef.hpp"
 
 namespace hive

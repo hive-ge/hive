@@ -1,5 +1,7 @@
 #pragma once
 
+#include <hive.h>
+
 #include <chrono>
 #include <ctime>
 #include <iostream>
@@ -20,7 +22,7 @@
 uint64_t getCPUCycles()
 {
     unsigned int lo, hi;
-    __asm__ __volatile__("rdtsc" : "=a"(lo), "=d"(hi));
+    __asm__ __volatile__("rdtscp" : "=a"(lo), "=d"(hi));
     return ((uint64_t)hi << 32) | lo;
 }
 

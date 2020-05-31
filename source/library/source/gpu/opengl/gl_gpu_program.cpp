@@ -11,7 +11,6 @@ namespace hive
 
         if (shader > 0) { // Must be a non-zero value
 
-
             glShaderSource(shader, 1, &shader_str, &shader_str_length);
 
             glCompileShader(shader);
@@ -178,101 +177,144 @@ namespace hive
 
     ShaderProgramProp::~ShaderProgramProp() {}
 
+    struct ShaderStringPTR {
+        const char * string = nullptr;
+        unsigned size       = 0;
+    };
+
+    struct ShaderStages {
+        ShaderStringPTR vert;
+        ShaderStringPTR frag;
+        ShaderStringPTR geom;
+        ShaderStringPTR eval;
+        ShaderStringPTR tess;
+        ShaderStringPTR comp;
+    };
+
     bool ShaderProgramProp::fromString(const std::string string_data)
     {
 
+        ShaderStages stages = {{nullptr, 0}, {nullptr, 0}, {nullptr, 0},
+                               {nullptr, 0}, {nullptr, 0}, {nullptr, 0}};
 
-        char const *vert = nullptr, *frag = nullptr;
+        ShaderStringPTR * stageptr = &stages.vert;
+
+        constexpr unsigned number_of_shader_stages  = 6;
+        constexpr unsigned shader_stage_flag_length = 8;
+
+        constexpr char stage_names[number_of_shader_stages][shader_stage_flag_length] = {
+            "[vert]\n", "[frag]\n", "[geom]\n", "[eval]\n", "[tess]\n", "[comp]\n"};
 
         char const * string = string_data.data();
 
-        unsigned vert_str_size = 0, frag_str_size = 0, state = 0;
+        int i = 0, current_stage_index = -1, pending_stage_index = -1, parse_name_index = 0,
+            parse_start = 0;
 
-        const char frag_name[8] = "[frag]\n", vert_name[8] = "[vert]\n";
+        bool IS_PARSING_SHADER_STAGE = false;
 
-        for (int i = 0; i < string_data.size(); i++) {
+        while (i < string_data.size()) {
 
-            const char d = string[i];
+            const char d = string[i++];
 
-            switch (state & 0x3) {
+            if (d == '[' && i < string_data.size()) {
 
-            case 0:
-                if (d == '[') state = 1;
-                break;
+                const char c = string[i];
 
-            case 1:
-                if (d == 'f' && frag_str_size == 0)
-                    state = 3 | 8;
-                else if (d == 'v' && frag_str_size == 0)
-                    state = 2 | 8;
-                else
-                    state = 0;
-                break;
-            case 2: {
+                unsigned j = 0;
 
-                const unsigned char char_pos = state >> 2;
+                for (; j < number_of_shader_stages; j++)
+                    if (c == stage_names[j][1]) break;
 
-                if (d == vert_name[char_pos])
-                    state += 4;
-                else
-                    state = 0;
-
-                if (char_pos >= 7) {
-
-                    vert = string + i;
-
-                    state = 0;
-
-                    if (frag != nullptr && frag_str_size == 0)
-                        frag_str_size = ((string + i) - frag) - 7;
+                if (i < number_of_shader_stages) {
+                    pending_stage_index = j;
+                    parse_name_index    = 2;
+                    i++;
+                    continue;
                 }
-            } break;
+            }
 
-            case 3: {
+            if (pending_stage_index > -1) {
+                if (d == stage_names[pending_stage_index][parse_name_index]) {
+                    if (++parse_name_index == shader_stage_flag_length) {
 
-                const unsigned char char_pos = state >> 2;
+                        if (IS_PARSING_SHADER_STAGE)
+                            stageptr[current_stage_index] = {
+                                &string[parse_start], (i - shader_stage_flag_length) - parse_start};
 
-                if (d == frag_name[char_pos])
-                    state += 4;
-                else
-                    state = 0;
-
-                if (char_pos >= 7) {
-
-                    frag = string + i;
-
-                    state = 0;
-
-                    if (vert != nullptr && vert_str_size == 0) {
-                        vert_str_size = (i - (vert - string)) - 7;
+                        IS_PARSING_SHADER_STAGE = true;
+                        parse_start             = i;
+                        current_stage_index     = pending_stage_index;
+                        pending_stage_index     = -1;
+                        continue;
                     }
+                } else {
+                    pending_stage_index = -1;
                 }
-            } break;
             }
         }
 
-        if (vert != nullptr && vert_str_size == 0)
-            vert_str_size = string_data.size() - (vert - string);
+        if (IS_PARSING_SHADER_STAGE)
+            stageptr[current_stage_index] = {&string[parse_start],
+                                             (i - shader_stage_flag_length) - parse_start};
 
-        if (frag != nullptr && frag_str_size == 0)
-            frag_str_size = string_data.size() - (frag - string);
+        if (stages.vert.string || stages.frag.string || stages.geom.string || stages.eval.string ||
+            stages.tess.string || stages.comp.string) {
 
-        if (vert_str_size > 0 && frag_str_size > 0) {
-
-            GLint program = glCreateProgram();
+            GLint program     = glCreateProgram();
+            GLint comp_shader = 0;
+            GLint vert_shader = 0;
+            GLint frag_shader = 0;
+            GLint geom_shader = 0;
+            GLint tess_shader = 0;
+            GLint eval_shader = 0;
 
             if (program > 0) {
 
-                GLint vert_shader =
-                    createShader(vert, vert_str_size, GL_VERTEX_SHADER, "vert shader");
+                if (stages.vert.string) {
+                    vert_shader = createShader(stages.vert.string, stages.vert.size,
+                                               GL_VERTEX_SHADER, "vert shader");
+                    if (!vert_shader) return false;
+                }
 
-                GLint frag_shader =
-                    createShader(frag, frag_str_size, GL_FRAGMENT_SHADER, "frag shader");
+                if (stages.frag.string) {
+                    frag_shader = createShader(stages.frag.string, stages.frag.size,
+                                               GL_FRAGMENT_SHADER, "frag shader");
+                    if (!frag_shader) return false;
+                }
 
-                if (vert_shader > 0 && frag_shader > 0) {
+                if (stages.geom.string) {
+                    geom_shader = createShader(stages.geom.string, stages.geom.size,
+                                               GL_GEOMETRY_SHADER, "geom shader");
+                    if (!geom_shader) return false;
+                }
 
-                    glAttachShader(program, vert_shader);
-                    glAttachShader(program, frag_shader);
+                if (stages.tess.string) {
+                    tess_shader = createShader(stages.tess.string, stages.tess.size,
+                                               GL_TESS_CONTROL_SHADER, "tess shader");
+                    if (!tess_shader) return false;
+                }
+
+                if (stages.eval.string) {
+                    eval_shader = createShader(stages.eval.string, stages.eval.size,
+                                               GL_TESS_EVALUATION_SHADER, "eval shader");
+                    if (!eval_shader) return false;
+                }
+
+                if (stages.comp.string) {
+                    comp_shader = createShader(stages.comp.string, stages.comp.size,
+                                               GL_COMPUTE_SHADER, "comp shader");
+                    if (!comp_shader) return false;
+                }
+
+                if (comp_shader) {
+
+                } else {
+
+                    if (vert_shader) glAttachShader(program, vert_shader);
+                    if (frag_shader) glAttachShader(program, frag_shader);
+                    if (geom_shader) glAttachShader(program, geom_shader);
+                    if (tess_shader) glAttachShader(program, tess_shader);
+                    if (eval_shader) glAttachShader(program, eval_shader);
 
                     // Link our program
                     glLinkProgram(program);
@@ -286,38 +328,29 @@ namespace hive
 
                         glUseProgram(program);
 
-                        glDetachShader(program, vert_shader);
-                        glDetachShader(program, frag_shader);
+                        if (vert_shader) glDetachShader(program, vert_shader);
+                        if (frag_shader) glDetachShader(program, frag_shader);
+                        if (geom_shader) glDetachShader(program, geom_shader);
+                        if (tess_shader) glDetachShader(program, tess_shader);
+                        if (eval_shader) glDetachShader(program, eval_shader);
 
-                        glDeleteShader(vert_shader);
-                        glDeleteShader(frag_shader);
+                        if (vert_shader) glDeleteShader(vert_shader);
+                        if (frag_shader) glDeleteShader(frag_shader);
+                        if (geom_shader) glDeleteShader(geom_shader);
+                        if (tess_shader) glDeleteShader(tess_shader);
+                        if (eval_shader) glDeleteShader(eval_shader);
+
+                        // Possibly output binaries for this shader.
 
                         // Create data
 
-                        //!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-                        //!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-                        //!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-                        //!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-                        //!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-                        //!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-                        //!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
                         // Program Boss should control allocation and release of
                         // ShaderProgramPropData !!!!!!!!!!!!!!
                         // Need check for ability to dedup this.
 
-#warning "Program Boss should control allocation and release of ShaderProgramPropData"
-
                         data = general_data_pool.allocate<ShaderProgramPropData>();
 
                         data->program = program;
-
-                        //!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-                        //!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-                        //!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-                        //!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-                        //!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-                        //!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-                        //!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
                         configureProgramInterfaces(program, data);
 
