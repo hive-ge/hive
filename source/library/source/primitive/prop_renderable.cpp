@@ -11,23 +11,19 @@ namespace hive
 
         if (CAN_RENDER != FLAG) {
 
-
             CAN_RENDER = FLAG;
 
-
             if (FLAG)
-                drone.reinterpret<Drone>()->flags |= DRONE_FLAG_CAN_RENDER;
+                drone->setFlag(DRONE_FLAG_CAN_RENDER | DRONE_FLAG_NEED_RENDER_UPDATE);
             else
-                drone.reinterpret<Drone>()->flags ^= DRONE_FLAG_CAN_RENDER;
-
-            drone.reinterpret<Drone>()->flags |=
-                DRONE_FLAG_NEED_RENDER_UPDATE | DRONE_FLAG_CAN_RENDER;
+                drone->unsetFlag(DRONE_FLAG_CAN_RENDER);
 
             sendMessage("REN_BOSSES_TEST", "U_DRONES");
         }
 
         return CAN_RENDER;
     };
+
 
     bool RenderableProp::ALLOW_RENDER() const { return CAN_RENDER; };
 } // namespace hive

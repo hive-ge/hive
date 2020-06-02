@@ -32,7 +32,7 @@ namespace hive
     /**::HIVE DRONE_PROP::*/
     struct ImageProp : Prop {
 
-        CONSTRUCT_PROP(ImageProp, "image");
+        CONSTRUCT_PROP(ImageProp, image);
 
         /**
          * Changes this to a dynamic pointer that can point to:

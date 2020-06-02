@@ -6,32 +6,48 @@ using namespace hive;
 
 hive::DataPool hive::general_data_pool(4096);
 
-int main(int arg_ct, char ** args)
+#include <atomic>
+#include <cassert>
+#include <iostream>
+#include <thread>
+#include <vector>
+std::vector<int> data;
+std::atomic<int> flag = {0};
+
+void thread_1()
+{
+    while (flag.load(std::memory_order_acquire) == 2)
+        ;
+    // ata.push_back(42);
+    flag.store(1, std::memory_order_release);
+    std::cout << "1 done" << std::endl;
+}
+
+void thread_2()
 {
 
-    // Create pool for drone's and prop's
-    hive::DroneDataPool pool(120);
+    int expected = 2;
+    // data.push_back(43);
+    while (!flag.compare_exchange_strong(expected, 3, std::memory_order_release)) {
+        expected = 2;
+    }
+    std::cout << "2 done" << std::endl;
+}
 
-    Drone::Ref drone                = pool.createObjectReturnRef<Drone>();
-    ImageProp::Ref prop             = pool.createObjectReturnRef<ImageProp>();
-    RenderableProp::Ref render_prop = pool.createObjectReturnRef<RenderableProp>();
-    ImageProp::Ref prop3            = pool.createObjectReturnRef<ImageProp>();
-    Drone::Ref drone2               = pool.createObjectReturnRef<Drone>();
-    Drone::Ref drone3               = pool.createObjectReturnRef<Drone>();
-    Drone::Ref drone4               = pool.createObjectReturnRef<Drone>();
-    Drone::Ref drone5               = pool.createObjectReturnRef<Drone>();
-    Drone::Ref drone6               = pool.createObjectReturnRef<Drone>();
-    Drone::Ref drone7               = pool.createObjectReturnRef<Drone>();
-    Drone::Ref drone8               = pool.createObjectReturnRef<Drone>();
-    Drone::Ref drone9               = pool.createObjectReturnRef<Drone>();
-    Drone::Ref drone10              = pool.createObjectReturnRef<Drone>();
-    Drone::Ref drone11              = pool.createObjectReturnRef<Drone>();
-    Drone::Ref drone12              = pool.createObjectReturnRef<Drone>();
+void thread_3()
+{
+    while (flag.load(std::memory_order_acquire) != 1)
+        ;
+    assert(42 == 43); // will never fire
+    std::cout << "3 done" << std::endl;
+}
 
-    RenderableProp::Ref render_prop3 = pool.createObjectReturnRef<RenderableProp>();
-
-    // Access Same drone data at the same time.
-
-
-    SUCCESS();
+int main()
+{
+    std::thread b(thread_2);
+    std::thread a(thread_1);
+    std::thread c(thread_3);
+    a.join();
+    b.join();
+    c.join();
 }

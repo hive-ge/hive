@@ -14,7 +14,7 @@ namespace hive
     /**::HIVE DRONE_PROP::*/
     struct DoubleMat44Prop : public Prop {
 
-        CONSTRUCT_PROP(DoubleMat44Prop, "mat44d");
+        CONSTRUCT_PROP(DoubleMat44Prop, mat44d);
 
         Mat44DoubleDataField::PTR data = nullptr;
 

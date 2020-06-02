@@ -18,29 +18,11 @@ namespace hive
 
     void Drone::connect(DroneDataHandle prop)
     {
+        auto ref = DroneDataPool::getReference(this);
 
-        // TODO: Should lock drone for threading?
-        DroneDataPool pool;
-
-
-        if (prop) {
-
-
-            if (props == DroneDataHandle::UNDEFINED) {
-                props = prop;
-            } else {
-                Prop::Reference current = props;
-
-                while (current.reinterpret<Prop>()->next != DroneDataHandle::UNDEFINED)
-                    current = current.reinterpret<Prop>()->next;
-
-                current->next = prop;
-            }
-
+        if (DroneDataPool::appendRefToEndOfChain(ref, prop)) {
+            prop.reinterpret<Prop>()->drone = ref;
             cache += prop.getType();
-
-        } else {
-            HIVE_DEBUG_WARN("Attempt to connect drone to undefined prop.");
         }
     };
 
@@ -51,19 +33,18 @@ namespace hive
 
     DroneDataHandle Drone::getProp(StringHash64 tag)
     {
-        if (props) {
 
-            DroneDataHandle prop = props, root = prop;
+        auto prop = DroneDataPool::getReference(this);
 
-            while (prop && !prop.is<Drone>()) {
+        while (prop) {
 
-                Prop::Ref ref = prop;
+            if (DroneDataPool::getImplementationData(prop) == tag) return prop;
 
-                if (ref->tag == tag) return ref;
-
-                prop = ref->next;
-            }
+            prop = DroneDataPool::getNextRef(prop);
         }
+
         return DroneDataHandle();
     }
+
+    DronePropLU Drone::getCache() { return cache; }
 } // namespace hive

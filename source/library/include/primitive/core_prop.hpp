@@ -7,32 +7,40 @@
 namespace hive
 {
 #define CONSTRUCT_PROP(prop, prop_id)                                                              \
-    static const ushort DroneDataType       = getDroneDataType(prop_id);                           \
-    static constexpr StringHash64 global_id = StringHash64(prop_id);                               \
-    static prop * construct() { return DroneDataPool::createObject<prop>(); }                      \
-    ADD_DRONE_DATA_REFERENCES(prop)
+  public:                                                                                          \
+    ADD_DRONE_DATA_REFERENCES(prop)                                                                \
+    static const ushort DroneDataType       = getDroneDataType(#prop_id);                          \
+    static constexpr StringHash64 global_id = StringHash64(#prop_id);                              \
+    static prop * construct()                                                                      \
+    {                                                                                              \
+        auto [ptr, i] = DroneDataPool::createObject<prop>();                                       \
+        return ptr;                                                                                \
+    }
 
 
 #define REGISTER_PROP(prop)                                                                        \
     static_assert(sizeof(prop) <= DroneDataPool::DroneDataStructSize,                              \
-                  "##prop size is greater than the pool allocation unit size");                    \
+                  "Property structure size is too large");                                         \
     static_assert(prop::DroneDataType != getDroneDataType("PropRoot"),                             \
-                  "Prop DroneDataType is not defined.");
+                  "Prop DroneDataType is not defined");
 
 
     /**::HIVE DRONE_PROP::*/
     struct Prop {
-        friend Boss;
+        friend DroneDataPool;
+
+      private:
+        const DroneDataHandle_<DroneDataPool, Prop> ref;
+        StringHash64 tag = 0;
 
       public:
-        CONSTRUCT_PROP(Prop, "PropRoot")
+        // Pool specific values
 
-        DroneDataHandle next  = 0;
-        StringHash64 tag      = 0;
-        DroneDataHandle drone = 0;
+        CONSTRUCT_PROP(Prop, PropRoot)
 
-      protected:
-        // char type = DroneDataType
+
+      public:
+        Drone::Ref drone = 0;
 
       public:
         Prop() {}
@@ -59,12 +67,13 @@ namespace hive
 
         inline std::string getTag() { return (std::string)tag; }
 
-        inline void setTag(std::string string) { tag = string; /*onTagChange();*/ }
+        inline void setTag(std::string string) { tag = string; }
 
         // virtual void onTagChange(DronePointer drone) {}
     };
 
-    static_assert(offsetof(Prop, next) == 0, "Prop next is not at root of Prop structure.");
+    constexpr size_t full_probe = sizeof(Prop);
+    // static_assert(offsetof(Prop, next) == 0, "Prop next is not at root of Prop structure.");
     static_assert(sizeof(Prop) <= DroneDataPool::DroneDataStructSize,
                   "Prop size is greater than the pool allocation unit size");
 } // namespace hive

@@ -11,9 +11,8 @@
 
 #define ASSERT(expression)                                                                         \
     if (!(expression)) {                                                                           \
-        std::cout << "Test failed at line::" << __LINE__                                            \ 
-                  << " with expression:["                                                          \
-                  << #expression << "]" << std::endl;                                              \
+        std::cout << "Test failed at line::" << __LINE__ << " with expression:[" << #expression    \
+                  << "]" << std::endl;                                                             \
         throw(-1);                                                                                 \
     }
 
@@ -37,5 +36,5 @@ void timeMeasureEndAndReport()
     std::chrono::duration<double> time_span =
         std::chrono::duration_cast<std::chrono::duration<double>>(t2 - t1);
 
-    std::cout << "time: " << time_span.count() * 1000.0 * 1000.0 << "ns." << std::endl;
+    std::cout << "time: " << time_span.count() * 1000.0 * 1000.0 << "μs." << std::endl;
 }

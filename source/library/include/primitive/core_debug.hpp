@@ -4,7 +4,7 @@
 
 #pragma once
 
-#include "include/primitive/core_type_information.hpp"
+#include "include/primitive/core_string_hash.hpp"
 #include <iostream>
 #include <string>
 
@@ -12,8 +12,6 @@
 #ifndef NDEBUG
 #define HIVE_DEBUG true
 #endif
-
-#define HIVE_FATAL_ERROR 1u
 
 #ifdef HIVE_DEBUG
 #define DEBUG_META(data) data;
@@ -69,12 +67,36 @@ namespace hive
  *
  */
 #ifdef HIVE_DEBUG
-#define HIVE_DEBUG_WARN(message)                                                                   \
-    {                                                                                              \
-        print message;                                                                             \
-    }
+
+#ifdef HIVE_DEBUG_NO_WARN
+#define HIVE_DEBUG_WARN(...)
 #else
-#define HIVE_DEBUG_WARN(message)
+#define HIVE_DEBUG_WARN(...)                                                                       \
+    {                                                                                              \
+        print __VA_ARGS__;                                                                         \
+    }
+#endif
+
+#define HIVE_DEBUG_MESSAGE(...)                                                                    \
+    {                                                                                              \
+        print __VA_ARGS__;                                                                         \
+    }
+
+#define HIVE_FATAL_ERROR(...)                                                                      \
+    {                                                                                              \
+        print __VA_ARGS__;                                                                         \
+        throw 0;                                                                                   \
+    }
+
+#define STR(...) (#__VA_ARGS__)
+
+#define HIVE_STATIC_WARN(string_arg) print #string_arg;
+
+#else
+#define HIVE_DEBUG_WARN(...)
+#define HIVE_FATAL_ERROR(...)
+#define HIVE_STATIC_WARN(string_arg)
+#define HIVE_DEBUG_MESSAGE(...)
 #endif
 
 

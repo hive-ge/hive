@@ -14,8 +14,6 @@ std::vector<Drone *> hive::Boss::drones;
 
 Boss::Boss(const unsigned _id) : id(_id)
 {
-    auto this_id = std::this_thread::get_id();
-
     Boss::bosses.push_back((Boss *)this);
 
     std::cout << (unsigned long long)this << std::endl;
@@ -96,7 +94,7 @@ Drone * BigBadBoss::createDrone()
 {
     DroneDataPool pool;
 
-    Drone * drone = pool.createObject<Drone>();
+    auto [drone, i] = pool.createObject<Drone>();
 
     return drone;
 }

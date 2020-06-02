@@ -198,7 +198,6 @@ namespace hive
                     friend std::ostream & operator<<(std::ostream & os,
                                                      const ControllerStateReader & r)
                     {
-                        const auto & ctrl = r.controller;
                         os << "{ \"axes\":[ ";
                         for (int i = 0; i < r.getMaxAxis(); i++) {
                             os << r.getAxis((AxisName)i);

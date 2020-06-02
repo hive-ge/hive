@@ -3,6 +3,10 @@
 #include <cstring>
 #include <vector>
 
+#include <GL/glew.h>
+/* intentional */
+#include <GL/gl.h>
+
 namespace hive
 {
 
@@ -60,26 +64,29 @@ namespace hive
         auto from = DroneDataPool::begin<Drone>();
         auto to   = DroneDataPool::end<Drone>();
         // Check the drones for update render settings.
+
+        // Need drones that at least have have -> Render + Program
+
         for (auto it = from; it != to; it++) {
 
             Drone::Ref drone = *it;
 
             // Candidate for threading using a work queueing system.
 
-            if (drone->flags != DRONE_FLAG_NEED_RENDER_UPDATE) continue;
+            if (drone->flag != DRONE_FLAG_NEED_RENDER_UPDATE) continue;
 
-            drone->flags ^= DRONE_FLAG_NEED_RENDER_UPDATE;
+            drone->flag = DRONE_FLAG_NEED_RENDER_UPDATE;
 
-            if (drone->flags == DRONE_FLAG_CAN_RENDER) {
+            if (drone->flag == DRONE_FLAG_CAN_RENDER) {
 
-                Prop::Ref prop = (drone->props);
+                Prop::Ref prop = DroneDataPool::getNextRef(drone);
 
                 MeshProp::Ref mesh             = 0;
                 ShaderProgramProp::Ref program = 0;
                 std::vector<ImageProp::Ref> images;
                 std::vector<FloatProp::Ref> floats;
 
-                while (prop != DroneDataHandle::UNDEFINED) {
+                while (prop) {
 
                     if (prop.is<ShaderProgramProp>()) program = prop;
 
@@ -89,7 +96,7 @@ namespace hive
 
                     if (prop.is<FloatProp>()) floats.push_back(prop);
 
-                    prop = prop->next;
+                    prop = DroneDataPool::getNextRef(prop);
                 }
 
                 if (mesh && program && mesh->data) {
@@ -149,8 +156,6 @@ namespace hive
 
                         for (auto texture_artifact : textures) {
 
-                            print * texture_artifact;
-
                             StringHash64 name = texture_artifact->name_hash;
 
                             for (auto image : images) {
@@ -186,8 +191,6 @@ namespace hive
                             StringHash64 name = uniform_artifact->name_hash;
 
                             for (auto _float : floats) {
-
-                                print * uniform_artifact;
 
                                 if (_float->getTagHash() == name) {
                                     // Make sure the texture is uploaded to the GPU.
@@ -234,12 +237,6 @@ namespace hive
                     char * buffer = new char[buffer_size];
 
                     const NativeMeshData & mesh_data = *(mesh->data->native);
-
-                    print mesh_data.verts[0], mesh_data.verts[1], mesh_data.verts[2],
-                        mesh_data.verts[3];
-
-
-                    print mesh_data.faces[0], mesh_data.faces[1];
 
                     // Fill the buffer up - Move this to mesh fill function.
                     for (int i = 0, j = 0; i < element_count; i += 1) {

@@ -33,7 +33,7 @@ namespace hive
     /**::HIVE DRONE_PROP::*/
     struct FloatVec3Prop : Prop {
 
-        CONSTRUCT_PROP(FloatVec3Prop, "vec3");
+        CONSTRUCT_PROP(FloatVec3Prop, vec3);
 
         Vec3FloatDataField::PTR data = nullptr;
 
@@ -48,7 +48,7 @@ namespace hive
     /**::HIVE DRONE_PROP::*/
     struct DoubleVec3Prop : Prop {
 
-        CONSTRUCT_PROP(FloatVec3Prop, "vec3d");
+        CONSTRUCT_PROP(FloatVec3Prop, vec3d);
 
         Vec3DoubleDataField::PTR data = nullptr;
 
@@ -64,7 +64,7 @@ namespace hive
     /**::HIVE DRONE_PROP::*/
     struct FloatProp : Prop {
 
-        CONSTRUCT_PROP(FloatVec3Prop, "float32");
+        CONSTRUCT_PROP(FloatVec3Prop, float32);
 
         FloatDataField::PTR data = nullptr;
 
@@ -76,13 +76,14 @@ namespace hive
         // void removeVertex();
     };
 
+
     REGISTER_PROP(FloatProp)
 
 
     /**::HIVE DRONE_PROP::*/
     struct Float64Prop : Prop {
 
-        CONSTRUCT_PROP(Float64Prop, "float64");
+        CONSTRUCT_PROP(Float64Prop, float64);
 
         Float64DataField::PTR data = nullptr;
 
@@ -94,12 +95,13 @@ namespace hive
         // void removeVertex();
     };
 
+    constexpr unsigned d = sizeof(Float64Prop);
     REGISTER_PROP(Float64Prop)
 
     /**::HIVE DRONE_PROP::*/
     struct Int32Prop : Prop {
 
-        CONSTRUCT_PROP(Int32Prop, "int32");
+        CONSTRUCT_PROP(Int32Prop, int32);
 
         Int32DataField::PTR data = nullptr;
 
@@ -116,7 +118,7 @@ namespace hive
     /**::HIVE DRONE_PROP::*/
     struct Int64Prop : Prop {
 
-        CONSTRUCT_PROP(Int64Prop, "int64");
+        CONSTRUCT_PROP(Int64Prop, int64);
 
         Int64DataField::PTR data = nullptr;
 
@@ -133,7 +135,7 @@ namespace hive
     /**::HIVE DRONE_PROP::*/
     struct Uint32Prop : Prop {
 
-        CONSTRUCT_PROP(Uint32Prop, "uint32");
+        CONSTRUCT_PROP(Uint32Prop, uint32);
 
         Uint32DataField::PTR data = nullptr;
 
@@ -150,7 +152,7 @@ namespace hive
     /**::HIVE DRONE_PROP::*/
     struct Uint64Prop : Prop {
 
-        CONSTRUCT_PROP(Uint64Prop, "uint64");
+        CONSTRUCT_PROP(Uint64Prop, uint64);
 
         Uint64DataField::PTR data = nullptr;
 

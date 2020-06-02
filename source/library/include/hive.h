@@ -3,8 +3,6 @@
 #ifndef HIVE_HEADER_H
 #define HIVE_HEADER_H
 
-#define HIVE_DEBUG
-
 #define HIVE_MAJOR_VERSION 0
 #define HIVE_MINOR_VERSION 1
 #define HIVE_PATCH_VERSION 2

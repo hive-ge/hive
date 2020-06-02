@@ -20,6 +20,8 @@ namespace hive
     constexpr unsigned MEM_MAX_ELEMENT_TYPE_COUNT =
         (MEM_TYPE_MASK >> MEM_MAX_ELEMENT_BIT_COUNT) + 1u;
 
+#define DroneDataByteSize 16
+
     // Specific type information for a data chain element.
     constexpr unsigned MEM_BARE_PROP_TYPE  = 3;
     constexpr unsigned MEM_DRONE_TYPE      = 1;
@@ -69,9 +71,8 @@ namespace hive
          * Properties
          ****************************************/
         default: // For static assertion to check that there are enough bits allocated in a
-                 // DroneDataHandle for type information
-            i++;
-
+            return MEM_MAX_ELEMENT_TYPE_COUNT - 1;
+            // DroneDataHandle for type information
             // Complex Systems
             SetPropIndexLookup(mesh);
             SetPropIndexLookup(image);
@@ -112,6 +113,7 @@ namespace hive
     }
 
 #define setDroneLUStaticBITFlag(prop) prop = 1 << getDroneDataType(#prop)
+#define setDroneTypeEnumEntry(prop) prop = getDroneDataType(#prop)
 
     struct DronePropLU {
         enum : hive_ull {
@@ -144,7 +146,41 @@ namespace hive
             setDroneLUStaticBITFlag(tag)
         };
 
-        hive_ull flag;
+
+        enum class PropType : unsigned char {
+            setDroneTypeEnumEntry(material),
+            setDroneTypeEnumEntry(mesh),
+            setDroneTypeEnumEntry(grid),
+            setDroneTypeEnumEntry(image),
+            setDroneTypeEnumEntry(script),
+            setDroneTypeEnumEntry(gpu_program),
+            setDroneTypeEnumEntry(parent),
+            setDroneTypeEnumEntry(animation),
+            setDroneTypeEnumEntry(audio),
+            setDroneTypeEnumEntry(mat44d),
+            setDroneTypeEnumEntry(mat44),
+            setDroneTypeEnumEntry(mat33d),
+            setDroneTypeEnumEntry(mat33),
+            setDroneTypeEnumEntry(quat),
+            setDroneTypeEnumEntry(quatd),
+            setDroneTypeEnumEntry(vec3d),
+            setDroneTypeEnumEntry(vec3),
+            setDroneTypeEnumEntry(vec2d),
+            setDroneTypeEnumEntry(vec2),
+            setDroneTypeEnumEntry(float32),
+            setDroneTypeEnumEntry(float64),
+            setDroneTypeEnumEntry(int32),
+            setDroneTypeEnumEntry(uint32),
+            setDroneTypeEnumEntry(int64),
+            setDroneTypeEnumEntry(uint64),
+            setDroneTypeEnumEntry(render),
+            setDroneTypeEnumEntry(tag)
+        };
+
+        union {
+            hive_ull flag;
+            PropType DroneType;
+        };
 
         constexpr DronePropLU() : DronePropLU((unsigned int)0) {}
 
@@ -199,11 +235,13 @@ namespace hive
 
         constexpr bool operator!=(const unsigned val) const { return flag != 1ull << val; }
 
-        constexpr bool operator==(const DronePropLU & other) const { return other.flag == flag; }
+        constexpr bool operator==(const DronePropLU & other) const { return  (flag & other.flag) == other.flag; }
 
-        constexpr bool operator!=(const DronePropLU & other) const { return other.flag != flag; }
+        constexpr bool operator!=(const DronePropLU & other) const { return !(*this == other); }
 
         constexpr operator bool() const { return flag != 0ull; }
+
+        constexpr operator hive_ull() const { return flag; }
     };
 
     static_assert(getDroneDataType("DEFAULT_VALUE_MAX") < MEM_MAX_ELEMENT_TYPE_COUNT,

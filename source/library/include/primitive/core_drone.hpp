@@ -23,6 +23,7 @@ namespace hive
 
     /**::HIVE DRONE_PROP::*/
     struct Drone {
+        friend DroneDataPool;
 
         ADD_DRONE_DATA_REFERENCES(Drone)
 
@@ -38,28 +39,17 @@ namespace hive
           4 Needs
           3 Has Parent
         */
-      public:
-        /**
-         * Linked list of attached props.
-         */
-        DroneDataHandle props = 0;
+      private:
+        const DroneDataHandle_<DroneDataPool, Drone> ref;
+        DronePropLU cache;
 
+      public:
         /**
          * Linked list of observerables.
          */
         DroneDataHandle observation_chain = 0;
 
-        /**
-         * Set of flags to indicate different states of the Drone.
-         *
-         * Possibly unecessary in light of the cache property???
-         */
-        DroneFlag flags;
-
-        /**
-         * Flags indicating what prop types are attached to the drone.
-         */
-        DronePropLU cache;
+        DroneFlag flag;
 
       public:
         static Drone * construct();
@@ -72,9 +62,26 @@ namespace hive
         void disconnect(DroneDataHandle prop);
 
         DroneDataHandle getProp(StringHash64 tag);
-    };
 
-    static_assert(offsetof(Drone, props) == 0, "Props reference is not at root of Drone");
+        DronePropLU getCache();
+
+        const Ref getRef() { return DroneDataPool::getReference(this); }
+
+        bool hasProp(const DronePropLU & lu) { return cache == lu; };
+
+        template <drone_flag_primitive i> void setFlag(const DroneFlagTemplate<i> & new_flag)
+        {
+            flag += new_flag;
+        };
+
+        template <drone_flag_primitive i> void unsetFlag(const DroneFlagTemplate<i> & new_flag)
+        {
+            flag -= new_flag;
+        };
+
+
+        const DroneFlag getFlag(const DroneFlag & new_flag) { return flag; };
+    };
 
     static_assert(sizeof(Drone) <= DroneDataPool::DroneDataStructSize,
                   "Prop size is greater than the pool allocation unit size");

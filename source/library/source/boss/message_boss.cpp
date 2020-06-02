@@ -1,5 +1,3 @@
-#pragma once
-
 #include "include/hive.h"
 
 namespace hive

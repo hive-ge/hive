@@ -3,7 +3,6 @@
 #include <vector>
 
 #include "include/primitive/core_math.hpp"
-
 #include "include/primitive/core_prop.hpp"
 
 namespace hive
@@ -13,7 +12,7 @@ namespace hive
 
     struct GridProp : Prop {
 
-        CONSTRUCT_PROP(GridProp, "grid");
+        CONSTRUCT_PROP(GridProp, grid);
 
         ~GridProp() {}
 

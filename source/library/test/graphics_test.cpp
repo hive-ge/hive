@@ -62,8 +62,8 @@ int main(int arg_ct, char ** args)
     shader->fromString(shader_string);
 
     RenderableProp::Ref renderable = pool.createObjectReturnRef<RenderableProp>();
-    renderable->SET_RENDER_STATE(true);
     drone->connect(renderable);
+    renderable->SET_RENDER_STATE(true);
 
     MeshProp::Ref mesh_prop = pool.createObjectReturnRef<MeshProp>();
     mesh_prop->addVertex(1, .5, 0, 1.0, 1.0);

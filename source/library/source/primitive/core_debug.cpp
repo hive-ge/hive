@@ -17,7 +17,7 @@ namespace hive
 
         std::cout << "0x" << error_number << " : " << message << std::endl;
 
-        if (error_number & HIVE_FATAL_ERROR) throw - 1;
+        HIVE_FATAL_ERROR(message);
 
         return 0;
     };
@@ -29,7 +29,7 @@ namespace hive
         std::cout << "0x" << error_number << " : " << message << " " << filename << ":"
                   << line_number << std::endl;
 
-        if (error_number & HIVE_FATAL_ERROR) throw - 1;
+        HIVE_FATAL_ERROR(message);
 
         return 0;
     };

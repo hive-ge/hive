@@ -1,19 +1,17 @@
 #include "include/hive.h"
 
-
-//#include "gpu/opengl/gl.hpp"
-
 #define GLFW_INCLUDE_NONE
 
 //#endif
+#include <GL/glew.h>
+/* intentional */
+#include <GL/gl.h>
 
 #include <GLFW/glfw3.h>
 
 #include <iostream>
 
 #include <vector>
-
-//#ifdef HIVE_USE_OPENGLFW
 
 #define makePressCase(KEY_NAME)                                                                    \
     case GLFW_KEY_##KEY_NAME:                                                                      \
@@ -389,6 +387,7 @@ namespace hive
         {
 
             if (window != nullptr) {
+
                 glfwDestroyWindow(window);
 
                 glfwTerminate();
@@ -470,19 +469,23 @@ namespace hive
                 glfwMakeContextCurrent(window);
 
                 // Initialize glew
-                std::cout << "Intializing GLEW" << std::endl;
+                HIVE_DEBUG_MESSAGE("Intializing GLEW");
 
                 GLenum err = glewInit();
 
                 if (GLEW_OK != err) {
                     /* Problem: glewInit failed, something is seriously wrong. */
-                    std::cout << glewGetErrorString(err) << std::endl;
+
+                    HIVE_DEBUG_WARN(glewGetErrorString(err));
+
                     glfwTerminate();
+
                     fatalError();
+
                     return;
                 }
 
-                std::cout << "Created GL Context" << std::endl;
+                HIVE_DEBUG_MESSAGE("Created GL Context");
 
                 glfwSwapInterval(0);
 

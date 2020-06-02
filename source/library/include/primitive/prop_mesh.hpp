@@ -31,7 +31,7 @@ namespace hive
     /**::HIVE DRONE_PROP::*/
     struct MeshProp : Prop {
 
-        CONSTRUCT_PROP(MeshProp, "mesh");
+        CONSTRUCT_PROP(MeshProp, mesh);
 
         MeshDataField::PTR data = nullptr;
 
@@ -64,6 +64,7 @@ namespace hive
 
         unsigned numberOfVertices() const { return data->native->verts.size(); }
     };
+
 
     REGISTER_PROP(MeshProp);
 } // namespace hive

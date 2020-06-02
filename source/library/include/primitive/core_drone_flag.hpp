@@ -24,15 +24,14 @@ namespace hive
         DroneFlagTemplate() {}
 
         template <drone_flag_primitive i>
-        DroneFlagTemplate & operator|=(const DroneFlagTemplate<i> & other)
+        DroneFlagTemplate & operator+=(const DroneFlagTemplate<i> & other)
         {
-            std::cout << "TESTING: " << other.flag << std::endl;
             flag |= other.flag;
             return *this;
         }
 
         template <drone_flag_primitive i>
-        DroneFlagTemplate & operator^=(const DroneFlagTemplate<i> & other)
+        DroneFlagTemplate & operator-=(const DroneFlagTemplate<i> & other)
         {
             flag &= ~other.flag;
             return *this;

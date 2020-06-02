@@ -16,10 +16,21 @@ namespace hive
 
     /**::HIVE DRONE_PROP::*/
     struct RenderableProp : Prop {
-        CONSTRUCT_PROP(RenderableProp, "render");
+        CONSTRUCT_PROP(RenderableProp, render);
 
       private:
         bool CAN_RENDER = false;
+
+        /**
+         * The render group this object belongs to;
+         */
+        unsigned short group = 0;
+
+        /**
+         * The render pass order this object belongs to;
+         */
+        unsigned short order = 0;
+
 
       public:
         RenderableProp() : Prop() {}

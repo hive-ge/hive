@@ -1,6 +1,6 @@
 #pragma once
 
-#include "include/primitive/core_error.hpp"
+#include "include/primitive/core_debug.hpp"
 #include "include/primitive/core_string_hash.hpp"
 #include "include/primitive/core_type_information.hpp"
 #include <atomic>
@@ -21,7 +21,7 @@ namespace hive
 
     template <class Allocator, class Type = void *> struct DroneDataHandle_ {
 
-        enum vTYPE : unsigned { UNDEFINED = 0 };
+        enum vTYPE : unsigned { INVALID_REF = 0 };
 
         /**
          * Type information stored in high 8 bits.
@@ -36,6 +36,7 @@ namespace hive
       public:
         static inline unsigned getIndexTypeCombo(unsigned index, unsigned type)
         {
+
             return (type << MEM_MAX_ELEMENT_BIT_COUNT) | index;
         }
 
@@ -44,6 +45,7 @@ namespace hive
         inline unsigned getType() const { return index_type >> MEM_MAX_ELEMENT_BIT_COUNT; }
 
         inline unsigned getID() const { return unique_id; }
+
         /**
          * ind : The index location in the ObjectBuffer for this object.
          * type : Type of object this handle references
@@ -61,6 +63,12 @@ namespace hive
         template <class T>
         DroneDataHandle_(const DroneDataHandle_<Allocator, T> & hndl)
             : DroneDataHandle_(hndl.getIndex(), hndl.getType(), hndl.getID())
+        {
+        }
+
+        template <class T>
+        DroneDataHandle_(const DroneDataHandle_<Allocator, T> & hndl, unsigned new_index)
+            : DroneDataHandle_(new_index, hndl.getType(), hndl.getID())
         {
         }
 
@@ -101,7 +109,7 @@ namespace hive
             return (index_type | unique_id) != t;
         }
 
-        explicit operator bool() { return (index_type | unique_id) != DroneDataHandle_::UNDEFINED; }
+        explicit operator bool() { return (index_type) != DroneDataHandle_::INVALID_REF; }
 
         Type & operator*() const { return *ptr(); }
 
@@ -125,7 +133,7 @@ namespace hive
 
         Type * operator->() { return ptr(); }
 
-        Type * ptr() { return static_cast<Type *>(Allocator::retrieveIndexedPointer(getIndex())); }
+        Type * ptr() { return static_cast<Type *>(Allocator::retrieveIndexedPointer(*this)); }
 
         template <class T> DroneDataHandle_<Allocator, T> reinterpret()
         {
@@ -155,43 +163,55 @@ namespace hive
      */
     template <const int object_size> struct ObjectMemPool {
 
-        constexpr static unsigned DroneDataStructSize     = object_size;
+        constexpr static unsigned DroneDataStructSize     = object_size + 16;
         constexpr static unsigned DroneDataNullObjectType = 0xFF;
         typedef DroneDataHandle_<ObjectMemPool<object_size>> ObjectPointer;
 
-        static void * min_object_location;
-        static void * max_object_location;
-        static unsigned offset_alignment;
+        static inline void * min_object_location = nullptr;
+        static inline void * max_object_location = nullptr;
+
 
       private:
-        typedef ObjectPointer lu_element;
+        struct AdvancedHeader {
+            ObjectPointer ptr;
+            // This will contain either a ref to the drone if the type is in the PROP group, or
+            // advanced flags if the type is a DRONE,
+            u_ull implementation_data;
+            u_ull structure_data_A;
+            u_ull structure_data_B;
+        };
+
+        static_assert(sizeof(AdvancedHeader) == DroneDataStructSize,
+                      "Pool slot and DataStructure missmatch");
+
+        typedef ObjectPointer ObjectPoolHeader;
+
 
         // TABLE FOR STORING Object Pool data
-        static struct Data {
+        static inline struct Data {
             unsigned element_count;
             unsigned byte_size;
             unsigned next_free;
             unsigned current_uuid;
-            ObjectPointer * LU;
-            char * pool;
-        } * data;
+            AdvancedHeader * Pool;
+        } * data = nullptr;
 
       public:
         template <class T> class iterator
         {
             unsigned index         = 0;
             unsigned element_count = data->element_count;
-            ObjectPointer * LU     = data->LU;
+            AdvancedHeader * Pool  = data->Pool;
 
 
           public:
-            iterator(int index) : index(index) {}
-            iterator() : index(0) {}
+            iterator(int index) : index(index) { (*this)++; }
+            iterator() : index(0) { (*this)++; }
 
             iterator & operator++()
             {
                 while (index++ < element_count) {
-                    if (LU[index].template is<T>()) return *this;
+                    if (Pool[index].ptr.template is<T>()) return *this;
                 }
 
                 index = element_count;
@@ -202,7 +222,12 @@ namespace hive
             iterator operator++(int)
             {
                 while (index++ < element_count) {
-                    if (LU[index].template is<T>()) return *this;
+
+
+                    unsigned type =
+                        (*reinterpret_cast<unsigned *>(Pool + index)) >> MEM_MAX_ELEMENT_BIT_COUNT;
+
+                    if (type == T::DroneDataType) return *this;
                 }
 
                 index = element_count;
@@ -212,7 +237,7 @@ namespace hive
 
             bool operator==(iterator other) const { return (index == other.index); }
             bool operator!=(iterator other) const { return !(index == other.index); }
-            ObjectPointer operator*() { return data->LU[index]; }
+            ObjectPointer operator*() { return ObjectPointer(data->Pool[index].ptr, index); }
             // iterator traits
             using difference_type   = long;
             using value_type        = ObjectPointer;
@@ -235,8 +260,7 @@ namespace hive
         {
             if (!data && element_amount < MEM_MAX_ELEMENT_SIZE) {
 
-                const unsigned construct_size =
-                    sizeof(Data) + element_amount + element_amount * object_size;
+                const unsigned construct_size = sizeof(Data) + element_amount * DroneDataStructSize;
 
                 data = static_cast<Data *>(LargeBlockAllocator::allocate(construct_size));
 
@@ -249,38 +273,32 @@ namespace hive
                 Data & data_ref        = *data;
                 data_ref.element_count = element_amount;
                 data_ref.byte_size     = construct_size;
-                data_ref.next_free     = 0;
+                data_ref.next_free     = 1;
                 data_ref.current_uuid  = 0;
-                data_ref.LU   = reinterpret_cast<ObjectPointer *>(reinterpret_cast<char *>(data) +
-                                                                sizeof(Data));
-                data_ref.pool = reinterpret_cast<char *>(data) + sizeof(Data) +
-                                sizeof(lu_element) * element_amount;
+                data_ref.Pool = reinterpret_cast<AdvancedHeader *>(reinterpret_cast<char *>(data) +
+                                                                   sizeof(Data));
 
+                data_ref.Pool[0].ptr = ObjectPointer();
 
-                offset_alignment = (unsigned long long)data_ref.pool % object_size;
-
-                // Initialize LU list
+                // Initialize Pool list
                 // Using the ObjectPointer with the Null Id, the index of this handle
                 // will point to the next free index slot available.
-                for (int i = 0; i < element_amount - 1; i++) {
-                    data_ref.LU[i]     = ObjectPointer(i + 1, DroneDataNullObjectType, 0);
-                    ObjectPointer test = data_ref.LU[i];
-                }
+                for (int i = 1; i < element_amount - 1; i++)
+                    data_ref.Pool[i].ptr = ObjectPointer(i + 1, DroneDataNullObjectType, 0);
 
                 // The last free object will always have an index greater than the available
                 // objects.
-                data_ref.LU[element_amount - 1] =
+                data_ref.Pool[element_amount - 1].ptr =
                     ObjectPointer(element_amount, DroneDataNullObjectType, 0);
 
-                min_object_location = data_ref.pool;
-                max_object_location = data_ref.pool + ((element_amount - 1) * object_size);
+                min_object_location = data_ref.Pool;
+                max_object_location =
+                    (data_ref.Pool) + ((element_amount - 1) * DroneDataStructSize);
+
             } else if (!data) {
                 if (!data) {
-
-                    std::cout << "ObjectMemPool:: Allocation amount request " << element_amount
-                              << " surpasses max allocation size " << MEM_MAX_ELEMENT_SIZE
-                              << std::endl;
-                    throw 0;
+                    HIVE_FATAL_ERROR("ObjectMemPool:: Allocation amount request ", element_amount,
+                                     " surpasses max allocation size ", MEM_MAX_ELEMENT_SIZE)
                 }
             }
         }
@@ -290,10 +308,12 @@ namespace hive
             // if (data) LargeBlockAllocator::deallocate(data);
         }
 
-        template <class T> static T * createObject()
+        template <class T> static std::tuple<T *, unsigned> createObject()
         {
-            static_assert(T::DroneDataType >= 0 && T::DroneDataType <= 255,
+            static_assert(T::DroneDataType >= 0 && T::DroneDataType < MEM_MAX_ELEMENT_TYPE_COUNT,
                           "Should Have DroneDataType Type");
+
+            static_assert(sizeof(T) <= DroneDataStructSize, "Object type is incorrect size");
 
             if constexpr (T::DroneDataType == MEM_MAX_ELEMENT_TYPE_COUNT - 1)
                 HIVE_ERROR("ObjectMemPool:: Root Prop objects should not be constructed")
@@ -303,38 +323,81 @@ namespace hive
 
                 const unsigned index = data->next_free;
 
-                ObjectPointer data_slot = data->LU[data->next_free];
+                ObjectPointer data_slot = data->Pool[data->next_free].ptr;
 
                 data->next_free = data_slot.getIndex();
 
-                T * obj = new (static_cast<void *>(data->pool + (index * object_size))) T();
+                hive_ull offset = ((unsigned long long)(data->Pool + index) -
+                                   (unsigned long long)min_object_location);
 
-                data->LU[index] = ObjectPointer(index, T::DroneDataType, data->current_uuid++);
+                T * obj = new (static_cast<void *>(data->Pool + index)) T();
 
-                return obj;
+                data->Pool[index].ptr = ObjectPointer(0, T::DroneDataType, data->current_uuid++);
+
+                return {obj, index};
             }
 
-            return nullptr;
+            return {nullptr, 0};
         };
 
         template <class T>
         static DroneDataHandle_<ObjectMemPool<object_size>, T> createObjectReturnRef()
         {
-            return getReference(createObject<T>());
+            static_assert(offsetof(T, ref) == 0,
+                          "Structure should have a [ref] member at the 0th offset.");
+
+            const auto [obj, index] = createObject<T>();
+
+            if (obj != nullptr)
+                return ObjectPointer(obj->ref, index);
+            else
+                return ObjectPointer();
         };
+
+
+        static bool setImplementationData(const ObjectPointer & ref, const hive_ull & data_numeric)
+        {
+            hive_ull maskA;
+
+            unsigned indexA = resolveIndex(ref, maskA);
+
+            if (maskA) {
+                data->Pool[indexA].implementation_data = data_numeric;
+                return true;
+            }
+
+            return false;
+        }
+
+        static hive_ull getImplementationData(const ObjectPointer & ref)
+        {
+            hive_ull maskA;
+
+            unsigned indexA = resolveIndex(ref, maskA);
+
+            if (maskA) {
+                return data->Pool[indexA].implementation_data;
+            }
+
+            return 0;
+        }
 
         static inline unsigned indexFromPtr(const void * ptr)
         {
-            return (unsigned)(((unsigned long long)ptr - (unsigned long long)min_object_location) /
-                              object_size);
+            hive_ull offset = ((unsigned long long)ptr - (unsigned long long)min_object_location);
+
+            return (unsigned)(offset / DroneDataStructSize);
         }
 
         static inline bool isPointerInPool(const void * ptr)
         {
-            bool pointer_in_min_bound = ptr >= min_object_location;
-            bool pointer_in_max_bound = ptr <= max_object_location;
-            bool pointer_alligned_to_size_boundary =
-                (((unsigned long long)ptr % object_size) - offset_alignment) == 0;
+
+            bool pointer_in_min_bound = (ptr >= min_object_location);
+            bool pointer_in_max_bound = (ptr <= max_object_location);
+
+            hive_ull offset = ((unsigned long long)ptr - (unsigned long long)min_object_location);
+
+            bool pointer_alligned_to_size_boundary = (offset % DroneDataStructSize) == 0;
 
             return pointer_in_min_bound && pointer_in_max_bound &&
                    pointer_alligned_to_size_boundary;
@@ -345,7 +408,10 @@ namespace hive
         {
             if (isPointerInPool(ptr)) {
                 unsigned index = indexFromPtr(ptr);
-                return data->LU[index];
+
+                auto ref = data->Pool[index].ptr;
+
+                return ObjectPointer(ref, index);
             }
 
             return ObjectPointer();
@@ -354,59 +420,169 @@ namespace hive
         template <class T>
         static void deleteObject(DroneDataHandle_<ObjectMemPool<object_size>, T> & object)
         {
-            ObjectPointer obj = resolveReference(object);
 
-            if (obj) deleteObject(obj.ptr());
+            hive_ull maskA;
+
+            unsigned indexA = resolveIndex(object, maskA);
+
+            if (maskA) deleteObject(indexA);
 
             // Sneaky Sneak, change the index to MAX_ELEMENT_SIZE
             *((unsigned *)&object) = MEM_MAX_ELEMENT_SIZE;
         };
 
-        static void deleteObject(const void * ptr)
+        static void deleteObject(const unsigned index)
         {
-            if (isPointerInPool(ptr)) {
-                unsigned index = indexFromPtr(ptr);
+            HIVE_DEBUG_WARN("Make this thread safe!!")
 
-                data->LU[index] = ObjectPointer(data->next_free, DroneDataNullObjectType, 0);
+            data->Pool[index].ptr = ObjectPointer(data->next_free, DroneDataNullObjectType, 0);
 
-                data->next_free = index;
-            }
+            data->next_free = index;
         };
 
       public:
-        // Resolve object pointer
+        /**
+         * Resolve object pointer
+         */
         static ObjectPointer resolveReference(ObjectPointer object)
         {
+            hive_ull maskA;
 
-            unsigned index = object.getIndex();
+            unsigned index = resolveIndex(object, maskA);
 
-            if (index < data->element_count) {
+            if (maskA) return ObjectPointer(object, index);
 
-                if (data->LU[index] == object)
-                    return object;
-                else {
-                    // Hunt down the reference, which may have been moved.
-                    // TODO: There should be a guarantee that this process will not be interrupted
+            return ObjectPointer();
+        }
 
-                    for (int i = 0; i < data->element_count; i++) {
-                        if (data->LU[i] == object) {
-                            // Found what we are looking for.
-                            return data->LU[i]; // Clearly data must be in-place before! LU can be
-                                                // dereferenced
-                        }
+      private:
+        // TODO - move to source file.
+        static unsigned resolveIndex(const ObjectPointer & ptr, hive_ull & mask)
+        {
+            mask = 0xFFFFFFFFFFFFFFFF;
+
+            const unsigned index     = ptr.getIndex();
+            const unsigned object_id = ptr.getID();
+
+            // Compare index of current object with the ptr.
+            if (object_id != data->Pool[index].ptr.getID()) {
+
+                // Fast path, use Generation Resolution Lookup Table.
+
+                HIVE_DEBUG_WARN("Need to implement remapping functions for DRONE/PROP lookup.")
+
+                // Slow path, iterate throw array to find the object.
+
+                for (int i = 1; i < data->element_count; i++) {
+                    if (data->Pool[i].ptr.getID() == object_id) {
+                        // Found what we are looking for.
+                        return i;
                     }
-                    // If here then the reference should not exist. Return an empty reference.
+                }
+
+                HIVE_DEBUG_WARN("Lost reference to object:", object_id, " type", ptr.getType());
+
+                // If the object can't be resolved return [false index]
+                mask = 0;
+                return 0;
+            }
+
+            return index;
+        }
+
+      public:
+        /**
+         * Append @arg{next_ptr} to end of chain specified by @arg{ptr}.
+         */
+        static bool appendRefToEndOfChain(ObjectPointer ptr, ObjectPointer next_ptr)
+        {
+            HIVE_DEBUG_WARN("How can this be made concurrent?")
+
+            hive_ull maskA, maskB;
+
+            unsigned indexA = resolveIndex(ptr, maskA), indexB = resolveIndex(next_ptr, maskB);
+
+            if (maskA & maskB) {
+                // We'll proceed down the object prop chain until we reach the end of the chain.
+                ObjectPointer current = data->Pool[indexA].ptr;
+
+                while (current.getIndex() > 0) { // TODO: Need bounds check.
+                    indexA  = current.getIndex();
+                    current = data->Pool[indexA].ptr;
+                }
+                // Could be CAS to force a redo if necessary.
+                data->Pool[indexA].ptr = ObjectPointer(current, indexB);
+
+                return true;
+            }
+
+            return false;
+        }
+
+        /**
+         *  Return a reference to the next object in the chain. May return a InvalidRef ptr.
+         */
+        static ObjectPointer getNextRef(ObjectPointer ptr)
+        {
+            hive_ull maskA;
+
+            unsigned indexA = resolveIndex(ptr, maskA);
+
+            if (indexA) {
+                ObjectPointer current = data->Pool[indexA].ptr;
+
+                unsigned next_index = current.getIndex();
+
+                if (next_index > 0) {
+                    ObjectPointer next = data->Pool[next_index].ptr;
+                    return ObjectPointer(next, next_index);
                 }
             }
 
+            // Return the InvalidRef object pointer.
+            return ObjectPointer();
+        }
+
+        /**
+         *  Return a reference to the next object in the chain. May return a InvalidRef ptr.
+         */
+        template <class T> static ObjectPointer getNextRefOfType(ObjectPointer ptr)
+        {
+            static_assert(T::DroneDataType >= 0 && T::DroneDataType <= MEM_MAX_ELEMENT_TYPE_COUNT,
+                          "Should Have DroneDataType Type");
+
+            hive_ull maskA;
+
+            unsigned indexA = resolveIndex(ptr, maskA);
+
+            if (maskA) {
+
+                ObjectPointer current = data->Pool[indexA].ptr;
+
+                while (current) {
+
+                    unsigned next_index = current.getIndex();
+
+                    if (next_index > 0) {
+                        ObjectPointer next = data->Pool[next_index].ptr;
+                        if (next.getType() == T::DroneDataType)
+                            return ObjectPointer(next, next_index);
+                    } else
+                        break;
+                }
+            }
+
+            // Return the InvalidRef object pointer.
             return ObjectPointer();
         }
 
         static void incrementIndexedReference(unsigned i){};
         static void decrementIndexedReference(unsigned i){};
-        static void * retrieveIndexedPointer(unsigned index)
+        static void * retrieveIndexedPointer(const ObjectPointer & ptr)
         {
-            return static_cast<void *>(&(data->pool[index * object_size]));
+            hive_ull maskA;
+            unsigned indexA = resolveIndex(ptr, maskA);
+            return static_cast<void *>(data->Pool + indexA);
         }
 
         static void destroyObject(ObjectPointer object) { deleteObject(object.ptr()); };
@@ -421,7 +597,7 @@ namespace hive
         static bool resize() {}
     }; // namespace hive
 
-#define DroneDataByteSize 32
+
     typedef ObjectMemPool<DroneDataByteSize> DroneDataPool;
     typedef DroneDataPool::ObjectPointer DroneDataHandle;
 
@@ -440,7 +616,8 @@ namespace hive
         unsigned word_size = 0; // Size of memory pool, in 4 byte units.
         unsigned char * pool;
 
-        /** Field header for a field of free memory, implemented as a single linked cyclic list. */
+        /** Field header for a field of free memory, implemented as a single linked cyclic list.
+         */
         struct FreeMemoryLink {
             FreeMemoryLink * next;
             unsigned word_size;
@@ -454,15 +631,9 @@ namespace hive
         struct DataChain {
 
             static const ushort DroneDataType = MEM_DATA_CHAIN_TYPE;
-
-            DroneDataHandle drone_link;
-            DroneDataHandle chain_link;
             DroneDataHandle next_observer_link;
             DroneDataHandle prev_observer_link;
         };
-
-        static_assert(offsetof(DataChain, drone_link) == 0,
-                      "Props reference is not at root of Drone");
 
         static_assert(sizeof(DataChain) <= DroneDataPool::DroneDataStructSize,
                       "Prop size is greater than the pool allocation unit size");
@@ -598,8 +769,8 @@ namespace hive
             // Need to allocate enough space for a header as well as the data.
             unsigned full_allocation_request_size = sizeof(DataField<T>);
 
-            // Search through existing free fields and find an appropriately sized section to handle
-            // the data. First fit approach implemented at this point.
+            // Search through existing free fields and find an appropriately sized section to
+            // handle the data. First fit approach implemented at this point.
             DataField<T> * df = nullptr;
 
             if (first_free_memory) {
@@ -616,6 +787,7 @@ namespace hive
                         (link->word_size + MemLinkWordSize) - (full_allocation_request_size >> 2);
 
                     if (fit >= 0) {
+
 
                         unsigned word_size = link->word_size + MemLinkWordSize;
 
@@ -672,8 +844,8 @@ namespace hive
             void * ptr = data_field;
 
             if (ptr >= pool && ptr <= pool) {
-                // TODO: additional checks should be made to make sure the data_field is correctly
-                // aligned
+                // TODO: additional checks should be made to make sure the data_field is
+                // correctly aligned
 
                 // replace the data_field with a free memory structure
 
@@ -700,8 +872,8 @@ namespace hive
                     new_link.next = nullptr;
                 }
             } else {
-                HIVE_ERROR(
-                    "DataPool:: Attempt to free data_field that does not belong to the DataPool.")
+                HIVE_ERROR("DataPool:: Attempt to free data_field that does not belong to the "
+                           "DataPool.")
             }
         }
 
@@ -715,8 +887,8 @@ namespace hive
     };
 
     // Create a general pool that can store default data. This should be a global object.
-    // Bosses MAY have additional pools that can be used to optimize their memory cache performance.
-    // This pool should be defined at program entry.
+    // Bosses MAY have additional pools that can be used to optimize their memory cache
+    // performance. This pool should be defined at program entry.
     extern DataPool general_data_pool;
 
 } // namespace hive
