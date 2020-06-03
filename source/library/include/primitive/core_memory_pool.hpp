@@ -197,57 +197,6 @@ namespace hive
         } * data = nullptr;
 
       public:
-        template <class T> class iterator
-        {
-            unsigned index         = 0;
-            unsigned element_count = data->element_count;
-            AdvancedHeader * Pool  = data->Pool;
-
-
-          public:
-            iterator(int index) : index(index) { (*this)++; }
-            iterator() : index(0) { (*this)++; }
-
-            iterator & operator++()
-            {
-                while (index++ < element_count) {
-                    if (Pool[index].ptr.template is<T>()) return *this;
-                }
-
-                index = element_count;
-
-                return *this;
-            }
-
-            iterator operator++(int)
-            {
-                while (index++ < element_count) {
-
-
-                    unsigned type =
-                        (*reinterpret_cast<unsigned *>(Pool + index)) >> MEM_MAX_ELEMENT_BIT_COUNT;
-
-                    if (type == T::DroneDataType) return *this;
-                }
-
-                index = element_count;
-
-                return *this;
-            }
-
-            bool operator==(iterator other) const { return (index == other.index); }
-            bool operator!=(iterator other) const { return !(index == other.index); }
-            ObjectPointer operator*() { return ObjectPointer(data->Pool[index].ptr, index); }
-            // iterator traits
-            using difference_type   = long;
-            using value_type        = ObjectPointer;
-            using pointer           = const ObjectPointer *;
-            using reference         = const ObjectPointer &;
-            using iterator_category = std::forward_iterator_tag;
-        };
-        template <class T> static iterator<T> begin() { return iterator<T>(); }
-        template <class T> static iterator<T> end() { return iterator<T>(data->element_count); }
-
         constexpr ObjectMemPool()
         {
             if (!data)
@@ -595,6 +544,143 @@ namespace hive
         }
 
         static bool resize() {}
+
+        /* #####################################################################################
+         * Iterators
+         * #####################################################################################
+         */
+        template <class T> struct TypeIterator {
+
+            typedef typename T::Ref Ref;
+
+            class iterator
+            {
+                unsigned index         = 0;
+                unsigned element_count = data->element_count;
+                AdvancedHeader * Pool  = data->Pool;
+
+
+              public:
+                iterator(int index) : index(index) { (*this)++; }
+                iterator() : index(0) { (*this)++; }
+
+                iterator & operator++()
+                {
+                    while (index++ < element_count) {
+
+                        unsigned type = (*reinterpret_cast<unsigned *>(Pool + index)) >>
+                                        MEM_MAX_ELEMENT_BIT_COUNT;
+
+                        if (type == T::DroneDataType) return *this;
+                    }
+
+                    index = element_count;
+
+                    return *this;
+                }
+
+                iterator operator++(int)
+                {
+                    while (index++ < element_count) {
+
+                        unsigned type = (*reinterpret_cast<unsigned *>(Pool + index)) >>
+                                        MEM_MAX_ELEMENT_BIT_COUNT;
+
+                        if (type == T::DroneDataType) return *this;
+                    }
+
+                    index = element_count;
+
+                    return *this;
+                }
+
+                bool operator==(iterator other) const { return (index == other.index); }
+                bool operator!=(iterator other) const { return !(index == other.index); }
+                Ref operator*() { return Ref(data->Pool[index].ptr, index); }
+                // iterator traits
+                using difference_type   = long;
+                using value_type        = ObjectPointer;
+                using pointer           = const ObjectPointer *;
+                using reference         = const ObjectPointer &;
+                using iterator_category = std::forward_iterator_tag;
+            };
+
+            static TypeIterator<T>::iterator begin() { return iterator(); }
+            static TypeIterator<T>::iterator end() { return iterator(data->element_count); }
+        };
+
+        template <hive_ull flag, class T> struct DroneFlagIterator {
+
+            typedef typename T::Ref Ref;
+
+            class iterator
+            {
+                unsigned index         = 0;
+                unsigned element_count = data->element_count;
+                AdvancedHeader * Pool  = data->Pool;
+
+              public:
+                iterator(int index) : index(index) { (*this)++; }
+                iterator() : index(0) { (*this)++; }
+
+                iterator & operator++()
+                {
+                    while (index++ < element_count) {
+
+                        const unsigned type = (*reinterpret_cast<unsigned *>(Pool + index)) >>
+                                              MEM_MAX_ELEMENT_BIT_COUNT;
+
+                        if (type == T::DroneDataType) {
+                            const hive_ull drone_flag =
+                                *(reinterpret_cast<hive_ull *>(Pool + index) + 1);
+
+                            if ((drone_flag & flag) == flag) return *this;
+                        };
+                    }
+
+                    index = element_count;
+
+                    return *this;
+                }
+
+                iterator operator++(int)
+                {
+                    while (index++ < element_count) {
+
+                        const unsigned type = (*reinterpret_cast<unsigned *>(Pool + index)) >>
+                                              MEM_MAX_ELEMENT_BIT_COUNT;
+
+                        if (type == T::DroneDataType) {
+                            const hive_ull drone_flag =
+                                *(reinterpret_cast<hive_ull *>(Pool + index) + 1);
+
+                            if ((drone_flag & flag) == flag) return *this;
+                        };
+                    }
+
+                    index = element_count;
+
+                    return *this;
+                }
+
+                bool operator==(iterator other) const { return (index == other.index); }
+                bool operator!=(iterator other) const { return !(index == other.index); }
+                Ref operator*() { return Ref(data->Pool[index].ptr, index); }
+                // iterator traits
+                using difference_type   = long;
+                using value_type        = ObjectPointer;
+                using pointer           = const ObjectPointer *;
+                using reference         = const ObjectPointer &;
+                using iterator_category = std::forward_iterator_tag;
+            };
+
+            static DroneFlagIterator<flag, T>::iterator begin() { return iterator(); }
+            static DroneFlagIterator<flag, T>::iterator end()
+            {
+                return iterator(data->element_count);
+            }
+        };
+
     }; // namespace hive
 
 

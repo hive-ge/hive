@@ -75,18 +75,33 @@ int main(int arg_ct, char ** args)
 
     for (int i = 0; i < 10000000; i++) pool.createObjectReturnRef<Drone>();
 
+    std::cout << "\nfor( of : in ) loop " << std::endl;
     timeMeasureStart();
     unsigned long long start = getCPUCycles();
-    auto from                = pool.begin<Drone>();
-    auto to                  = pool.end<Drone>();
-
-    unsigned found = 0;
-
-    for (auto it = from; it != to; it++) found++;
+    unsigned found           = 0;
+    DroneDataPool::TypeIterator<Drone> it;
+    for (auto drone : it) found++;
 
     unsigned long long end = getCPUCycles();
     timeMeasureEndAndReport();
-    std::cout << "cycles: " << end - start << std::endl;
+    std::cout << "A cycles: " << end - start << std::endl;
+    std::cout << "A cycle per element: " << (end - start) / 12000000 << std::endl;
+
+
+    std::cout << "\nfor( init : comp : iter ) loop " << std::endl;
+    timeMeasureStart();
+    start = getCPUCycles();
+    found = 0;
+    DroneDataPool::TypeIterator<Drone>::iterator a;
+    DroneDataPool::TypeIterator<Drone>::iterator s = DroneDataPool::TypeIterator<Drone>::begin();
+    DroneDataPool::TypeIterator<Drone>::iterator e = DroneDataPool::TypeIterator<Drone>::end();
+
+    for (auto a = s; a != e; a++) found++;
+
+    end = getCPUCycles();
+    timeMeasureEndAndReport();
+    std::cout << "B cycles: " << end - start << std::endl;
+    std::cout << "B cycle per element: " << (end - start) / 12000000 << std::endl;
 
     ASSERT(found == 10000012);
 

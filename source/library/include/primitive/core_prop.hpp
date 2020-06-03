@@ -9,7 +9,8 @@ namespace hive
 #define CONSTRUCT_PROP(prop, prop_id)                                                              \
   public:                                                                                          \
     ADD_DRONE_DATA_REFERENCES(prop)                                                                \
-    static const ushort DroneDataType       = getDroneDataType(#prop_id);                          \
+    static constexpr ushort DroneDataType   = getDroneDataType(#prop_id);                          \
+    static constexpr hive_ull CachID        = (1ull << getDroneDataType(#prop_id));                \
     static constexpr StringHash64 global_id = StringHash64(#prop_id);                              \
     static prop * construct()                                                                      \
     {                                                                                              \

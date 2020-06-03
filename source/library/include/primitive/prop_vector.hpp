@@ -95,7 +95,6 @@ namespace hive
         // void removeVertex();
     };
 
-    constexpr unsigned d = sizeof(Float64Prop);
     REGISTER_PROP(Float64Prop)
 
     /**::HIVE DRONE_PROP::*/

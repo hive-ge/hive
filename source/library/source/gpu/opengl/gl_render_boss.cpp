@@ -49,27 +49,27 @@ namespace hive
 
     };
 
-    void RenderBoss::onMessage(StringHash64 message_id, const char * message_data,
-                               const unsigned message_length)
-    {
-    }
-
-    void RenderBoss::setup(){
-
-    };
-
-    void RenderBoss::update(float)
+    void UpdateRenderables()
     {
 
-        auto from = DroneDataPool::begin<Drone>();
-        auto to   = DroneDataPool::end<Drone>();
-        // Check the drones for update render settings.
+        Drone::Ref collection[512];
 
-        // Need drones that at least have have -> Render + Program
+        DroneDataPool::DroneFlagIterator<RenderableProp::CachID, Drone> iterator;
 
-        for (auto it = from; it != to; it++) {
+        int i = 0;
 
-            Drone::Ref drone = *it;
+        // Get a collection of all renderable objects.
+        for (auto drone : iterator) {
+
+            if (i >= 512) break;
+
+            collection[i++] = drone;
+        }
+
+        // For each member in collection, update the data.
+
+        for (int u = 0; u < i; u++) {
+            Drone::Ref & drone = collection[u];
 
             // Candidate for threading using a work queueing system.
 
@@ -313,6 +313,21 @@ namespace hive
                 };
             }
         }
+
+    } // namespace hive
+
+    void RenderBoss::onMessage(StringHash64 message_id, const char * message_data,
+                               const unsigned message_length)
+    {
+    }
+
+    void RenderBoss::setup(){
+
+    };
+
+    void RenderBoss::update(float)
+    {
+        UpdateRenderables();
 
         /**
          *   On message update or intermittent interval, create render settings:

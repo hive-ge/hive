@@ -14,7 +14,7 @@ namespace hive
             CAN_RENDER = FLAG;
 
             if (FLAG)
-                drone->setFlag(DRONE_FLAG_CAN_RENDER | DRONE_FLAG_NEED_RENDER_UPDATE);
+                drone->setFlag(DRONE_FLAG_CAN_RENDER + DRONE_FLAG_NEED_RENDER_UPDATE);
             else
                 drone->unsetFlag(DRONE_FLAG_CAN_RENDER);
 

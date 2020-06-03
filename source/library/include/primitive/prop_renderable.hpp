@@ -11,8 +11,8 @@ namespace hive
 {
     using namespace hive::math;
 
-    static const DroneFlagTemplate<2> DRONE_FLAG_CAN_RENDER;
-    static const DroneFlagTemplate<3> DRONE_FLAG_NEED_RENDER_UPDATE;
+    constexpr DroneFlagTemplate<2> DRONE_FLAG_CAN_RENDER;
+    constexpr DroneFlagTemplate<3> DRONE_FLAG_NEED_RENDER_UPDATE;
 
     /**::HIVE DRONE_PROP::*/
     struct RenderableProp : Prop {
