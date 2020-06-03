@@ -45,7 +45,7 @@ namespace hive
         ~ImageProp() {}
 
         /*
-            Optional Implmentation, useful for debugging
+            Optional Implementation, useful for debugging
         */
         bool loadFromFile(const std::string file_name, const bool STREAM_TO_VRAM = false);
 

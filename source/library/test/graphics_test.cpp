@@ -80,6 +80,22 @@ int main(int arg_ct, char ** args)
     drone->connect(float_prop);
 
 
+    // Setup the render layer
+    Drone::Ref drone_layer                      = pool.createObjectReturnRef<Drone>();
+    RenderableProp::Ref renderable_layer        = pool.createObjectReturnRef<RenderableProp>();
+    RenderLayerProp::Ref renderable_layer_layer = pool.createObjectReturnRef<RenderLayerProp>();
+    ImageProp::Ref image                        = pool.createObjectReturnRef<ImageProp>();
+
+    drone_layer->connect(renderable_layer);
+    drone_layer->connect(image);
+    drone_layer->connect(renderable_layer_layer);
+
+    image->data->width  = 1280;
+    image->data->height = 720;
+
+    renderable_layer->SET_RENDER_STATE(true);
+
+
     // AudioBoss
     // AnimationBoss
     // AssetBoss

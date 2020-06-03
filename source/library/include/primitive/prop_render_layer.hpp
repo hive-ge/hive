@@ -11,12 +11,9 @@ namespace hive
 {
     using namespace hive::math;
 
-    constexpr DroneFlagTemplate<2> DRONE_FLAG_CAN_RENDER;
-    constexpr DroneFlagTemplate<3> DRONE_FLAG_NEED_RENDER_UPDATE;
-
     /**::HIVE DRONE_PROP::*/
-    struct RenderableProp : Prop {
-        CONSTRUCT_PROP(RenderableProp, render);
+    struct RenderLayerProp : Prop {
+        CONSTRUCT_PROP(RenderLayerProp, renderlayer);
 
       private:
         /**
@@ -47,9 +44,9 @@ namespace hive
 
 
       public:
-        RenderableProp() : Prop() {}
+        RenderLayerProp() : Prop() {}
 
-        ~RenderableProp() {}
+        ~RenderLayerProp() {}
 
         /** Implemented in active GPU library */
         bool SET_RENDER_STATE(bool FLAG);
@@ -65,5 +62,5 @@ namespace hive
         const unsigned getRenderBufferLater() const { return rb_layer; };
     };
 
-    REGISTER_PROP(RenderableProp)
+    REGISTER_PROP(RenderLayerProp)
 } // namespace hive

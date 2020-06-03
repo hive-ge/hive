@@ -74,37 +74,38 @@ namespace hive
             return MEM_MAX_ELEMENT_TYPE_COUNT - 1;
             // DroneDataHandle for type information
             // Complex Systems
-            SetPropIndexLookup(mesh);
-            SetPropIndexLookup(image);
-            SetPropIndexLookup(grid);
-            SetPropIndexLookup(script);
-            SetPropIndexLookup(material);
-            SetPropIndexLookup(gpu_program);
-            SetPropIndexLookup(parent);
-            SetPropIndexLookup(animation);
-            SetPropIndexLookup(audio);
+            SetPropIndexLookup(mesh);        // 1
+            SetPropIndexLookup(image);       // 2
+            SetPropIndexLookup(grid);        // 3
+            SetPropIndexLookup(script);      // 4
+            SetPropIndexLookup(material);    // 5
+            SetPropIndexLookup(gpu_program); // 6
+            SetPropIndexLookup(parent);      // 7
+            SetPropIndexLookup(animation);   // 8
+            SetPropIndexLookup(audio);       // 9
 
             // Numerics
-            SetPropIndexLookup(mat44d);
-            SetPropIndexLookup(mat44);
-            SetPropIndexLookup(mat33d);
-            SetPropIndexLookup(mat33);
-            SetPropIndexLookup(quat);
-            SetPropIndexLookup(quatd);
-            SetPropIndexLookup(vec3d);
-            SetPropIndexLookup(vec3);
-            SetPropIndexLookup(vec2d);
-            SetPropIndexLookup(vec2);
-            SetPropIndexLookup(float32);
-            SetPropIndexLookup(float64);
-            SetPropIndexLookup(int32);
-            SetPropIndexLookup(uint32);
-            SetPropIndexLookup(int64);
-            SetPropIndexLookup(uint64);
+            SetPropIndexLookup(mat44d);  // 10
+            SetPropIndexLookup(mat44);   // 11
+            SetPropIndexLookup(mat33d);  // 12
+            SetPropIndexLookup(mat33);   // 13
+            SetPropIndexLookup(quat);    // 14
+            SetPropIndexLookup(quatd);   // 15
+            SetPropIndexLookup(vec3d);   // 16
+            SetPropIndexLookup(vec3);    // 17
+            SetPropIndexLookup(vec2d);   // 18
+            SetPropIndexLookup(vec2);    // 19
+            SetPropIndexLookup(float32); // 20
+            SetPropIndexLookup(float64); // 21
+            SetPropIndexLookup(int32);   // 22
+            SetPropIndexLookup(uint32);  // 23
+            SetPropIndexLookup(int64);   // 24
+            SetPropIndexLookup(uint64);  // 25
 
             // Attributes
-            SetPropIndexLookup(render);
-            SetPropIndexLookup(tag);
+            SetPropIndexLookup(render);      // 26
+            SetPropIndexLookup(renderlayer); // 27
+            SetPropIndexLookup(tag);         // 28
 
             return i;
         }
@@ -112,7 +113,7 @@ namespace hive
         return 0;
     }
 
-#define setDroneLUStaticBITFlag(prop) prop = 1 << getDroneDataType(#prop)
+#define setDroneLUStaticBITFlag(prop) prop = 1u << getDroneDataType(#prop)
 #define setDroneTypeEnumEntry(prop) prop = getDroneDataType(#prop)
 
     struct DronePropLU {
@@ -143,6 +144,7 @@ namespace hive
             setDroneLUStaticBITFlag(int64),
             setDroneLUStaticBITFlag(uint64),
             setDroneLUStaticBITFlag(render),
+            setDroneLUStaticBITFlag(renderlayer),
             setDroneLUStaticBITFlag(tag)
         };
 
@@ -174,6 +176,7 @@ namespace hive
             setDroneTypeEnumEntry(int64),
             setDroneTypeEnumEntry(uint64),
             setDroneTypeEnumEntry(render),
+            setDroneTypeEnumEntry(renderlayer),
             setDroneTypeEnumEntry(tag)
         };
 
@@ -210,20 +213,20 @@ namespace hive
 
         constexpr DronePropLU & operator+=(const unsigned val)
         {
-            flag += 1ull << val;
+            flag |= 1ull << val;
             return *this;
         }
 
         constexpr DronePropLU & operator-=(const unsigned val)
         {
-            flag -= 1ull << val;
+            flag &= ~(1ull << val);
             return *this;
         }
 
 
         constexpr DronePropLU & operator=(const unsigned val)
         {
-            flag = 1ull << val;
+            flag |= (1ull << val);
             return *this;
         }
 
@@ -231,11 +234,20 @@ namespace hive
 
         constexpr bool operator!=(const hive_ull val) const { return (flag & val) != val; }
 
-        constexpr bool operator==(const unsigned val) const { return flag == 1ull << val; }
+        constexpr bool operator==(const unsigned short val) const
+        {
+            return (flag & (1ull << val)) > 0;
+        }
 
-        constexpr bool operator!=(const unsigned val) const { return flag != 1ull << val; }
+        constexpr bool operator!=(const unsigned short val) const
+        {
+            return (flag & (1ull << val)) == 0;
+        }
 
-        constexpr bool operator==(const DronePropLU & other) const { return  (flag & other.flag) == other.flag; }
+        constexpr bool operator==(const DronePropLU & other) const
+        {
+            return (flag & other.flag) == other.flag;
+        }
 
         constexpr bool operator!=(const DronePropLU & other) const { return !(*this == other); }
 

@@ -1,5 +1,7 @@
 
 #include "includes.hpp"
+#include "prop_matrix.hpp"
+#include "prop_vector.hpp"
 #include <hive.h>
 
 using namespace hive;
@@ -71,6 +73,17 @@ int main(int arg_ct, char ** args)
     ASSERT(drone3->getProp("render_tag") == render_prop3)
     ASSERT(drone3->getProp("test") != prop)
     ASSERT(drone3->getProp("render_tag") == render_prop3)
+
+
+    // Prop lookup cache
+    ASSERT(drone3->getCache() == ImageProp::DroneDataType);
+    ASSERT(drone3->getCache() == RenderableProp::DroneDataType);
+    ASSERT(drone3->getCache() != MeshProp::DroneDataType);
+    ASSERT(drone3->getCache() != RenderLayerProp::DroneDataType);
+    ASSERT(drone3->getCache() != GridProp::DroneDataType);
+    ASSERT(drone3->getCache() != DoubleMat44Prop::DroneDataType);
+    ASSERT(drone3->getCache() != DoubleVec3Prop::DroneDataType);
+    ASSERT(drone3->getCache() != Float64Prop::DroneDataType);
 
 
     for (int i = 0; i < 10000000; i++) pool.createObjectReturnRef<Drone>();

@@ -11,7 +11,7 @@
 #define HIVE_APP_MAJOR_VERSION 0
 #endif
 
-#ifndef HIVE_APP_MINOR_VERSION
+#ifndef HIVE_APP_MINOR_VERSIONhttps: // www.giantbomb.com/
 #define HIVE_APP_MINOR_VERSION 0
 #endif
 
@@ -49,9 +49,11 @@
 #include "include/primitive/core_prop.hpp"
 // Primitive Props
 #include "include/primitive/prop_gpu_program.hpp"
+#include "include/primitive/prop_grid.hpp"
 #include "include/primitive/prop_image.hpp"
 #include "include/primitive/prop_matrix.hpp"
 #include "include/primitive/prop_mesh.hpp"
+#include "include/primitive/prop_render_layer.hpp"
 #include "include/primitive/prop_renderable.hpp"
 #include "include/primitive/prop_vector.hpp"
 // GPU Headers

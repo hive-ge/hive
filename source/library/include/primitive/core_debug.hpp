@@ -58,7 +58,7 @@ namespace hive
 
 #define HIVE_ERROR(message)                                                                        \
     {                                                                                              \
-        /*std::cout << message << std::end;*/                                                      \
+        print message;                                                                             \
         throw((unsigned long long)StringHash64(message));                                          \
     }
 /**
