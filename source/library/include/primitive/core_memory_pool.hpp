@@ -88,23 +88,23 @@ namespace hive
             return false;
         }
 
-        constexpr bool operator==(const DroneDataHandle_ t)
+        constexpr bool operator==(const DroneDataHandle_ t) const
         {
             return index_type == t.index_type && t.unique_id == unique_id;
         }
 
-        constexpr bool operator!=(const DroneDataHandle_ t)
+        constexpr bool operator!=(const DroneDataHandle_ t) const
         {
             return index_type != t.index_type || t.unique_id != unique_id;
         }
 
 
-        constexpr bool operator==(const DroneDataHandle_::vTYPE t)
+        constexpr bool operator==(const DroneDataHandle_::vTYPE t) const
         {
             return (index_type | unique_id) == t;
         }
 
-        constexpr bool operator!=(const DroneDataHandle_::vTYPE t)
+        constexpr bool operator!=(const DroneDataHandle_::vTYPE t) const
         {
             return (index_type | unique_id) != t;
         }

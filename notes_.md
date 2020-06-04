@@ -15,7 +15,6 @@
         4. Asset binding conflict detection, reporting, and
            automatic resolution. 
 
-    -[] 
 
 -[] Build Script system
 
@@ -23,7 +22,7 @@
         task of dynamically updating Drone structures and handling
         message passing between Drones for 
 
-        -[] JS binding for now. 
+        -[] Use JS binding through WASM for now. 
 
 -[] Build Audio system
 

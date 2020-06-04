@@ -10,11 +10,12 @@ std::string shader_string("[vert]\n"
                           "uniform float rot;"
                           ""
                           "out vec2 tex_coord;"
+                          "uniform mat4 camera;"
                           ""
                           "void main()"
                           "{"
                           ""
-                          "gl_Position = vec4(vertex, 1.0);"
+                          "gl_Position = camera * vec4(vertex, 1.0);"
                           ""
                           "tex_coord = (vertex.xy + vec2(1.0, 1.0));"
                           "}"
@@ -64,8 +65,11 @@ std::string shader_string2(
     "void main() { FragColor =  texture(color_t, tex_coord) * vec4(1.0, 1.0, 1.0, 1.0) + vec4(0.5, "
     "0.0, 0.0, 1.0) ; }");
 
+#define PI 3.14159265359
+
 
 // Create Global Memory Object.
+
 hive::DataPool hive::general_data_pool(4096);
 
 int main(int arg_ct, char ** args)
@@ -81,6 +85,31 @@ int main(int arg_ct, char ** args)
     RenderBoss render;
 
     boss.setup();
+
+    // Setup the camera
+    Drone::Ref camera                     = pool.createObjectReturnRef<Drone>();
+    Mat44FloatProp::Ref matrix            = pool.createObjectReturnRef<Mat44FloatProp>();
+    Mat44FloatProp::Ref matrix2           = pool.createObjectReturnRef<Mat44FloatProp>();
+    RenderableProp::Ref camera_renderable = pool.createObjectReturnRef<RenderableProp>();
+
+    matrix->setTag("camera"); // projection matrix
+
+    matrix->toPerspectiveProjectionMatrix(1280, 720, PI / 2.0 /* 90deg */, 0.01, 100.0);
+
+    auto matA   = matrix->get();
+    mat44f matB = {};
+    matB.row4.z = -10.0;
+    matrix->set(matA * matB);
+    matrix->set(matA * matB);
+
+    matrix2->setTag("lens");
+    camera->connect(matrix);
+    camera->connect(matrix2);
+    camera->connect(camera_renderable);
+
+    camera_renderable->setRenderPassGroup(1);
+    camera_renderable->SET_RENDER_STATE(true);
+
 
     // Setup first game object
 
@@ -123,6 +152,7 @@ int main(int arg_ct, char ** args)
 
 
     // Setup the second object which will bind to the root layer and render buffer image.
+
     Drone::Ref drone2 = pool.createObjectReturnRef<Drone>();
 
     ShaderProgramProp::Ref shader2 = DroneDataPool::createObjectReturnRef<ShaderProgramProp>();
@@ -158,8 +188,15 @@ int main(int arg_ct, char ** args)
 
     float i = 0.0;
 
+
     while (boss.update() && timout-- > 0) {
         // float_prop->set(i += 0.01);
+        // matB = {};
+        // matB.row4.z = -22.0 + std::cos(i += 0.0002) * -20;
+        matrix->toPerspectiveProjectionMatrix(
+            1280, 720, PI / (2.2 + 1.0 * std::cos(i += 0.0002)) /* 90deg */, 0.01, 100.0);
+        matA = matrix->get();
+        matrix->set(matA * matB);
     }
 
 

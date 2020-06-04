@@ -66,7 +66,7 @@ int main(int arg_ct, char ** args)
     // Lookup Property By Tag
     ASSERT(drone->getProp("test") == prop)
     ASSERT(drone->getProp("render_tag") == render_prop)
-    ASSERT(!drone->getProp("render_greble"))
+    ASSERT(!(bool)drone->getProp("render_greble"))
 
     // Out of order lookup
     ASSERT(drone3->getProp("test") == prop3)

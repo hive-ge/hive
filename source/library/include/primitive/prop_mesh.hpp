@@ -65,6 +65,35 @@ namespace hive
         unsigned numberOfVertices() const { return data->native->verts.size(); }
     };
 
-
     REGISTER_PROP(MeshProp);
+
+    inline std::tuple<vec3d, vec3d> getAABB(MeshProp::Ref & ref)
+    {
+        vec3d min = {5000000.0, 5000000.0, 5000000.0};
+        vec3d max = {0, 0, 0};
+        if (ref) {
+
+            HIVE_DEBUG_STATIC_WARN("Should this be locked?");
+
+            MeshDataField::PTR & mesh_data = ref->data;
+
+
+            for (auto vertex : mesh_data->native->verts) {
+
+                if (vertex.x < min.x) min.x = vertex.x;
+
+                if (vertex.y < min.y) min.y = vertex.y;
+
+                if (vertex.z < min.z) min.z = vertex.z;
+
+                if (vertex.x > max.x) max.x = vertex.x;
+
+                if (vertex.y > max.y) max.y = vertex.y;
+
+                if (vertex.z > max.z) max.z = vertex.z;
+            }
+        }
+
+        return {min, max};
+    };
 } // namespace hive

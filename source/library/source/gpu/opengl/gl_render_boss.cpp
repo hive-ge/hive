@@ -27,47 +27,53 @@ namespace hive
     /*
      */
     struct CachedRenderableObject {
-        Drone::Ref drone   = 0;
-        GLint program      = 0;
-        GLuint vao         = 0;
-        GLuint vert_data   = 0;
-        GLuint indice_data = 0;
+        Drone::Ref drone       = 0;
+        bool uses_scene_camera = false;
+        GLint program          = 0;
+        GLuint vao             = 0;
+        GLuint vert_data       = 0;
+        GLuint indice_data     = 0;
 
         unsigned element_count = 0;
-
 
         /* This should be rebuilt if any Texture PROPS are changed on the object. */
         TextureBinding texture;
 
         /* This should be rebuilt if any general vector PROPS are changed on the object. */
         std::vector<UniformBinding> uniforms;
+        std::vector<TextureBinding> textures;
     };
 
     struct CachedRenderPass {
 
-        Drone::Ref drone = 0;
-        int id           = -1;
+        Drone::Ref drone    = 0;
+        char id             = -1;
+        unsigned char order = 0;
+        bool active         = true;
+
+        // Camera data for the pass
+        void * camera_data = nullptr;
 
         // Secondary Ordering (after textures)
         // To determine render order of elements.
-        int order          = 0;
-        bool active        = true;
         GLint frame_buffer = 0;
 
         // Update camera here.
-        std::vector<UniformBinding> global_uniforms;
+        // std::vector<UniformBinding> global_uniforms;
         std::vector<CachedRenderableObject> objects;
 
         // Used to determine mapping between passes.
         // Also used to detect when textures are overlapping.
         std::vector<GLuint> input_textures;
         std::vector<GLuint> output_textures;
+
+        CachedRenderPass * next = nullptr;
     };
 
     struct RenderPass {
     };
 
-    static std::vector<CachedRenderPass> render_cache;
+    static std::vector<CachedRenderPass> render_passes;
 
     RenderBoss::RenderBoss()
         : Boss(IDENTIFIER){
@@ -84,8 +90,24 @@ namespace hive
     }
 
 
-    // Must be contain mesh data. All else is optional.
-    void setupUniform(Drone::Ref){};
+    // Camera, Lights, etc.
+    void setupUniform(Drone::Ref & drone, CachedRenderPass & pass)
+    {
+        if (drone->flag != DRONE_FLAG_NEED_RENDER_UPDATE) return;
+
+        drone->flag -= DRONE_FLAG_NEED_RENDER_UPDATE;
+        // Check for any matrix or vector objects that can be used for rendering.
+
+        if (drone->getCache() == Mat44FloatProp::DroneDataType) {
+            // use matrices for camera
+            Mat44FloatProp::Ref mat = drone->getFirstPropOfType<Mat44FloatProp>();
+
+            if (mat->getTagHash() == StringHash64("camera") ||
+                mat->getTagHash() == StringHash64("Camera")) {
+                pass.camera_data = (void *)(&mat->data.raw());
+            }
+        }
+    };
 
 
     // Called by other functions.
@@ -131,6 +153,7 @@ namespace hive
          */
 
         // Candidate for threading using a work queueing system.
+        bool USES_PASS_CAMERA = false;
 
         if (drone->flag != DRONE_FLAG_NEED_RENDER_UPDATE) return;
 
@@ -248,22 +271,37 @@ namespace hive
 
                     for (auto uniform_artifact : uniforms) {
 
-
                         StringHash64 name = uniform_artifact->name_hash;
 
-                        for (auto _float : floats) {
+                        if (name == StringHash64("Camera") || name == StringHash64("camera")) {
 
-                            if (_float->getTagHash() == name) {
-                                // Make sure the texture is uploaded to the GPU.
-                                UniformBinding binding;
+                            UniformBinding binding;
 
-                                binding.uniform_data = (void *)&((_float->data.raw()));
+                            binding.uniform_data = nullptr;
 
-                                binding.uniform_type = GL_FLOAT;
+                            binding.uniform_type = 11551155;
 
-                                binding.uniform_loc = uniform_artifact->shader_location;
+                            binding.uniform_loc = uniform_artifact->shader_location;
 
-                                obj.uniforms.push_back(binding);
+                            obj.uniforms.push_back(binding);
+
+                        } else {
+
+                            for (auto _float : floats) {
+
+
+                                if (_float->getTagHash() == name) {
+
+                                    UniformBinding binding;
+
+                                    binding.uniform_data = (void *)&((_float->data.raw()));
+
+                                    binding.uniform_type = GL_FLOAT;
+
+                                    binding.uniform_loc = uniform_artifact->shader_location;
+
+                                    obj.uniforms.push_back(binding);
+                                }
                             }
                         }
                     }
@@ -343,10 +381,6 @@ namespace hive
 
                 glBufferData(GL_ARRAY_BUFFER, buffer_size, buffer, GL_STATIC_DRAW);
 
-                delete[] buffer;
-
-                // Setup attrib pointers.
-
                 unsigned long long offset = 0;
 
                 if (vert) {
@@ -385,11 +419,12 @@ namespace hive
 
                 glBindBuffer(GL_ARRAY_BUFFER, 0);
 
-                obj.program       = program->data->program;
-                obj.vao           = vao;
-                obj.vert_data     = vbo;
-                obj.indice_data   = vbo_i;
-                obj.element_count = indice_count * 3;
+                obj.program           = program->data->program;
+                obj.vao               = vao;
+                obj.vert_data         = vbo;
+                obj.uses_scene_camera = USES_PASS_CAMERA;
+                obj.indice_data       = vbo_i;
+                obj.element_count     = indice_count * 3;
 
                 pass.objects.push_back(obj);
             };
@@ -624,7 +659,7 @@ namespace hive
 
             if (pass.id != pass_id) {
 
-                if (pass.id != -1) render_cache.push_back(pass);
+                if (pass.id != -1) render_passes.push_back(pass);
 
                 pass              = {};
                 pass.id           = pass_id;
@@ -655,10 +690,10 @@ namespace hive
             }
 
             // All others are uniforms.
-            setupUniform(drone);
+            setupUniform(drone, pass);
         }
 
-        if (pass.id != -1) render_cache.push_back(pass);
+        if (pass.id != -1) render_passes.push_back(pass);
     } // namespace hive
 
     void RenderBoss::onMessage(StringHash64 message_id, const char * message_data,
@@ -708,7 +743,21 @@ namespace hive
         return (a_ordered_before_b == 1);
     }
 
-    void SortPasses() { std::sort(render_cache.begin(), render_cache.end(), orderRenderPasses); }
+    void SortPasses()
+    {
+        std::sort(render_passes.begin(), render_passes.end(), orderRenderPasses);
+
+        for (auto pass : render_passes) {
+        }
+    }
+
+    void cullObjects()
+    {
+        for (auto pass : render_passes) {
+            // Get camera information.
+            // compare the transformed AABB with bounds to determine if object is renderable.
+        }
+    }
 
     void RenderBoss::update(float)
     {
@@ -716,6 +765,8 @@ namespace hive
         UpdateRenderables();
 
         SortPasses();
+
+        cullObjects();
 
         /**
          *   On message update or intermittent interval, create render settings:
@@ -725,16 +776,29 @@ namespace hive
          *   When ready to render render all batches.
          */
 
-        for (auto renderable : render_cache) {
+        for (auto pass : render_passes) {
 
-            glBindFramebuffer(GL_FRAMEBUFFER, renderable.frame_buffer);
+            bool HAVE_PASS_CAMERA = false;
+
+            UniformBinding pass_camera;
+
+            glBindFramebuffer(GL_FRAMEBUFFER, pass.frame_buffer);
 
             glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+            if (pass.camera_data != nullptr) {
+
+                HIVE_DEBUG_STATIC_WARN("Using raw pointer for global camera data in render pass.");
+
+                HAVE_PASS_CAMERA = true;
+
+                pass_camera.uniform_data = pass.camera_data;
+            }
 
             // Setup camera uniform.
             // Setup any global uniforms.
 
-            for (auto object : renderable.objects) {
+            for (auto object : pass.objects) {
 
                 glUseProgram(object.program);
 
@@ -750,9 +814,20 @@ namespace hive
 
                 for (auto uniform : object.uniforms) {
 
-                    float rot = *static_cast<float *>(uniform.uniform_data);
+                    if (uniform.uniform_type == 11551155 && HAVE_PASS_CAMERA) { // Global camera
 
-                    glUniform1f(uniform.uniform_loc, rot);
+                        glUniformMatrix4fv(uniform.uniform_loc, 1, true,
+                                           (float *)pass_camera.uniform_data);
+
+                    } else {
+
+                        if (uniform.uniform_data) {
+
+                            float rot = *static_cast<float *>(uniform.uniform_data);
+
+                            glUniform1f(uniform.uniform_loc, rot);
+                        }
+                    }
                 }
 
                 glBindVertexArray(object.vao);

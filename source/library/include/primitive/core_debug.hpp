@@ -90,17 +90,20 @@ namespace hive
     }
 
 
-#define STR(...) (#__VA_ARGS__)
+#define STR(...) #__VA_ARGS__
 
-#define HIVE_STATIC_WARN(string_arg) print #string_arg;
+#define HIVE_DEBUG_STATIC_MESSAGE(...) _Pragma(STR(message(STR(##__VA_ARGS__))));
+
+#define HIVE_DEBUG_STATIC_WARN(...) _Pragma(STR(message(#__VA_ARGS__)));
+
+#define HIVE_DEBUG_SIZE(object) const unsigned s_##object = sizeof(object);
 
 #else
 #define HIVE_DEBUG_WARN(...)
 #define HIVE_FATAL_ERROR(...)
-#define HIVE_STATIC_WARN(string_arg)
+#define HIVE_DEBUG_STATIC_WARN(string_arg)
 #define HIVE_DEBUG_MESSAGE(...)
-#define HIVE_MARK_CPU_COUNT_START(name)
-#define HIVE_MARK_CPU_COUNT_MARK(name)
+#define HIVE_DEBUG_SIZE(object)
 #endif
 
     inline uint64_t HIVE_DEBUG_getCPUCycles()
