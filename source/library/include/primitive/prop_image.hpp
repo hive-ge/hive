@@ -75,6 +75,17 @@ namespace hive
 
         void setSize(unsigned width = 1, unsigned height = 1, unsigned depth = 1);
 
+        void instance(ImageProp::Ref other_image)
+        {
+            if (other_image == ref) return;
+
+            if (data) {
+                // delete data;
+            }
+
+            data = other_image->data;
+        }
+
         template <class T> T getTextureHandle();
     };
 

@@ -56,7 +56,7 @@ namespace hive
 
         bool ALLOW_RENDER() const;
 
-        void setRenderPassGroup(unsigned rpg) { rp_group = 0; };
+        void setRenderPassGroup(unsigned rpg) { rp_group = rpg; };
 
         const unsigned getRenderPassGroup() const { return rp_group; };
 

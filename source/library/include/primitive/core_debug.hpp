@@ -68,6 +68,7 @@ namespace hive
  */
 #ifdef HIVE_DEBUG
 
+
 #ifdef HIVE_DEBUG_NO_WARN
 #define HIVE_DEBUG_WARN(...)
 #else
@@ -88,6 +89,7 @@ namespace hive
         throw 0;                                                                                   \
     }
 
+
 #define STR(...) (#__VA_ARGS__)
 
 #define HIVE_STATIC_WARN(string_arg) print #string_arg;
@@ -97,7 +99,24 @@ namespace hive
 #define HIVE_FATAL_ERROR(...)
 #define HIVE_STATIC_WARN(string_arg)
 #define HIVE_DEBUG_MESSAGE(...)
+#define HIVE_MARK_CPU_COUNT_START(name)
+#define HIVE_MARK_CPU_COUNT_MARK(name)
 #endif
+
+    inline uint64_t HIVE_DEBUG_getCPUCycles()
+    {
+        unsigned int lo, hi;
+        __asm__ __volatile__("rdtscp" : "=a"(lo), "=d"(hi));
+        return ((uint64_t)hi << 32) | lo;
+    }
+
+#define HIVE_MARK_CPU_COUNT_START(name)                                                            \
+    hive_ull hive_cpu_clock_start_##name = HIVE_DEBUG_getCPUCycles();
+
+#define HIVE_MARK_CPU_COUNT_MARK(name)                                                             \
+    std::cout << #name                                                                             \
+              << ": cycles counted: " << (HIVE_DEBUG_getCPUCycles() - hive_cpu_clock_start_##name) \
+              << std::endl;
 
 
 } // namespace hive

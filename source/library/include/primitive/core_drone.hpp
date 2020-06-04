@@ -61,9 +61,9 @@ namespace hive
 
         void disconnect(DroneDataHandle prop);
 
-        DroneDataHandle getProp(StringHash64 tag);
+        DroneDataHandle getProp(StringHash64 tag) const;
 
-        DronePropLU getCache();
+        DronePropLU getCache() const;
 
         const Ref getRef() { return DroneDataPool::getReference(this); }
 
@@ -77,6 +77,21 @@ namespace hive
         template <drone_flag_primitive i> void unsetFlag(const DroneFlagTemplate<i> & new_flag)
         {
             flag -= new_flag;
+        };
+
+        template <class Prop> typename Prop::Ref getFirstPropOfType()
+        {
+            static_assert(Prop::DroneDataType, "Template argument is not a Prop.");
+
+            // first child
+            typename Prop::Ref prop = DroneDataPool::getNextRef(DroneDataPool::getReference(this));
+
+            while (prop) {
+                if (prop.getType() == Prop::DroneDataType) return prop;
+                prop = DroneDataPool::getNextRef(prop);
+            }
+
+            return DroneDataPool::ObjectPointer();
         };
 
 

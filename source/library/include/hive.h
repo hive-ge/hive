@@ -11,7 +11,7 @@
 #define HIVE_APP_MAJOR_VERSION 0
 #endif
 
-#ifndef HIVE_APP_MINOR_VERSIONhttps: // www.giantbomb.com/
+#ifndef HIVE_APP_MINOR_VERSION
 #define HIVE_APP_MINOR_VERSION 0
 #endif
 

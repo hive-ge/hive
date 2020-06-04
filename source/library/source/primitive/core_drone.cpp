@@ -31,7 +31,7 @@ namespace hive
         HIVE_DEBUG_WARN("Drone::disconnect not yet implemented!");
     };
 
-    DroneDataHandle Drone::getProp(StringHash64 tag)
+    DroneDataHandle Drone::getProp(StringHash64 tag) const
     {
 
         auto prop = DroneDataPool::getReference(this);
@@ -46,5 +46,5 @@ namespace hive
         return DroneDataHandle();
     }
 
-    DronePropLU Drone::getCache() { return cache; }
+    DronePropLU Drone::getCache() const { return cache; }
 } // namespace hive

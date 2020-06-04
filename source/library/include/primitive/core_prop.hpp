@@ -30,7 +30,7 @@ namespace hive
     struct Prop {
         friend DroneDataPool;
 
-      private:
+      protected:
         const DroneDataHandle_<DroneDataPool, Prop> ref;
         StringHash64 tag = 0;
 

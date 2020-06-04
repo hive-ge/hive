@@ -27,11 +27,14 @@ namespace hive
     /*
      */
     struct CachedRenderableObject {
-        GLint program          = 0;
-        GLuint vao             = 0;
-        GLuint vert_data       = 0;
-        GLuint indice_data     = 0;
+        Drone::Ref drone   = 0;
+        GLint program      = 0;
+        GLuint vao         = 0;
+        GLuint vert_data   = 0;
+        GLuint indice_data = 0;
+
         unsigned element_count = 0;
+
 
         /* This should be rebuilt if any Texture PROPS are changed on the object. */
         TextureBinding texture;
@@ -40,10 +43,31 @@ namespace hive
         std::vector<UniformBinding> uniforms;
     };
 
+    struct CachedRenderPass {
+
+        Drone::Ref drone = 0;
+        int id           = -1;
+
+        // Secondary Ordering (after textures)
+        // To determine render order of elements.
+        int order          = 0;
+        bool active        = true;
+        GLint frame_buffer = 0;
+
+        // Update camera here.
+        std::vector<UniformBinding> global_uniforms;
+        std::vector<CachedRenderableObject> objects;
+
+        // Used to determine mapping between passes.
+        // Also used to detect when textures are overlapping.
+        std::vector<GLuint> input_textures;
+        std::vector<GLuint> output_textures;
+    };
+
     struct RenderPass {
     };
 
-    static std::vector<CachedRenderableObject> render_cache;
+    static std::vector<CachedRenderPass> render_cache;
 
     RenderBoss::RenderBoss()
         : Boss(IDENTIFIER){
@@ -59,8 +83,39 @@ namespace hive
         // Extract data and setup uniform. Append the data to the render pass.
     }
 
+
     // Must be contain mesh data. All else is optional.
-    void setupObject(Drone::Ref & drone)
+    void setupUniform(Drone::Ref){};
+
+
+    // Called by other functions.
+    void setupTexture(ImageProp::Ref & image)
+    {
+        auto data = image->data; //<- this image data becomes a buffer data.
+
+        if (data->gpu_handle) return; // already have a texture present on the gpu
+
+        // The texture we're going to render to
+        GLuint renderedTexture;
+
+        glGenTextures(1, &renderedTexture);
+
+        glBindTexture(GL_TEXTURE_2D, renderedTexture);
+
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, data->width, data->height, 0, GL_RGB,
+                     GL_UNSIGNED_BYTE, 0);
+
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+
+        data->gpu_handle = renderedTexture;
+
+        data.update();
+    }
+
+
+    // Must be contain mesh data. All else is optional.
+    void setupObject(Drone::Ref & drone, CachedRenderPass & pass)
     {
 
         /**
@@ -166,13 +221,15 @@ namespace hive
 
                             if (image->getTagHash() == name) {
                                 // Make sure the texture is uploaded to the GPU.
-                                image->uploadToVRAM();
+                                setupTexture(image);
 
-                                unsigned texture_point = image->data->gpu_handle;
+                                unsigned texture_handle = image->data->gpu_handle;
 
-                                obj.texture.texture = texture_point;
+                                obj.texture.texture = texture_handle;
                                 obj.texture.unit    = texture_artifact->shader_location;
                                 obj.texture.slot    = slot;
+
+                                pass.input_textures.push_back(texture_handle);
 
                                 slot++;
                             }
@@ -219,11 +276,34 @@ namespace hive
 
                 unsigned element_count = mesh->numberOfVertices();
 
+                unsigned stride_size = 0;
+
                 unsigned buffer_size = (vert ? 3 * 4 * element_count : 0) +
                                        (uv ? 2 * 4 * element_count : 0) +
                                        (normal ? 3 * 4 * element_count : 0);
+                unsigned stride_marker = 0;
 
-                unsigned stride_size = (vert ? 0 : 0) + (uv ? 0 : 0) + (normal ? 0 : 0);
+                if (vert) {
+                    buffer_size += 3 * 4 * element_count;
+                    stride_size += 12;
+                    stride_marker++;
+                }
+
+                if (uv) {
+                    buffer_size += 2 * 4 * element_count;
+                    stride_size += 8;
+                    stride_marker++;
+                }
+
+                if (normal) {
+                    buffer_size += 2 * 4 * element_count;
+                    stride_size += 12;
+                    stride_marker++;
+                }
+
+                if (stride_marker < 1) stride_size = 0;
+
+                // If more than one element is selected the
 
                 // Create a buffer for this data.
                 GLuint vao, vbo = 0, vbo_i = 0;
@@ -311,40 +391,12 @@ namespace hive
                 obj.indice_data   = vbo_i;
                 obj.element_count = indice_count * 3;
 
-                render_cache.push_back(obj);
+                pass.objects.push_back(obj);
             };
         }
     }
-
-    // Must be contain mesh data. All else is optional.
-    void setupUniform(Drone::Ref){};
-
-
-    // Called by other functions.
-    void setupTexture(ImageProp::Ref & image)
-    {
-        auto data = image->data; //<- this image data becomes a buffer data.
-
-        // The texture we're going to render to
-        GLuint renderedTexture;
-
-        glGenTextures(1, &renderedTexture);
-
-        glBindTexture(GL_TEXTURE_2D, renderedTexture);
-
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, data->width, data->height, 0, GL_RGB,
-                     GL_UNSIGNED_BYTE, 0);
-
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-
-        data->gpu_handle = renderedTexture;
-
-        data.update();
-    }
-
     // Determin the output. Should trow error if this is not present.
-    void setupRenderBuffer(Drone::Ref & drone)
+    void setupRenderBuffer(Drone::Ref & drone, CachedRenderPass & pass)
     {
         struct Render {
         };
@@ -435,27 +487,44 @@ namespace hive
                 glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0 + index, GL_TEXTURE_2D,
                                        image->data->gpu_handle, 0);
             }
-            // Need at least one color attachment.
+
+            pass.output_textures.push_back(image->data->gpu_handle);
         }
 
+        // Need at most one depth texture.
         if (!HAS_DEPTH) {
+            // If not depth Setup depth texture.
+            GLuint depth_renderbuffer;
 
-            // If not depth
-            // Setup depth texture.
-            GLuint depthrenderbuffer;
+            glGenRenderbuffers(1, &depth_renderbuffer);
 
-            glGenRenderbuffers(1, &depthrenderbuffer);
+            glBindRenderbuffer(GL_RENDERBUFFER, depth_renderbuffer);
 
-            glBindRenderbuffer(GL_RENDERBUFFER, depthrenderbuffer);
-
-            glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT, 1024, 1024);
+            glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT, 1280, 720);
 
             glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER,
-                                      depthrenderbuffer);
+                                      depth_renderbuffer);
+        }
+
+        // Need at least one color attachment.
+        if (!HAS_COLOR) {
+            // Set default color attachment
+            GLuint color_render_buffer;
+
+            glGenRenderbuffers(1, &color_render_buffer);
+
+            glBindRenderbuffer(GL_RENDERBUFFER, color_render_buffer);
+
+            glRenderbufferStorage(GL_RENDERBUFFER, GL_RGBA, 1280, 720);
+
+            glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_RENDERBUFFER,
+                                      color_render_buffer);
         }
 
         if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
             HIVE_ERROR("Frame buffer incomplete");
+
+        pass.frame_buffer = frame_buffer;
 
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
     }
@@ -506,13 +575,17 @@ namespace hive
     */
 
     // Compares two intervals according to staring times.
-    bool compareDroneData(Drone::Ref r1, Drone::Ref r2)
+    bool compareDroneData(Drone::Ref & r1, Drone::Ref & r2)
     {
 
-        RenderableProp::Ref rp1 = r1->getProp("renderable");
-        RenderableProp::Ref rp2 = r2->getProp("renderable");
+        // These are fiber-able.
+        RenderableProp::Ref rp1 = r1->getFirstPropOfType<RenderableProp>();
+        RenderableProp::Ref rp2 = r2->getFirstPropOfType<RenderableProp>();
 
-        return (rp1->getRenderPassGroup() < rp2->getRenderPassGroup());
+        unsigned index1 = rp1->getRenderPassGroup();
+        unsigned index2 = rp2->getRenderPassGroup();
+
+        return (index1 < index2);
     }
 
     void UpdateRenderables()
@@ -535,27 +608,40 @@ namespace hive
         // Sort by render pass group
         std::sort(collection.begin(), collection.end(), compareDroneData);
 
+        CachedRenderPass pass = {};
+
         // For each member in collection, update the data.
         for (int u = 0; u < collection.size(); u++) {
 
             Drone::Ref & drone = collection[u];
             auto cache         = drone->getCache();
 
-            if (drone->flag != DRONE_FLAG_NEED_RENDER_UPDATE) return;
+            if (drone->flag != DRONE_FLAG_NEED_RENDER_UPDATE) continue;
 
-            drone->flag = DRONE_FLAG_NEED_RENDER_UPDATE;
+            RenderableProp::Ref render = drone->getFirstPropOfType<RenderableProp>();
+
+            unsigned pass_id = render->getRenderPassGroup();
+
+            if (pass.id != pass_id) {
+
+                if (pass.id != -1) render_cache.push_back(pass);
+
+                pass              = {};
+                pass.id           = pass_id;
+                pass.frame_buffer = 0;
+            }
 
             // Check to see if drone has mesh data -> sort to Objects
             if (cache == MeshProp::DroneDataType) {
                 // Process as a renderable object
-                setupObject(drone);
+                setupObject(drone, pass);
                 continue;
             }
 
             // Render Buffer data
             if (cache == RenderLayerProp::DroneDataType) {
                 // Input and output textures/buffers.
-                setupRenderBuffer(drone);
+                setupRenderBuffer(drone, pass);
                 continue;
             }
 
@@ -571,7 +657,9 @@ namespace hive
             // All others are uniforms.
             setupUniform(drone);
         }
-    }
+
+        if (pass.id != -1) render_cache.push_back(pass);
+    } // namespace hive
 
     void RenderBoss::onMessage(StringHash64 message_id, const char * message_data,
                                const unsigned message_length)
@@ -582,9 +670,52 @@ namespace hive
 
     };
 
+    // Sort passes based upon textures. If any input texture is dependent on an
+    // output texture, then the pass should be ordered before the output object.
+    // If there is no dependency, then the order attribute should be used to determine
+    // order.
+    bool orderRenderPasses(CachedRenderPass & passA, CachedRenderPass & passB)
+    {
+        char a_ordered_before_b = 0;
+
+        // passA against passB
+
+        for (auto texA : passA.input_textures) {
+            for (auto texB : passB.output_textures) {
+                if (texA == texB) {
+                    a_ordered_before_b = -1;
+                    goto outer;
+                }
+            }
+        }
+
+
+        for (auto texB : passB.input_textures) {
+            for (auto texA : passA.output_textures) {
+                if (texA == texB) {
+                    a_ordered_before_b = 1;
+                    goto outer;
+                }
+            }
+        }
+
+    outer:
+
+        if (!a_ordered_before_b) {
+            return passA.order < passB.order;
+        }
+
+        return (a_ordered_before_b == 1);
+    }
+
+    void SortPasses() { std::sort(render_cache.begin(), render_cache.end(), orderRenderPasses); }
+
     void RenderBoss::update(float)
     {
+
         UpdateRenderables();
+
+        SortPasses();
 
         /**
          *   On message update or intermittent interval, create render settings:
@@ -593,35 +724,41 @@ namespace hive
          *
          *   When ready to render render all batches.
          */
-        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
 
         for (auto renderable : render_cache) {
 
-            glBindFramebuffer(GL_FRAMEBUFFER, 0);
+            glBindFramebuffer(GL_FRAMEBUFFER, renderable.frame_buffer);
 
-            glUseProgram(renderable.program);
+            glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-            glUniform1i(renderable.texture.unit, 0);
+            // Setup camera uniform.
+            // Setup any global uniforms.
 
-            glActiveTexture(GL_TEXTURE0 + 0);
+            for (auto object : renderable.objects) {
 
-            glBindTexture(GL_TEXTURE_2D, renderable.texture.texture);
+                glUseProgram(object.program);
 
-            // glActiveTexture(0);
-            //
-            // glBindTexture(GL_TEXTURE_2D, 0);
+                glUniform1i(object.texture.unit, 0);
 
-            for (auto uniform : renderable.uniforms) {
+                glActiveTexture(GL_TEXTURE0 + 0);
 
-                float rot = *static_cast<float *>(uniform.uniform_data);
+                glBindTexture(GL_TEXTURE_2D, object.texture.texture);
 
-                glUniform1f(uniform.uniform_loc, rot);
+                // glActiveTexture(0);
+                //
+                // glBindTexture(GL_TEXTURE_2D, 0);
+
+                for (auto uniform : object.uniforms) {
+
+                    float rot = *static_cast<float *>(uniform.uniform_data);
+
+                    glUniform1f(uniform.uniform_loc, rot);
+                }
+
+                glBindVertexArray(object.vao);
+
+                glDrawElements(GL_TRIANGLES, object.element_count, GL_UNSIGNED_INT, 0);
             }
-
-            glBindVertexArray(renderable.vao);
-
-            glDrawElements(GL_TRIANGLES, renderable.element_count, GL_UNSIGNED_INT, 0);
         }
 
         glBindVertexArray(0);

@@ -2,11 +2,40 @@
 
 using namespace hive;
 
-std::string shader_string(
+std::string shader_string("[vert]\n"
+                          "#version 300 es\n"
+                          ""
+                          "in vec3 vertex;"
+                          ""
+                          "uniform float rot;"
+                          ""
+                          "out vec2 tex_coord;"
+                          ""
+                          "void main()"
+                          "{"
+                          ""
+                          "gl_Position = vec4(vertex, 1.0);"
+                          ""
+                          "tex_coord = (vertex.xy + vec2(1.0, 1.0));"
+                          "}"
+                          ""
+                          "[frag]\n"
+                          "#version 300 es\n"
+                          "precision mediump float;"
+                          ""
+                          ""
+                          "in vec2 tex_coord;"
+                          ""
+                          "out vec4 FragColor;"
+                          ""
+                          "void main() { FragColor = vec4(1.0, 0.25, 0.75, 1.0); }");
+
+std::string shader_string2(
     "[vert]\n"
     "#version 300 es\n"
     ""
     "in vec3 vertex;"
+    "in vec2 UV;"
     ""
     "uniform float rot;"
     ""
@@ -19,7 +48,7 @@ std::string shader_string(
     "sin(rot)),"
     "(vertex.z), 1.0);"
     ""
-    "tex_coord = vec2(1., 1.) - (vertex.xy + vec2(1.0, 1.0)) / 2.0;"
+    "tex_coord = UV;"
     "}"
     ""
     "[frag]\n"
@@ -32,7 +61,8 @@ std::string shader_string(
     ""
     "out vec4 FragColor;"
     ""
-    "void main() { FragColor = vec4(0.1, 0.8, 0.1, 1.0) + texture(color_t, tex_coord); }");
+    "void main() { FragColor =  texture(color_t, tex_coord) * vec4(1.0, 1.0, 1.0, 1.0) + vec4(0.5, "
+    "0.0, 0.0, 1.0) ; }");
 
 
 // Create Global Memory Object.
@@ -63,44 +93,68 @@ int main(int arg_ct, char ** args)
 
     RenderableProp::Ref renderable = pool.createObjectReturnRef<RenderableProp>();
     drone->connect(renderable);
+    renderable->setRenderPassGroup(1);
     renderable->SET_RENDER_STATE(true);
-
     MeshProp::Ref mesh_prop = pool.createObjectReturnRef<MeshProp>();
-    mesh_prop->addVertex(1, .5, 0, 1.0, 1.0);
-    mesh_prop->addVertex(-1, 1.0, 0, 1.0, 1.0);
-    mesh_prop->addVertex(-1, -1.0, 0, 1.0, 1.0);
-    mesh_prop->addVertex(1, -1.0, 0, 1.0, 1.0);
+    mesh_prop->addVertex(1.0, 0.5, 0, 1.0, 1.0);
+    mesh_prop->addVertex(-0.5, 0.5, 0, 0.5, 0.5);
+    mesh_prop->addVertex(-1.0, -0.5, 0, 0.5, 0.5);
+    mesh_prop->addVertex(0.5, -0.5, 0, 0.5, 0.5);
     mesh_prop->addTriangle(0, 1, 2);
     mesh_prop->addTriangle(2, 3, 0);
     drone->connect(mesh_prop);
-
-
     FloatProp::Ref float_prop = pool.createObjectReturnRef<FloatProp>();
     float_prop->setTag("rot");
     drone->connect(float_prop);
 
 
-    // Setup the render layer
+    // Setup the first render layer
     Drone::Ref drone_layer                      = pool.createObjectReturnRef<Drone>();
     RenderableProp::Ref renderable_layer        = pool.createObjectReturnRef<RenderableProp>();
     RenderLayerProp::Ref renderable_layer_layer = pool.createObjectReturnRef<RenderLayerProp>();
     ImageProp::Ref image                        = pool.createObjectReturnRef<ImageProp>();
-
     drone_layer->connect(renderable_layer);
     drone_layer->connect(image);
     drone_layer->connect(renderable_layer_layer);
-
     image->data->width  = 1280;
     image->data->height = 720;
-
+    renderable_layer->setRenderPassGroup(1);
     renderable_layer->SET_RENDER_STATE(true);
 
+
+    // Setup the second object which will bind to the root layer and render buffer image.
+    Drone::Ref drone2 = pool.createObjectReturnRef<Drone>();
+
+    ShaderProgramProp::Ref shader2 = DroneDataPool::createObjectReturnRef<ShaderProgramProp>();
+    drone2->connect(shader2);
+    shader2->fromString(shader_string2);
+
+    ImageProp::Ref image2 = pool.createObjectReturnRef<ImageProp>();
+    image2->instance(image);
+    image2->setTag("color_t");
+
+    RenderableProp::Ref renderable2 = pool.createObjectReturnRef<RenderableProp>();
+    drone2->connect(renderable2);
+    renderable2->SET_RENDER_STATE(true);
+
+    MeshProp::Ref mesh_prop2 = pool.createObjectReturnRef<MeshProp>();
+    mesh_prop2->addVertex(0.5625 * .5, .5, 0, 1.0, 1.0);
+    mesh_prop2->addVertex(-0.5625 * .5, .5, 0, 0.0, 1.0);
+    mesh_prop2->addVertex(-0.5625 * .5, -.5, 0, 0.0, 0.0);
+    mesh_prop2->addVertex(0.5625 * .5, -.5, 0, 1.0, 0.0);
+    mesh_prop2->addTriangle(0, 1, 2);
+    mesh_prop2->addTriangle(2, 3, 0);
+    drone2->connect(mesh_prop2);
+    drone2->connect(image2);
+
+    renderable2->setRenderPassGroup(0);
+    renderable2->SET_RENDER_STATE(true);
 
     // AudioBoss
     // AnimationBoss
     // AssetBoss
 
-    int timout = 1200;
+    int timout = 120000000;
 
     float i = 0.0;
 
