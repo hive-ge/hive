@@ -25,7 +25,7 @@ uint64_t getCPUCycles()
     return ((uint64_t)hi << 32) | lo;
 }
 
-std::chrono::high_resolution_clock::time_point t1;
+thread_local std::chrono::high_resolution_clock::time_point t1;
 
 void timeMeasureStart() { t1 = std::chrono::high_resolution_clock::now(); }
 

@@ -122,4 +122,13 @@ namespace hive
               << std::endl;
 
 
+    struct metrics {
+        template <class T> struct metric {
+            static_assert(sizeof(T) == 8, "metric value should be 8bytes long");
+            unsigned type = T::type;
+            StringHash64 name;
+            T value;
+        };
+    } static Metrics;
+
 } // namespace hive

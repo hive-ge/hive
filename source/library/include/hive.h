@@ -19,7 +19,12 @@
 #define HIVE_APP_PATCH_VERSION 0
 #endif
 
+// Primitives
+#include "include/primitive/core_concurrent.hpp"
 #include "include/primitive/core_debug.hpp"
+#include "include/primitive/core_drone.hpp"
+#include "include/primitive/core_math.hpp"
+#include "include/primitive/core_prop.hpp"
 #include "include/primitive/core_type_information.hpp"
 
 // MATHS Stuff
@@ -43,10 +48,7 @@
 #include "include/boss/message_boss.hpp"
 #include "include/boss/render_boss.hpp"
 
-// Primitives
-#include "include/primitive/core_drone.hpp"
-#include "include/primitive/core_math.hpp"
-#include "include/primitive/core_prop.hpp"
+
 // Primitive Props
 #include "include/primitive/prop_gpu_program.hpp"
 #include "include/primitive/prop_grid.hpp"

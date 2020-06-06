@@ -1,53 +1,109 @@
 
 #include "includes.hpp"
+#include <atomic>
 #include <hive.h>
+#include <iostream>
+#include <sstream>
+#include <string>
 
 using namespace hive;
 
-hive::DataPool hive::general_data_pool(4096);
+std::atomic<int> t = {0};
+unsigned * test_datUM;
 
-#include <atomic>
-#include <cassert>
-#include <iostream>
-#include <thread>
-#include <vector>
-std::vector<int> data;
-std::atomic<int> flag = {0};
+#define TEST_SIZE 50000000
 
-void thread_1()
-{
-    while (flag.load(std::memory_order_acquire) == 2)
-        ;
-    // ata.push_back(42);
-    flag.store(1, std::memory_order_release);
-    std::cout << "1 done" << std::endl;
-}
-
-void thread_2()
+void task(void * data, std::size_t data_size)
 {
 
-    int expected = 2;
-    // data.push_back(43);
-    while (!flag.compare_exchange_strong(expected, 3, std::memory_order_release)) {
-        expected = 2;
+    // convert data to correct structure.
+    struct TestData {
+        unsigned int counterA;
+        unsigned int counterB;
+    } * test_data = reinterpret_cast<TestData *>(data);
+    int i         = 0;
+
+    while (i++ < 50) {
+        test_data->counterA = i + 2;
+        test_data->counterA += test_data->counterB;
+        test_data->counterB = test_data->counterA;
     }
-    std::cout << "2 done" << std::endl;
+    i                   = 10;
+    test_data->counterB = i;
+    while (i++ < 50) {
+        test_data->counterA = i + 2;
+        test_data->counterA += test_data->counterB;
+        test_data->counterB = test_data->counterA;
+    }
+    i                   = 20;
+    test_data->counterB = i;
+    while (i++ < 50) {
+        test_data->counterA = i + 2;
+        test_data->counterA += test_data->counterB;
+        test_data->counterB = test_data->counterA;
+    }
+
+    *((unsigned *)data + 15) = 2222222;
+};
+
+void lz(void * data, std::size_t data_size)
+{
+    std::cout << "Data: " << (hive_ull)data << std::endl;
+    std::cout << "Datum: " << (hive_ull)test_datUM << std::endl;
+    unsigned * d = reinterpret_cast<unsigned *>(data);
+
+    for (int i = 0; i < TEST_SIZE; i++) {
+        ASSERT(d[i * 16] == d[i * 16 + 1]);
+        ASSERT(d[i * 16 + 15] == 2222222);
+    }
+
+    t.store(1, std::memory_order_release);
 }
 
-void thread_3()
-{
-    while (flag.load(std::memory_order_acquire) != 1)
-        ;
-    assert(42 == 43); // will never fire
-    std::cout << "3 done" << std::endl;
-}
 
 int main()
 {
-    std::thread b(thread_2);
-    std::thread a(thread_1);
-    std::thread c(thread_3);
-    a.join();
-    b.join();
-    c.join();
+    jobs::initialize(); // Job for the bigbadboss
+
+    ThreadRunner thread_sys(0);
+
+    test_datUM = new unsigned[TEST_SIZE * 16];
+
+    for (int i = 0; i < TEST_SIZE; i++) {
+        test_datUM[i * 16]      = i * 4;
+        test_datUM[i * 16 + 1]  = i * 4 + 2;
+        test_datUM[i * 16 + 2]  = i * 4 + 3;
+        test_datUM[i * 16 + 3]  = i * 4 + 4;
+        test_datUM[i * 16 + 4]  = i * 4 + 5;
+        test_datUM[i * 16 + 5]  = i * 4 + 6;
+        test_datUM[i * 16 + 6]  = i * 4 + 7;
+        test_datUM[i * 16 + 7]  = i * 4 + 8;
+        test_datUM[i * 16 + 8]  = i * 4 + 9;
+        test_datUM[i * 16 + 9]  = i * 4 + 10;
+        test_datUM[i * 16 + 10] = i * 4 + 11;
+        test_datUM[i * 16 + 11] = i * 4 + 12;
+        test_datUM[i * 16 + 12] = i * 4 + 13;
+        test_datUM[i * 16 + 13] = i * 4 + 14;
+        test_datUM[i * 16 + 14] = i * 4 + 15;
+        test_datUM[i * 16 + 15] = i * 4 + 16;
+    }
+    timeMeasureStart();
+    HIVE_MARK_CPU_COUNT_START(threadA)
+
+    jobs::JobLZ job(lz, test_datUM, sizeof(test_datUM));
+
+    for (int i = 0; i < TEST_SIZE; i++) job.task(task, test_datUM + i * 16, 64);
+
+    job.execute();
+
+    thread_sys.join();
+
+    HIVE_MARK_CPU_COUNT_MARK(threadA)
+    timeMeasureEndAndReport();
+
+    ASSERT(t == 1);
+
+    std::cout << "Free count: " << jobs::getFreeCount() << std::endl;
+
+    delete[] test_datUM;
 }

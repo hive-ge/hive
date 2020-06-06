@@ -7,9 +7,10 @@
 #include <cstdlib>
 #include <new>
 
+#define _64_BIT_FULL_MASK 0xFFFFFFFFFFFFFFFF
+
 namespace hive
 {
-
 
     /**
      * Allocates large blocks of contiguous memory.
@@ -408,7 +409,7 @@ namespace hive
         // TODO - move to source file.
         static unsigned resolveIndex(const ObjectPointer & ptr, hive_ull & mask)
         {
-            mask = 0xFFFFFFFFFFFFFFFF;
+            mask = _64_BIT_FULL_MASK;
 
             const unsigned index     = ptr.getIndex();
             const unsigned object_id = ptr.getID();
