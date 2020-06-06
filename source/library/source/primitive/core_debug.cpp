@@ -34,5 +34,5 @@ namespace hive
         return 0;
     };
 
-    print_o print_e;
+    struct hive::print_o print_e;
 } // namespace hive

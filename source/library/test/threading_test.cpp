@@ -11,7 +11,7 @@ using namespace hive;
 std::atomic<int> t = {0};
 unsigned * test_datUM;
 
-#define TEST_SIZE 50000000
+#define TEST_SIZE 5000
 
 void task(void * data, std::size_t data_size)
 {
@@ -63,9 +63,11 @@ void lz(void * data, std::size_t data_size)
 
 int main()
 {
-    jobs::initialize(); // Job for the bigbadboss
+    const unsigned number_of_job_slots = 2;
 
-    ThreadRunner thread_sys(0);
+    jobs::initialize(number_of_job_slots); // Job for the bigbadboss
+
+    ThreadRunner thread_sys(4);
 
     test_datUM = new unsigned[TEST_SIZE * 16];
 
@@ -103,7 +105,11 @@ int main()
 
     ASSERT(t == 1);
 
+    ASSERT(jobs::getFreeCount() == number_of_job_slots - 1);
+
     std::cout << "Free count: " << jobs::getFreeCount() << std::endl;
+
+    thread_sys.kill();
 
     delete[] test_datUM;
 }

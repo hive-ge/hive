@@ -35,11 +35,13 @@ namespace hive
 
 
     struct print_o {
-        inline print_o & print(const unsigned line, const char * file)
+
+        template <class T> inline print_o & PRINT(const T & data)
         {
-            std::cout << "In file " << file << "::" << line << ": \n";
+            std::cout << data << std::endl;
             return *this;
         }
+
         template <class T> inline print_o & operator,(const T & data)
         {
 
@@ -51,15 +53,19 @@ namespace hive
 
     extern print_o print_e;
 
-#define print print_e.print(__LINE__, __FILE__),
+#define ST(...) #__VA_ARGS__
+#define STR(...) ST(__VA_ARGS__)
+
+#define print print_e.PRINT(STR(__LINE__) "::" STR(__FILE__)),
 
 #define HIVE_DEBUG_ASSERT(expression, error_message)                                               \
     if (!(expression)) HIVE_ERROR(error_message)
 
-#define HIVE_ERROR(message)                                                                        \
+#define HIVE_ERROR(...)                                                                            \
     {                                                                                              \
-        print message;                                                                             \
-        throw((unsigned long long)StringHash64(message));                                          \
+        STR(__LINE__);                                                                             \
+        print_e.PRINT("Error at:" __FILE__ ":" STR(__LINE__) " : " __VA_ARGS__);                   \
+        throw((unsigned long long)StringHash64(__VA_ARGS__));                                      \
     }
 /**
  * When in DEBUG mode, prints warning message to console, includes file and line location.
@@ -89,8 +95,6 @@ namespace hive
         throw 0;                                                                                   \
     }
 
-
-#define STR(...) #__VA_ARGS__
 
 #define HIVE_DEBUG_STATIC_MESSAGE(...) _Pragma(STR(message(STR(##__VA_ARGS__))));
 

@@ -4,6 +4,8 @@
 #include "include/primitive/core_string_hash.hpp"
 #include <shared_mutex>
 
+
+#define HIVE_CACHE_LINE_SIZE 64
 /**
  * Type Information
  */

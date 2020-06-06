@@ -4,15 +4,15 @@
 #pragma once
 
 #include "include/primitive/core_debug.hpp"
+#include "include/primitive/core_type_information.hpp"
 
 #include <atomic>
+#include <chrono>
 #include <thread>
 #include <typeinfo>
 
-
 #define HIVE_JOB_POOL_SIZE 800
 #define MAX_JOB_DEPENDENCIES 64
-#define HIVE_CACHE_LINE_SIZE 64
 
 namespace hive
 {
@@ -28,6 +28,7 @@ namespace hive
          */
 
         static_assert(std::is_same<decltype(T::index), IndexVal>::value);
+
         static_assert(std::is_same<decltype(T::next), std::atomic<IndexVal>>::value);
 
       private:
@@ -37,6 +38,7 @@ namespace hive
         T * pool;
 
         unsigned size;
+
 
       public:
         //-----------------------------------------------------------------------------//
@@ -107,11 +109,9 @@ namespace hive
                     }
                 } else {
                     // Probably need to update head and tail
-
-                    // Comfirm head is -1;
-
                     IndexVal head_index = head.load(std::memory_order_relaxed);
 
+                    // Comfirm head is -1;
                     if (head == -1) {
                         if (!head.compare_exchange_weak(head_index, obj_head_index,
                                                         std::memory_order_release))
@@ -141,8 +141,6 @@ namespace hive
 
                 if (next_head_index == -1) {
 
-                    // if (!current_head.next.compare_exchange_weak(next_head_index, -1)) continue;
-
                     IndexVal tail_index = tail.load(std::memory_order_relaxed);
 
                     if (tail_index != head_index) continue;
@@ -171,9 +169,18 @@ namespace hive
             head.store(1);
             tail.store(size - 1);
         }
-    }; // namespace hive
+    };
+
+
+    //#############################################################################//
+
+    //#############################################################################//
+
+    //#############################################################################//
+
 
     typedef struct JobDispatch {
+
 
         typedef void (*JOB_ENTRY)(void * data, std::size_t param_data_length);
 
@@ -184,54 +191,94 @@ namespace hive
             SETUP,
             COMPLETED,
             QUAISCENT_BLOCKED,
-            FREE_SLOT
+            FREE_SLOT,
+            FALL_BACK_JOB
         };
 
+        enum JOB_PRIORITY : unsigned char {
+            // Highest priority, for maintenance tasks. These jobs immediately execute.
+            INTERNAL_PRIORITY = 99,
+            // Priorities progress from this point in descending
+            // order.
+            LEVEL_10 = 0,
+            LEVEL_9  = 1,
+            LEVEL_8,
+            LEVEL_7,
+            LEVEL_6,
+            LEVEL_5,
+            LEVEL_4,
+            LEVEL_3,
+            LEVEL_2,
+            LEVEL_1
+        };
+
+      private:
         typedef struct JOB {
-            //----------------------------
+            //---------------------------- 8 byte boundary
             JOB_ENTRY entry;
-            //----------------------------
+            //---------------------------- 8 byte boundary
             void * data;
-            //----------------------------
+            //---------------------------- 8 byte boundary
             unsigned data_size;
+            // Used to determine whether this current job can execute
+            // If the counter is larger than 1, then this job is waiting
+            // for other jobs to complete execution before this one
+            // can begin.
             std::atomic<int> local_counter;
-            //----------------------------
+            //---------------------------- 8 byte boundary
+            // Pointer to another job's local_counter. Can be used to
+            // create a chain of dependency.
             std::atomic<int> * destination_counter;
-            //----------------------------
+            //---------------------------- 8 byte boundary
             std::atomic<JOB_STATE> state; // 4
             std::atomic<int> next;        // 4
-            //----------------------------
-            int index;        // 4
-            unsigned unusedH; // time start
-            //----------------------------
-            unsigned unusedD; // time end
-            unsigned unusedE; // priority
-            //----------------------------
-            unsigned unusedF;
-            unsigned unusedG;
+            //---------------------------- 8 byte boundary
+            int index; // 4
+            // If access to a specific resource needs to be restricted
+            // use this in conjuction with the job_group_lock
+            // to create a global lock for a set of jobs.
+            std::atomic<int> local_group_lock; // shared lock
+            //---------------------------- 8 byte boundary
+            std::atomic<int> * job_group_lock;
+            //---------------------------- 8 byte boundary
+            std::chrono::high_resolution_clock::time_point job_start; // time start
 
         } Job;
 
+
+        static thread_local Job fall_back_job;
+
         static_assert(sizeof(JOB) <= HIVE_CACHE_LINE_SIZE, "Job is larger than cache line size.");
 
-        static Job job_pool[HIVE_JOB_POOL_SIZE];
+        //-----------------------------------------------------------------------------//
+      private:
+        static constexpr unsigned number_of_priority_queues = 10;
 
-        static int next_free;
+        static constexpr unsigned SETUP_COUNTER_START = 2;
 
-        const static Job dead_ringer;
+        // Thread local globals
+        static thread_local std::atomic<int> * global_lock;
 
-        constexpr static int SETUP_COUNTER_START = 2;
+        static thread_local Job * active_job;
+
+        static Job * job_pool;
+
+        static unsigned number_of_job_slots;
 
         static LinkedListConcurrentQueue<Job, int> free_queue;
-        static LinkedListConcurrentQueue<Job, int> priority_queues[10];
 
+        static LinkedListConcurrentQueue<Job, int> priority_queues[number_of_priority_queues];
+
+        static std::atomic_bool cleanup_lock;
+
+      public:
         //-----------------------------------------------------------------------------//
 
         typedef struct JOB_LANDING_ZONE {
 
             Job & destination;
 
-            JOB_LANDING_ZONE(JOB_ENTRY lz, void * data, std::size_t data_size)
+            JOB_LANDING_ZONE(JOB_ENTRY lz, void * data, unsigned data_size)
                 : destination(acquireJobSlot())
             {
                 if (destination.state == JOB_STATE::DEAD_RINGER)
@@ -240,16 +287,19 @@ namespace hive
                 destination.entry     = lz;
                 destination.data      = data;
                 destination.data_size = data_size;
-                destination.local_counter.store(SETUP_COUNTER_START, std::memory_order_release);
             }
 
-            void task(JOB_ENTRY lz, void * data, std::size_t data_size)
+            JOB_LANDING_ZONE(const JOB_LANDING_ZONE & lz) : destination(lz.destination) {}
+
+            void task(JOB_ENTRY lz, void * data, unsigned data_size,
+                      JOB_PRIORITY priority = JOB_PRIORITY::LEVEL_10)
             {
 
                 Job & job_slot = acquireJobSlot();
 
                 if (job_slot.state == JOB_STATE::DEAD_RINGER) HIVE_ERROR("No free job slots left!");
 
+                job_slot.job_group_lock      = &destination.local_group_lock;
                 job_slot.destination_counter = &destination.local_counter;
                 job_slot.entry               = lz;
                 job_slot.data                = data;
@@ -264,22 +314,36 @@ namespace hive
                     increment = i + 1;
                 }
 
-                job_slot.local_counter.store(SETUP_COUNTER_START, std::memory_order_relaxed);
-
-                promoteJobToPending(job_slot, 0);
+                promoteJobToPending(job_slot, priority);
             }
 
-            void execute() { promoteJobToPending(destination, 0); }
+            /**
+             * Creates another job group that can be used as an intermittent stage
+             * before the main group is finished.
+             */
+            JOB_LANDING_ZONE waypoint(JOB_ENTRY lz, void * data, unsigned data_size) const
+            {
+                auto waypoint_job = JOB_LANDING_ZONE(lz, data, data_size);
+
+                return waypoint_job;
+            }
+
+            void execute(JOB_PRIORITY priority = JOB_PRIORITY::LEVEL_10)
+            {
+                promoteJobToPending(destination, priority);
+            }
         } JobLZ;
 
         //-----------------------------------------------------------------------------//
 
 
       public:
-        static void initialize();
+        static void initialize(unsigned = HIVE_JOB_POOL_SIZE);
+
+        static void destroy();
 
         /**
-         * Cycle through all jobs pending jobs and runs the highest priority job in the active
+         * Cycle through all pending jobs and runs the highest priority job in the active
          * queues. Returns true if a job was run, false otherwise.
          */
         static bool acquireJob();
@@ -287,14 +351,46 @@ namespace hive
         static unsigned getFreeCount() noexcept
         {
             unsigned count = 0;
-            for (int i = 0; i < HIVE_JOB_POOL_SIZE; i++)
-                if (job_pool[i].state == JOB_STATE::FREE_SLOT) count++;
-            ;
+
+            for (int i = 0; i < number_of_job_slots; i++) {
+
+                if (job_pool[i].state.load() == JOB_STATE::FREE_SLOT ||
+                    job_pool[i].state.load() == JOB_STATE::COMPLETED)
+                    count++;
+            };
             return count;
+        }
+        /**
+         * Can be called during job execution (preferably upon start of entry function)
+         * to try and acquire the lock that is local to all jobs within the group.
+         * Returns true if lock is acquired, false otherwise.
+         */
+        static bool acquireJobGroupLock()
+        {
+            int locked = 0;
+
+            if (global_lock) return global_lock->compare_exchange_weak(locked, 1);
+
+            return false;
+        }
+
+        /**
+         * place the current active job back into the queue. Should only be called within
+         * the entry function, which MUST IMMEDIATELY return after calling this function.
+         */
+        static void requeueJob(JOB_PRIORITY priority = JOB_PRIORITY::LEVEL_10)
+        {
+            if (active_job) {
+                Job & job  = *active_job;
+                active_job = nullptr;
+                enqueueJob(job, priority);
+            }
         }
         //-----------------------------------------------------------------------------//
 
       private:
+        static void enqueueJob(Job & job, JOB_PRIORITY priority);
+
         static void runJob(Job & job);
 
         /**
@@ -302,12 +398,17 @@ namespace hive
          * If a call to ThreadRunner::getNumberOfThreads were to return 0
          * then promoting a job will also cause it to immediately run.
          */
-        static void promoteJobToPending(Job & job, unsigned priority = 0);
+        static void promoteJobToPending(Job & job, JOB_PRIORITY priority = JOB_PRIORITY::LEVEL_10);
 
         /**
          * Returns a free job_slot or the dead_ringer job_slot.
          */
-        static void retireJobSlot(JOB & job) { job.state.store(JOB_STATE::COMPLETED); }
+        static void retireJobSlot(JOB & job)
+        {
+            if (job.state.load() != JOB_STATE::FALL_BACK_JOB) {
+                job.state.store(JOB_STATE::COMPLETED);
+            };
+        }
 
         /**
          * Returns a free job_slot or the dead_ringer job_slot.
@@ -315,24 +416,25 @@ namespace hive
         static JOB & acquireJobSlot();
     } jobs;
 
+
     //#############################################################################//
+
+    //#############################################################################//
+
+    //#############################################################################//
+
 
     struct ThreadRunner {
 
       private:
-        static std::atomic<bool> KILL_SWITCHED;
-
         static thread_local int id;
 
-      public:
-        static unsigned getID() { return id; }
-
-        static unsigned getNumberOfThreads() { return thread_count; }
-
       private:
+        static std::atomic<bool> KILL_SWITCHED;
+
         static thread_local unsigned thread_count;
 
-        std::thread ** threads;
+        static std::thread ** threads;
 
         static void thread_runtime(int id, unsigned tc)
         {
@@ -343,7 +445,7 @@ namespace hive
 
             while (true) {
                 // Greedily acquire jobs until there are none to acquire, then sleep for a short
-                // durration.
+                // duration.
                 while (jobs::acquireJob()) exponential_sleep_count = 1;
 
                 if (KILL_SWITCHED.load(std::memory_order_consume)) return;
@@ -356,26 +458,33 @@ namespace hive
         }
 
       public:
+        static unsigned getID() { return id; }
+
+        static unsigned getNumberOfThreads() { return thread_count; }
+
+      public:
         ThreadRunner(std::size_t number_of_threads = 2)
         {
-            KILL_SWITCHED.store(false);
+            if (!threads) {
 
-            thread_count = number_of_threads;
+                KILL_SWITCHED.store(false);
 
-            threads = new std::thread *[number_of_threads];
+                thread_count = number_of_threads;
 
-            for (int i = 0; i < thread_count; i++) {
-                threads[i] = new std::thread(thread_runtime, i + 1, thread_count);
+                threads = new std::thread *[number_of_threads];
+
+                for (int i = 0; i < thread_count; i++)
+                    threads[i] = new std::thread(thread_runtime, i + 1, thread_count);
             }
         };
 
-        void detachThreads()
+        static void detachThreads()
         {
             for (int i = 0; i < thread_count; i++) threads[i]->detach();
             thread_count = 0;
         }
 
-        void join()
+        static void join()
         {
             KILL_SWITCHED.store(true, std::memory_order_relaxed);
 
@@ -384,13 +493,13 @@ namespace hive
             thread_count = 0;
         }
 
-        ~ThreadRunner()
+        static void kill()
         {
             join();
 
             std::this_thread::sleep_for(std::chrono::milliseconds(1));
 
-            delete[] threads;
+            if (threads) delete[] threads;
         }
     };
 } // namespace hive
