@@ -27,7 +27,7 @@
         "@candlefw/wick": "^0.8.13",
         "@nodegui/nodegui": "^0.19.0",
         "cmake-js": "^6.1.0",
-        "electron": "^8.2.3",
+        "electron": "^11.5.0",
         "emscripten": "^0.0.2-beta"
     },
     "devDependencies": {
